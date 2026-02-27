@@ -1,0 +1,110 @@
+.pantallaCentrada {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: var(--bulma-scheme-main-bis); 
+    transition: background-color 0.4s ease;
+}
+
+.contenedor-centrado {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 450px;
+    background-color: var(--bulma-scheme-main); 
+    padding: 40px;
+    border-radius: 15px;
+    border: 1px solid var(--bulma-border);
+    transition: all 0.4s ease;
+}
+
+.entradasTexto {
+    @extend .input;
+    @extend .is-rounded;
+    width: 100%;
+    max-width: 300px;
+    text-align: center;
+    background-color: transparent;
+    color: var(--bulma-text);
+    border-color: var(--bulma-border); 
+    transition: all 0.3s ease-in-out;
+
+    &::placeholder {
+        color: var(--bulma-text-weak);
+    }
+
+    &:hover {
+        border-color: var(--bulma-link) !important;
+        filter: brightness(0.8);
+        box-shadow: 0 0 5px var(--bulma-link) !important;
+        opacity: 0.8; 
+    }
+
+    &:focus {
+        border-color: var(--bulma-link) !important;
+        filter: brightness(1.2);
+        box-shadow: 0 0 12px var(--bulma-link) !important;
+        background-color: rgba(128, 128, 128, 0.05);
+        opacity: 1;
+        outline: none;
+    }
+}
+
+.olvido-pass {
+    color: var(--bulma-text) !important; 
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-top: 5px;
+    transition: all 0.3s;
+    
+    &:hover {
+        color: var(--bulma-link) !important;
+        text-decoration: underline;
+    }
+}
+
+.select-temas {
+    @extend .select;
+    @extend .is-rounded;
+    @extend .is-small;
+    
+    select {
+        // Fondo y texto adaptables para el selector
+        background-color: var(--bulma-scheme-main-ter);
+        color: var(--bulma-text);
+        border-color: var(--bulma-border);
+        
+        option {
+            background-color: var(--bulma-scheme-main);
+            color: var(--bulma-text);
+        }
+    }
+}
+.botonTemas {
+    @extend .button;
+    @extend .is-rounded;
+    
+    // --- AJUSTE DE TAMAÑO ---
+    width: 300px;  // ajustar el ancho
+    height: 45px;  // ajustar el alto
+    margin-top: 1.5rem;
+    
+    // --- COLORES DINÁMICOS ---
+    background-color: var(--bulma-link) !important;
+    color: white !important;
+    border: none;
+
+    // --- TRANSICIÓN SUAVE (Para evitar el cambio abrupto) ---
+    // Esto hace que al cambiar el tema, el color se desvanezca suavemente
+    transition: background-color 0.6s ease, transform 0.3s, filter 0.4s;
+
+    &:hover {
+        filter: brightness(1.1);
+        transform: translateY(-2px);
+    }
+}

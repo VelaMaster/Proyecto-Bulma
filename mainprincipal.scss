@@ -1,0 +1,14 @@
+@import "node_modules/bulma/bulma.scss";
+:root {
+    --bulma-link: #6e57ff;
+}
+html[data-theme-accent="verde"] { 
+    --bulma-link: #23d160; 
+}
+html[data-theme-accent="naranja"] { 
+    --bulma-link: #ff470f; 
+}
+html[data-theme-accent="violeta"] { 
+    --bulma-link: #6e57ff; 
+}
+@import "sass/componentes";
