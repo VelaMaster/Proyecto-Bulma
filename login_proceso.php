@@ -1,7 +1,6 @@
 <?php
 session_start();
 
-// Datos de conexión validados
 $host = '172.24.10.251';
 $port = '3050';
 $db_path = 'C:\SisDLL20\BD\DB_SIDIST.FDB'; 
@@ -10,50 +9,48 @@ $pass = '290990';
 
 try {
     $dsn = "firebird:dbname=$host/$port:$db_path;charset=UTF8";
-    $options = [
+    $pdo = new PDO($dsn, $user, $pass, [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-    ];
-
-    // Creamos la conexión
-    $pdo = new PDO($dsn, $user, $pass, $options);
+    ]);
 
     if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $usuario  = trim($_POST['usuario']);
         $password = trim($_POST['password']);
-        
-        // Consulta preparada para evitar inyecciones SQL
-        // Nota: En Firebird, los nombres de tablas y campos suelen ir en MAYÚSCULAS
-        $sql = "SELECT USUARIO, ROL FROM USUARIOS_INVENTARIOS
+        $rol_esperado = $_POST['rol_id']; // 0, 1 o 2
+
+        $sql = "SELECT USUARIO, ROL FROM USUARIOS 
                 WHERE USUARIO = :usuario 
                 AND CONTRASENA = :pass 
-                AND ROL = '0'";
+                AND ROL = :rol";
 
         $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':usuario', $usuario);
-        $stmt->bindParam(':pass', $password);
-        $stmt->execute();
+        $stmt->execute([
+            ':usuario' => $usuario,
+            ':pass'    => $password,
+            ':rol'     => $rol_esperado
+        ]);
 
         $datos = $stmt->fetch();
 
         if ($datos) {
-            // Guardamos sesión
             $_SESSION['usuario'] = $datos['USUARIO'];
-            $_SESSION['rol']     = 'promotor';
-
-            // Redirigir a tu carpeta de residencia
-            header("Location: promotores/inicio.php");
+            
+            if ($datos['ROL'] == '0') {
+                $_SESSION['rol'] = 'promotor';
+                header("Location: promotores/inicio.php");
+            } else if ($datos['ROL'] == '1') {
+                $_SESSION['rol'] = 'supervisor';
+                header("Location: supervisor/inicio.php");
+            } else if ($datos['ROL'] == '2') {
+                $_SESSION['rol'] = 'distribucion';
+                header("Location: distribucion/inicio.php");
+            }
             exit();
         } else {
-            echo "<script>
-                    alert('Usuario o contraseña incorrectos para Promotor'); 
-                    window.location.href='iniciosesionPromotor.php';
-                  </script>";
+            echo "<script>alert('Acceso denegado: Credenciales incorrectas para este nivel.'); window.history.back();</script>";
         }
     }
-
 } catch (PDOException $e) {
-    // Si falla aquí, veremos el error exacto en el navegador
-    die("Error de conexión: " . $e->getMessage());
+    die("Error de conexión al servidor del Tec: " . $e->getMessage());
 }
-?>
