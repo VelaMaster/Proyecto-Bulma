@@ -1,4 +1,20 @@
 @charset "UTF-8";
+:root {
+  --bulma-link: #6e57ff;
+}
+
+html[data-theme-accent=verde] {
+  --bulma-link: #23d160;
+}
+
+html[data-theme-accent=naranja] {
+  --bulma-link: #ff470f;
+}
+
+html[data-theme-accent=violeta] {
+  --bulma-link: #6e57ff;
+}
+
 /* Bulma Utilities */
 :root {
   --bulma-control-radius: var(--bulma-radius);
@@ -22687,22 +22703,6 @@ has-background-danger.is-hoverable:active {
   pointer-events: all !important;
 }
 
-:root {
-  --bulma-link: #6e57ff;
-}
-
-html[data-theme-accent=verde] {
-  --bulma-link: #23d160;
-}
-
-html[data-theme-accent=naranja] {
-  --bulma-link: #ff470f;
-}
-
-html[data-theme-accent=violeta] {
-  --bulma-link: #6e57ff;
-}
-
 .pantallaCentrada {
   display: flex;
   justify-content: center;
@@ -22792,4 +22792,30 @@ html[data-theme-accent=violeta] {
 .botonTemas:hover {
   filter: brightness(1.1);
   transform: translateY(-2px);
+}
+
+.botones-horizontal {
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.botones-horizontal .button, .botones-horizontal .botonTemas {
+  background-color: var(--bulma-scheme-main-ter);
+  border-color: var(--bulma-border);
+  color: var(--bulma-text);
+  transition: all 0.4s ease;
+  width: 100px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.botones-horizontal .button:hover, .botones-horizontal .botonTemas:hover {
+  border-color: var(--bulma-link);
+  color: var(--bulma-link);
+  z-index: 2;
+}
+.botones-horizontal .button.is-selected, .botones-horizontal .is-selected.botonTemas {
+  background-color: var(--bulma-link) !important;
+  color: white !important;
+  border-color: var(--bulma-link) !important;
+  box-shadow: 0 0 10px var(--bulma-link);
+  pointer-events: none;
 }/*# sourceMappingURL=mainprincipal.css.map */

@@ -92,13 +92,11 @@
     // --- AJUSTE DE TAMAÑO ---
     width: 300px;  // ajustar el ancho
     height: 45px;  // ajustar el alto
-    margin-top: 1.5rem;
-    
+    margin-top: 1.5rem;    
     // --- COLORES DINÁMICOS ---
     background-color: var(--bulma-link) !important;
     color: white !important;
     border: none;
-
     // --- TRANSICIÓN SUAVE (Para evitar el cambio abrupto) ---
     // Esto hace que al cambiar el tema, el color se desvanezca suavemente
     transition: background-color 0.6s ease, transform 0.3s, filter 0.4s;
@@ -106,5 +104,34 @@
     &:hover {
         filter: brightness(1.1);
         transform: translateY(-2px);
+    }
+}
+.botones-horizontal {
+    justify-content: center;
+    margin-bottom: 10px;
+
+    .button {
+        // Estilo base para botones no seleccionados en modo oscuro
+        background-color: var(--bulma-scheme-main-ter);
+        border-color: var(--bulma-border);
+        color: var(--bulma-text);
+        transition: all 0.4s ease;
+        width: 100px; // Tamaño fijo para que los 3 sumen 300px como tus inputs
+        font-size: 0.8rem;
+        font-weight: 600;
+
+        &:hover {
+            border-color: var(--bulma-link);
+            color: var(--bulma-link);
+            z-index: 2; // Para que el borde resalte sobre los vecinos
+        }
+
+&.is-selected {
+            background-color: var(--bulma-link) !important; // Color dinámico del tema
+            color: white !important;
+            border-color: var(--bulma-link) !important;
+            box-shadow: 0 0 10px var(--bulma-link);
+            pointer-events: none; // Evita clics repetidos mientras redirige
+        }
     }
 }

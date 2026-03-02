@@ -24,7 +24,19 @@
     <div class="pantallaCentrada">
         <div class="contenedor-centrado">
             <h1 class="title is-4">Inventarios de Leche en polvo</h1>
-            
+
+
+<div class="botones-horizontal buttons has-addons">
+    <button id="btn-promotor" class="button is-rounded is-selected" onclick="location.href='iniciosesionPromotor.php';">
+        Promotor
+    </button>
+    <button id="btn-supervisor" class="button" onclick="location.href='iniciosesionSupervisor.php';">
+        Supervisor
+    </button>
+    <button id="btn-distribucion" class="button is-rounded" onclick="location.href='iniciosesionDistribucion.php';">
+        Distribución
+    </button>
+</div>
             <input type="text" class="entradasTexto" placeholder="Usuario">
             <input type="password" class="entradasTexto" placeholder="Contraseña">
             

@@ -19,3 +19,12 @@ window.onload = () => {
         document.getElementById('selectorColor').value = a;
     }
 }
+function seleccionarRol(rol) {
+    const botones = document.querySelectorAll('.botones-horizontal .button');
+    botones.forEach(btn => btn.classList.remove('is-selected'));
+    const btnActivo = document.getElementById(`btn-${rol}`);
+    btnActivo.classList.add('is-selected');
+    setTimeout(() => {
+        window.location.href = `inicio${rol}.php`;
+    }, 200);
+}
