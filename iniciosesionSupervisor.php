@@ -27,10 +27,10 @@
 
 
 <div class="botones-horizontal buttons has-addons">
-    <button id="btn-promotor" class="button is-rounded is-selected" onclick="location.href='iniciosesionPromotor.php';">
+    <button id="btn-promotor" class="button" onclick="location.href='iniciosesionPromotor.php';">
         Promotor
     </button>
-    <button id="btn-supervisor" class="button" onclick="location.href='iniciosesionSupervisor.php';">
+        <button id="btn-supervisor" class="button is-rounded is-selected" onclick="location.href='iniciosesionSupervisor.php';">
         Supervisor
     </button>
     <button id="btn-distribucion" class="button is-rounded" onclick="location.href='iniciosesionDistribucion.php';">

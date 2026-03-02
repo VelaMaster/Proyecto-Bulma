@@ -22818,4 +22818,14 @@ has-background-danger.is-hoverable:active {
   border-color: var(--bulma-link) !important;
   box-shadow: 0 0 10px var(--bulma-link);
   pointer-events: none;
+}
+
+/* Asegúrate de que el selector sea específico para ganar la prioridad en Chrome */
+.botones-horizontal.buttons.has-addons .button.is-selected, .botones-horizontal.buttons.has-addons .is-selected.botonTemas {
+  background-color: var(--bulma-link) !important;
+  color: #ffffff !important;
+  border-color: var(--bulma-link) !important;
+  box-shadow: 0 0 10px var(--bulma-link);
+  /* Esto ayuda a Chrome a renderizar el color correctamente */
+  -webkit-appearance: none;
 }/*# sourceMappingURL=mainprincipal.css.map */
