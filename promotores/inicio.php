@@ -8,39 +8,47 @@ $nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : $_SESSION['
 ?>
 
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Promotor - Leche para el Bienestar</title>
     <link rel="stylesheet" href="../mainprincipal.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
 <body>
+    <nav class="navbar nav-base-moderna" role="navigation" aria-label="main navigation">
+    <div class="navbar-brand">
+        <a class="navbar-item logo-ajustado" href="#">
+            <span class="icon is-medium mr-2"><i class="fas fa-bolt fa-lg"></i></span>
+            <strong class="texto-logotipo">Leche para el bienestar.</strong>
+        </a>
 
-    <nav class="navbar is-dark" role="navigation" aria-label="main navigation" style="border-bottom: 1px solid var(--bulma-border);">
-        <div class="navbar-brand">
-            <a class="navbar-item" href="#">
-                <strong style="color: var(--bulma-link);">LICONSA - PROMOTOR</strong>
-            </a>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navMenuLiconsa">
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+            <span aria-hidden="true"></span>
+        </a>
+    </div>
+
+    <div id="navMenuLiconsa" class="navbar-menu">
+        <div class="navbar-start">
+            
+<div class="navbar-item has-dropdown is-hoverable">
+    <a class="navbar-link is-arrowless nav-enlace">Inventarios</a>
+    
+    <div class="navbar-dropdown is-boxed glass-menu">
+        <a class="navbar-item">Stock</a>
+        <a class="navbar-item">Entradas</a>
+        <a class="navbar-item">Kardex</a>
+    </div>
+</div>
+
         </div>
-
-        <div class="navbar-end">
-            <div class="navbar-item">
-                <div class="buttons">
-                    <span class="tag is-link is-light is-medium mr-3">
-                        <i class="fas fa-user mr-2"></i> <?php echo htmlspecialchars($nombre_usuario); ?>
-                    </span>
-                    <a href="../logout.php" class="button is-danger is-outlined  is-rounded">
-                        <i class="fas fa-sign-out-alt mr-1"></i> Cerrar Sesión
-                    </a>
-                </div>
-            </div>
-        </div>
-    </nav>
-
+    </div>
+</nav>
     <section class="section">
         <div class="container">
             <div class="columns is-centered">
@@ -84,7 +92,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : $_SESSION['
             </div>
         </div>
     </section>
-
+    <script src="../js/temas.js"> </script>
 </body>
 
 </html>

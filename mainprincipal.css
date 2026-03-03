@@ -22820,12 +22820,77 @@ has-background-danger.is-hoverable:active {
   pointer-events: none;
 }
 
-/* Asegúrate de que el selector sea específico para ganar la prioridad en Chrome */
 .botones-horizontal.buttons.has-addons .button.is-selected, .botones-horizontal.buttons.has-addons .is-selected.botonTemas {
   background-color: var(--bulma-link) !important;
   color: #ffffff !important;
   border-color: var(--bulma-link) !important;
   box-shadow: 0 0 10px var(--bulma-link);
-  /* Esto ayuda a Chrome a renderizar el color correctamente */
   -webkit-appearance: none;
+}
+
+nav.navbar.nav-base-moderna {
+  background-color: #2e3034 !important;
+  min-height: 3.5rem !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+nav.navbar.nav-base-moderna .navbar-link.nav-enlace {
+  background-color: transparent !important;
+  cursor: default;
+}
+nav.navbar.nav-base-moderna .navbar-link.nav-enlace:hover {
+  color: white !important;
+  border-bottom: none !important;
+}
+nav.navbar.nav-base-moderna .navbar-brand {
+  margin-left: -2rem !important;
+  background-color: transparent !important;
+}
+nav.navbar.nav-base-moderna .navbar-brand .logo-ajustado {
+  padding-left: 0.5rem !important;
+  padding-right: 1rem !important;
+  background-color: transparent !important;
+  display: flex;
+  align-items: center;
+}
+nav.navbar.nav-base-moderna .navbar-brand .logo-ajustado:hover {
+  background-color: transparent !important;
+}
+nav.navbar.nav-base-moderna .texto-logotipo {
+  color: white !important;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  margin-left: -5px;
+}
+nav.navbar.nav-base-moderna .navbar-link.nav-enlace {
+  background-color: transparent !important;
+  cursor: default;
+}
+nav.navbar.nav-base-moderna .navbar-link.nav-enlace:hover {
+  color: white !important;
+  border-bottom: none !important;
+}
+nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu {
+  background-color: rgba(var(--bulma-scheme-main-rgb), 0.5) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px !important;
+  min-width: 180px !important;
+  padding: 0.4rem;
+  margin-top: 2px;
+}
+nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item {
+  color: var(--bulma-text) !important;
+  opacity: 0.8;
+  font-size: 0.85rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item:hover {
+  opacity: 1;
+  background-color: var(--bulma-link) !important;
+  color: white !important;
+  transform: scale(1.02);
 }/*# sourceMappingURL=mainprincipal.css.map */

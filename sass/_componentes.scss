@@ -3,7 +3,7 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background-color: var(--bulma-scheme-main-bis); 
+    background-color: var(--bulma-scheme-main-bis);
     transition: background-color 0.4s ease;
 }
 
@@ -15,7 +15,7 @@
     align-items: center;
     width: 100%;
     max-width: 450px;
-    background-color: var(--bulma-scheme-main); 
+    background-color: var(--bulma-scheme-main);
     padding: 40px;
     border-radius: 15px;
     border: 1px solid var(--bulma-border);
@@ -30,7 +30,7 @@
     text-align: center;
     background-color: transparent;
     color: var(--bulma-text);
-    border-color: var(--bulma-border); 
+    border-color: var(--bulma-border);
     transition: all 0.3s ease-in-out;
 
     &::placeholder {
@@ -41,7 +41,7 @@
         border-color: var(--bulma-link) !important;
         filter: brightness(0.8);
         box-shadow: 0 0 5px var(--bulma-link) !important;
-        opacity: 0.8; 
+        opacity: 0.8;
     }
 
     &:focus {
@@ -55,13 +55,13 @@
 }
 
 .olvido-pass {
-    color: var(--bulma-text) !important; 
+    color: var(--bulma-text) !important;
     text-decoration: none;
     font-size: 0.9rem;
     font-weight: 500;
     margin-top: 5px;
     transition: all 0.3s;
-    
+
     &:hover {
         color: var(--bulma-link) !important;
         text-decoration: underline;
@@ -72,27 +72,28 @@
     @extend .select;
     @extend .is-rounded;
     @extend .is-small;
-    
+
     select {
         // Fondo y texto adaptables para el selector
         background-color: var(--bulma-scheme-main-ter);
         color: var(--bulma-text);
         border-color: var(--bulma-border);
-        
+
         option {
             background-color: var(--bulma-scheme-main);
             color: var(--bulma-text);
         }
     }
 }
+
 .botonTemas {
     @extend .button;
     @extend .is-rounded;
-    
+
     // --- AJUSTE DE TAMAÑO ---
-    width: 300px;  // ajustar el ancho
-    height: 45px;  // ajustar el alto
-    margin-top: 1.5rem;    
+    width: 300px; // ajustar el ancho
+    height: 45px; // ajustar el alto
+    margin-top: 1.5rem;
     // --- COLORES DINÁMICOS ---
     background-color: var(--bulma-link) !important;
     color: white !important;
@@ -106,6 +107,7 @@
         transform: translateY(-2px);
     }
 }
+
 .botones-horizontal {
     justify-content: center;
     margin-bottom: 10px;
@@ -125,8 +127,8 @@
             z-index: 2;
         }
 
-&.is-selected {
-            background-color: var(--bulma-link) !important; // Color dinámico del tema
+        &.is-selected {
+            background-color: var(--bulma-link) !important;
             color: white !important;
             border-color: var(--bulma-link) !important;
             box-shadow: 0 0 10px var(--bulma-link);
@@ -134,14 +136,88 @@
         }
     }
 }
-/* Asegúrate de que el selector sea específico para ganar la prioridad en Chrome */
+
 .botones-horizontal.buttons.has-addons {
     .button.is-selected {
         background-color: var(--bulma-link) !important;
         color: #ffffff !important;
         border-color: var(--bulma-link) !important;
         box-shadow: 0 0 10px var(--bulma-link);
-        /* Esto ayuda a Chrome a renderizar el color correctamente */
-        -webkit-appearance: none; 
+        -webkit-appearance: none;
+    }
+}
+nav.navbar.nav-base-moderna {
+    background-color: #2e3034 !important;
+    min-height: 3.5rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+
+    // Título pasivo
+    .navbar-link.nav-enlace {
+        background-color: transparent !important;
+        cursor: default;
+
+        &:hover {
+            color: white !important;
+            border-bottom: none !important;
+        }
+    }
+    .navbar-brand {
+        margin-left: -2rem !important; // Forzamos inicio en el pixel 0
+        background-color: transparent !important;
+
+        .logo-ajustado {
+            padding-left: 0.5rem !important; // Solo un pequeño respiro del borde físico
+            padding-right: 1rem !important;
+            background-color: transparent !important;
+            display: flex;
+            align-items: center;
+
+            &:hover {
+                background-color: transparent !important;
+            }
+        }
+    }
+    .texto-logotipo {
+        color: white !important;
+        font-size: 1.2rem;
+        font-weight: 800;
+        letter-spacing: 0.5px;
+        margin-left: -5px; // Ajuste fino para pegar más la letra al icono
+    }
+    .navbar-link.nav-enlace {
+        background-color: transparent !important;
+        cursor: default;
+
+        &:hover {
+            color: white !important;
+            border-bottom: none !important;
+        }
+    }
+
+    .navbar-dropdown.glass-menu {
+        background-color: rgba(var(--bulma-scheme-main-rgb), 0.5) !important;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px !important;
+        min-width: 180px !important;
+        padding: 0.4rem;
+        margin-top: 2px;
+
+        .navbar-item {
+            color: var(--bulma-text) !important;
+            opacity: 0.8;
+            font-size: 0.85rem;
+            padding: 0.5rem 0.8rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+
+            &:hover {
+                opacity: 1;
+                background-color: var(--bulma-link) !important;
+                color: white !important;
+                transform: scale(1.02);
+            }
+        }
     }
 }
