@@ -21,7 +21,9 @@
     border: 1px solid var(--bulma-border);
     transition: all 0.4s ease;
 }
-
+.titulo-seccion-dinamico {
+    color: var(--bulma-text) !important;
+}
 .entradasTexto {
     @extend .input;
     @extend .is-rounded;

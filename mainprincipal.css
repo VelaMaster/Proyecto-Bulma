@@ -22727,6 +22727,10 @@ has-background-danger.is-hoverable:active {
   transition: all 0.4s ease;
 }
 
+.titulo-seccion-dinamico {
+  color: var(--bulma-text) !important;
+}
+
 .entradasTexto {
   width: 100%;
   max-width: 300px;
