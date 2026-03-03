@@ -146,6 +146,7 @@
         -webkit-appearance: none;
     }
 }
+
 nav.navbar.nav-base-moderna {
     background-color: #2e3034 !important;
     min-height: 3.5rem !important;
@@ -162,6 +163,7 @@ nav.navbar.nav-base-moderna {
             border-bottom: none !important;
         }
     }
+
     .navbar-brand {
         margin-left: -2rem !important; // Forzamos inicio en el pixel 0
         background-color: transparent !important;
@@ -178,6 +180,7 @@ nav.navbar.nav-base-moderna {
             }
         }
     }
+
     .texto-logotipo {
         color: white !important;
         font-size: 1.2rem;
@@ -185,6 +188,7 @@ nav.navbar.nav-base-moderna {
         letter-spacing: 0.5px;
         margin-left: -5px; // Ajuste fino para pegar más la letra al icono
     }
+
     .navbar-link.nav-enlace {
         background-color: transparent !important;
         cursor: default;
@@ -211,6 +215,9 @@ nav.navbar.nav-base-moderna {
             padding: 0.5rem 0.8rem;
             border-radius: 8px;
             transition: all 0.2s ease;
+            margin-left: 10px;
+            margin-right: 10px;
+            ;
 
             &:hover {
                 opacity: 1;
@@ -220,4 +227,5 @@ nav.navbar.nav-base-moderna {
             }
         }
     }
+
 }

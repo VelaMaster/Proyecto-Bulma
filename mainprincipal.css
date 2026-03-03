@@ -22887,6 +22887,8 @@ nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item {
   padding: 0.5rem 0.8rem;
   border-radius: 8px;
   transition: all 0.2s ease;
+  margin-left: 10px;
+  margin-right: 10px;
 }
 nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item:hover {
   opacity: 1;
