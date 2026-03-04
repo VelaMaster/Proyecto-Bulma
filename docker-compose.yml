@@ -1,0 +1,21 @@
+services:
+  # Servidor Web (PHP + Apache)
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    volumes:
+      - .:/var/www/html
+    environment:
+      - DB_HOST=db
+      - DB_PATH=/firebird/data/inventario.fdb
+
+  # Servidor de Base de Datos (Firebird)
+  db:
+    image: jacobalberty/firebird:latest
+    ports:
+      - "3050:3050"
+    environment:
+      - ISC_PASSWORD=masterkey
+    volumes:
+      - ./database:/firebird/data
