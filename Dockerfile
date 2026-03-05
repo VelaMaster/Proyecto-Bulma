@@ -1,13 +1,13 @@
 FROM php:8.2-apache
 
-# Instalamos las librerías del sistema necesarias para Firebird
+# Instalamos dependencias del sistema para el cliente de Firebird
 RUN apt-get update && apt-get install -y \
-    libib-util \
+    libfbclient2 \
     firebird-dev \
-    && docker-php-ext-install pdo_firebird
+    && rm -rf /var/lib/apt/lists/*
 
-# Activamos el modo rewrite de Apache para Bulma/Rutas
+# Instalamos la extensión PDO para Firebird
+RUN docker-php-ext-install pdo_firebird
+
+# Activamos rewrite para las rutas de tu app
 RUN a2enmod rewrite
-
-# Reiniciamos Apache para aplicar cambios
-RUN service apache2 restart

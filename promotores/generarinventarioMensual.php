@@ -134,53 +134,68 @@
 
                     fetch('buscarLecheria.php?q=' + encodeURIComponent(texto))
                         .then(response => {
-                            if (!response.ok) {
-                                throw new Error("Error HTTP " + response.status);
-                            }
-                            // Primero lee como texto para ver qué llegó realmente
+                            if (!response.ok) return response.text().then(t => {
+                                throw new Error(t)
+                            });
                             return response.text();
                         })
                         .then(textoRaw => {
-                            console.log("Respuesta raw del servidor:", textoRaw); // <- para depurar
-                            const datos = JSON.parse(textoRaw); // ahora parsea
-
-                            listaSugerencias.innerHTML = '';
-
-                            if (!Array.isArray(datos) || datos.length === 0) {
-                                dropdown.style.display = 'none';
+                            console.log("Contenido recibido:", textoRaw); // Esto te dirá qué llega realmente
+                            if (!textoRaw.trim()) {
+                                console.warn("Respuesta totalmente vacía del servidor.");
                                 return;
                             }
 
-                            datos.forEach(item => {
-                                const option = document.createElement('a');
-                                option.className = 'dropdown-item';
-                                option.style.cursor = 'pointer';
+                            try {
+                                const datos = JSON.parse(textoRaw);
 
-                                option.innerHTML = `
-                <strong>${item.LECHER}</strong> - ${item.NOMBRELECH}
-                <br>
-                <small>${item.MUNICIPIO_NOMBRE ?? ''} - ${item.LOCALIDAD_DESC ?? ''}</small>
-            `;
+                                if (datos.error) {
+                                    console.error("Error del servidor:", datos.mensaje);
+                                    return;
+                                }
 
-                                option.addEventListener('click', () => {
-                                    inputLecheria.value = item.LECHER;
-                                    document.getElementById('campoAlmacen').value = item.NOMBRELECH ?? '';
-                                    document.getElementById('campoMunicipio').value = item.MUNICIPIO_NOMBRE ?? '';
-                                    document.getElementById('campoComunidad').value = item.LOCALIDAD_DESC ?? '';
+                                listaSugerencias.innerHTML = ''; // Limpiar resultados anteriores
+
+                                if (!Array.isArray(datos) || datos.length === 0) {
                                     dropdown.style.display = 'none';
+                                    return;
+                                }
+
+                                // Generar los elementos del dropdown
+                                datos.forEach(item => {
+                                    const option = document.createElement('a');
+                                    option.className = 'dropdown-item';
+                                    option.style.cursor = 'pointer';
+
+                                    // Usamos los nombres de columnas que vienen en tu JSON
+                                    option.innerHTML = `
+                    <strong>${item.LECHER}</strong> - ${item.NOMBRELECH}
+                    <br>
+                    <small>${item.MUNICIPIO_NOMBRE ?? ''} - ${item.LOCALIDAD_DESC ?? ''}</small>
+                `;
+
+                                    // Al hacer clic, llenamos los inputs automáticos
+                                    option.addEventListener('click', () => {
+                                        inputLecheria.value = item.LECHER;
+                                        document.getElementById('campoAlmacen').value = item.NOMBRELECH ?? '';
+                                        document.getElementById('campoMunicipio').value = item.MUNICIPIO_NOMBRE ?? '';
+                                        document.getElementById('campoComunidad').value = item.LOCALIDAD_DESC ?? '';
+                                        dropdown.style.display = 'none'; // Cerrar el menú
+                                    });
+
+                                    listaSugerencias.appendChild(option);
                                 });
 
-                                listaSugerencias.appendChild(option);
-                            });
+                                dropdown.style.display = 'block'; // Mostrar el menú con los resultados
 
-                            dropdown.style.display = 'block';
+                            } catch (e) {
+                                console.error("Error parseando JSON:", e);
+                            }
                         })
                         .catch(error => {
-                            console.error('Error en fetch:', error);
+                            console.error('Error detallado:', error.message);
                         });
-
-                }, 250);
-
+                }, 300);
             });
 
             // Ocultar al hacer click fuera
@@ -189,7 +204,6 @@
                     dropdown.style.display = 'none';
                 }
             });
-
         });
     </script>
 </body>

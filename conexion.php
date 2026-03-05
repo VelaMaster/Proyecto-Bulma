@@ -5,11 +5,16 @@ $user = 'SYSDBA';
 $pass = '290990';
 
 try {
+    // Definimos el DSN para Firebird con UTF8 para evitar errores de caracteres
     $dsn = "firebird:dbname=$host/3050:$base_datos;charset=UTF8";
     $pdo = new PDO($dsn, $user, $pass);
+    
+    // Configuramos para que cualquier error lance una excepción visible
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
+
 } catch (PDOException $e) {
-    // No hacer nada, $pdo quedará null
-    // El archivo que hizo require_once debe verificar si $pdo existe
-    $pdo = null;
+    header('Content-Type: application/json');
+    echo json_encode(["error" => true, "mensaje" => "Error de conexión: " . $e->getMessage()]);
+    exit;
 }
