@@ -1,3 +1,6 @@
+<?php 
+require_once 'conexion.php'; 
+?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">
 
@@ -44,6 +47,9 @@
                     Ingresar
                 </button>
             </form>
+            <p class="is-size-7 mt-4" style="color: var(--bulma-text-soft); opacity: 0.8; font-weight: bold;">
+             Conectado a: <span style="color: var(--bulma-link);"><?php echo $origen_conexion; ?></span>
+            </p>
         </div>
     </div>
     <script src="js/temas.js"></script>
