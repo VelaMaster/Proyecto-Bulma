@@ -16,11 +16,15 @@ try {
     $patron = '%' . strtoupper($q) . '%';
 
     // Nota: Usamos UPPER() y TRIM() para limpiar los datos de Firebird
+// ... (resto del código igual hasta el SQL)
+
     $sql = "SELECT FIRST 20
                 L.LECHER,
                 TRIM(L.NOMBRELECH) as NOMBRELECH,
                 TRIM(M.MUN_DESCRIPCION) as MUNICIPIO_NOMBRE,
-                TRIM(LOC.LOC_DESCRIPCION) as LOCALIDAD_DESC
+                TRIM(LOC.LOC_DESCRIPCION) as LOCALIDAD_DESC,
+                L.NUM_TIENDA,
+                TRIM(L.ALMACEN_RURAL) as ALMACEN_RURAL
             FROM LECHERIA L
             LEFT JOIN LOCALIDAD LOC ON 
                 (L.EFD_NUMERO = LOC.EFD_NUMERO AND L.MUN_NUMERO = LOC.MUN_NUMERO AND L.LOC_NUMERO = LOC.LOC_NUMERO)
@@ -29,6 +33,8 @@ try {
             WHERE L.EFD_NUMERO = 20
             AND (CAST(L.LECHER AS VARCHAR(20)) LIKE :query1 OR UPPER(L.NOMBRELECH) LIKE :query2)
             ORDER BY L.NOMBRELECH";
+
+// ... (resto del código igual)
 
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':query1', $patron, PDO::PARAM_STR);

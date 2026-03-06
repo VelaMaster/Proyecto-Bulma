@@ -22899,4 +22899,48 @@ nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item:hover {
   background-color: var(--bulma-link) !important;
   color: white !important;
   transform: scale(1.02);
+}
+
+.dropdown-menu {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.dropdown-content.glass-menu {
+  background-color: var(--bulma-scheme-main-ter) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--bulma-border);
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+  padding: 0.5rem;
+}
+.dropdown-content.glass-menu .dropdown-item {
+  color: var(--bulma-text) !important;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  margin-bottom: 2px;
+  transition: all 0.2s ease;
+}
+.dropdown-content.glass-menu .dropdown-item strong {
+  color: var(--bulma-link);
+}
+.dropdown-content.glass-menu .dropdown-item small {
+  color: var(--bulma-text-weak);
+}
+.dropdown-content.glass-menu .dropdown-item:hover {
+  background-color: var(--bulma-link) !important;
+  color: white !important;
+}
+.dropdown-content.glass-menu .dropdown-item:hover strong, .dropdown-content.glass-menu .dropdown-item:hover small {
+  color: white !important;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }/*# sourceMappingURL=mainprincipal.css.map */

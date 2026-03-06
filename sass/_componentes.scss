@@ -231,3 +231,47 @@ nav.navbar.nav-base-moderna {
     }
 
 }
+.dropdown-menu {
+    // Para que el menú se despliegue con suavidad
+    animation: fadeIn 0.2s ease-out;
+}
+
+.dropdown-content.glass-menu {
+    background-color: var(--bulma-scheme-main-ter) !important; // Fondo sólido adaptable
+    backdrop-filter: blur(12px); // Efecto de desenfoque de fondo
+    border: 1px solid var(--bulma-border);
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); // Sombra para dar profundidad
+    padding: 0.5rem;
+
+    .dropdown-item {
+        color: var(--bulma-text) !important;
+        font-size: 0.9rem;
+        border-radius: 8px;
+        margin-bottom: 2px;
+        transition: all 0.2s ease;
+
+        strong {
+            color: var(--bulma-link); // Resalta la clave LECHER
+        }
+
+        small {
+            color: var(--bulma-text-weak);
+        }
+
+        &:hover {
+            background-color: var(--bulma-link) !important;
+            color: white !important;
+            
+            strong, small {
+                color: white !important;
+            }
+        }
+    }
+}
+
+// Animación de entrada
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}

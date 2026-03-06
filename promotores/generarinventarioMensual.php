@@ -50,7 +50,8 @@
                             <div class="field">
                                 <label class="label has-text-white">Fecha</label>
                                 <div class="control">
-                                    <input class="input entradasTexto" type="date" name="fecha" value="<?php echo date('Y-m-d'); ?>" required>
+                                    <input class="input entradasTexto" type="date" name="fecha"
+                                        value="<?php echo date('Y-m-d'); ?>" required>
                                 </div>
                             </div>
                         </div>
@@ -59,10 +60,14 @@
                             <div class="field">
                                 <label class="label has-text-white">Clave del punto de venta (LECHER)</label>
                                 <div class="control is-expanded has-icons-left">
-                                    <input class="input entradasTexto" type="text" id="inputLecheria" name="clave_punto_venta" autocomplete="off" placeholder="Escribe clave o nombre..." required>
+                                    <input class="input entradasTexto" type="text" id="inputLecheria"
+                                        name="clave_punto_venta" autocomplete="off"
+                                        placeholder="Escribe clave o nombre..." required>
                                     <span class="icon is-small is-left"><i class="fas fa-search"></i></span>
-                                    <div id="dropdown-menu" class="dropdown-menu" style="display:none; position:absolute; width:100%; z-index:100;">
-                                        <div class="dropdown-content glass-menu" id="lista-sugerencias" style="max-height: 200px; overflow-y: auto;"></div>
+                                    <div id="dropdown-menu" class="dropdown-menu"
+                                        style="display:none; position:absolute; width:100%; z-index:100;">
+                                        <div class="dropdown-content glass-menu" id="lista-sugerencias"
+                                            style="max-height: 200px; overflow-y: auto;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -72,7 +77,8 @@
                             <div class="field">
                                 <label class="label has-text-white">Clave de la tienda</label>
                                 <div class="control">
-                                    <input class="input entradasTexto" type="text" name="clave_tienda" placeholder="Opcional">
+                                    <input class="input entradasTexto" type="text" id="campoTienda" name="clave_tienda"
+                                        placeholder="Automático" readonly>
                                 </div>
                             </div>
                         </div>
@@ -81,7 +87,8 @@
                             <div class="field">
                                 <label class="label has-text-white">Almacén que surte</label>
                                 <div class="control">
-                                    <input class="input entradasTexto" type="text" id="campoAlmacen" name="almacen_nombre" readonly>
+                                    <input class="input entradasTexto" type="text" id="campoAlmacen"
+                                        name="almacen_nombre" readonly>
                                 </div>
                             </div>
                         </div>
@@ -90,7 +97,8 @@
                             <div class="field">
                                 <label class="label has-text-white">Municipio</label>
                                 <div class="control">
-                                    <input class="input entradasTexto" type="text" id="campoMunicipio" name="municipio" readonly>
+                                    <input class="input entradasTexto" type="text" id="campoMunicipio" name="municipio"
+                                        readonly>
                                 </div>
                             </div>
                         </div>
@@ -99,7 +107,41 @@
                             <div class="field">
                                 <label class="label has-text-white">Comunidad</label>
                                 <div class="control">
-                                    <input class="input entradasTexto" type="text" id="campoComunidad" name="comunidad" readonly>
+                                    <input class="input entradasTexto" type="text" id="campoComunidad" name="comunidad"
+                                        readonly>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="title is-4 titulo-seccion-dinamico mb-5">
+                lll. Cobertura social y dotacion asignada segun padron de beneficiarios
+            </h2>
+            <div class="box glass-menu" style="background-color: rgba(46, 48, 52, 0.4) !important;">
+                <form action="procesarInventario.php" method="POST">
+                    <div class="columns is-multiline">
+                        <div class="column is-4">
+                            <div class="field">
+                                <label class="label has-text-white">Clave de la tienda</label>
+                                <div class="control">
+                                    <input class="input entradasTexto" type="text" id="campoTienda" name="clave_tienda"
+                                        placeholder="Automático" readonly>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="column is-4">
+                            <div class="field">
+                                <label class="label has-text-white">Almacén que surte</label>
+                                <div class="control">
+                                    <input class="input entradasTexto" type="text" id="campoAlmacen"
+                                        name="almacen_nombre" readonly>
                                 </div>
                             </div>
                         </div>
@@ -119,7 +161,7 @@
 
             let timeoutBusqueda;
 
-            inputLecheria.addEventListener('input', function() {
+            inputLecheria.addEventListener('input', function () {
 
                 const texto = this.value.trim();
 
@@ -173,20 +215,19 @@
                     <br>
                     <small>${item.MUNICIPIO_NOMBRE ?? ''} - ${item.LOCALIDAD_DESC ?? ''}</small>
                 `;
-
-                                    // Al hacer clic, llenamos los inputs automáticos
-                                    option.addEventListener('click', () => {
-                                        inputLecheria.value = item.LECHER;
-                                        document.getElementById('campoAlmacen').value = item.NOMBRELECH ?? '';
-                                        document.getElementById('campoMunicipio').value = item.MUNICIPIO_NOMBRE ?? '';
-                                        document.getElementById('campoComunidad').value = item.LOCALIDAD_DESC ?? '';
-                                        dropdown.style.display = 'none'; // Cerrar el menú
-                                    });
+option.addEventListener('click', () => {
+    inputLecheria.value = item.LECHER;
+    document.getElementById('campoTienda').value = item.NUM_TIENDA ?? '';
+    document.getElementById('campoAlmacen').value = item.ALMACEN_RURAL ?? '';
+    document.getElementById('campoMunicipio').value = item.MUNICIPIO_NOMBRE ?? '';
+    document.getElementById('campoComunidad').value = item.LOCALIDAD_DESC ?? '';
+    dropdown.style.display = 'none';
+});
 
                                     listaSugerencias.appendChild(option);
                                 });
 
-                                dropdown.style.display = 'block'; // Mostrar el menú con los resultados
+                                dropdown.style.display = 'block';
 
                             } catch (e) {
                                 console.error("Error parseando JSON:", e);
@@ -199,7 +240,7 @@
             });
 
             // Ocultar al hacer click fuera
-            document.addEventListener('click', function(e) {
+            document.addEventListener('click', function (e) {
                 if (!inputLecheria.contains(e.target) && !dropdown.contains(e.target)) {
                     dropdown.style.display = 'none';
                 }
