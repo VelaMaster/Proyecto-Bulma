@@ -1,3 +1,6 @@
 database/*.sql filter=lfs diff=lfs merge=lfs -text
 .fbk filter=lfs diff=lfs merge=lfs -text
 *.fbk filter=lfs diff=lfs merge=lfs -text
+*.fdb filter=lfs diff=lfs merge=lfs -text
+database/*.fdb filter=lfs diff=lfs merge=lfs -text
+database/*.fbk filter=lfs diff=lfs merge=lfs -text

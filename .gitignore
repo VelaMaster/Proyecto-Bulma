@@ -1,3 +1,6 @@
 *.fbk
 *.fdb
 database/
+.DS_Store
+database/*.fdb
+database/*.fbk
