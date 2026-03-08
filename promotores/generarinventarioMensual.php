@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,7 +24,7 @@
 
         <div id="navMenuLiconsa" class="navbar-menu">
             <div class="navbar-item has-dropdown is-hoverable">
-                <a href="./inicio.php" class="navbar-item">Inicio</a>
+                <a href="./inicio.php" class="navbar-inicio">Inicio</a>
             </div>
             <div class="navbar-item has-dropdown is-hoverable">
                 <a class="navbar-link is-arrowless nav-enlace">Reporte mensual lecherías</a>
@@ -44,7 +43,7 @@
             </h2>
 
             <div class="box glass-menu" style="background-color: rgba(46, 48, 52, 0.4) !important;">
-                <form action="procesarInventario.php" method="POST">
+                <form id="formInventario">
                     <div class="columns is-multiline">
                         <div class="column is-4">
                             <div class="field">
@@ -121,32 +120,37 @@
     <section class="section">
         <div class="container">
             <h2 class="title is-4 titulo-seccion-dinamico mb-5">
-                lll. Cobertura social y dotacion asignada segun padron de beneficiarios
+                lll. Cobertura social y dotación asignada según padrón de beneficiarios
             </h2>
             <div class="box glass-menu" style="background-color: rgba(46, 48, 52, 0.4) !important;">
-                <form action="procesarInventario.php" method="POST">
-                    <div class="columns is-multiline">
-                        <div class="column is-4">
-                            <div class="field">
-                                <label class="label has-text-white">Clave de la tienda</label>
-                                <div class="control">
-                                    <input class="input entradasTexto" type="text" id="campoTienda" name="clave_tienda"
-                                        placeholder="Automático" readonly>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="column is-4">
-                            <div class="field">
-                                <label class="label has-text-white">Almacén que surte</label>
-                                <div class="control">
-                                    <input class="input entradasTexto" type="text" id="campoAlmacen"
-                                        name="almacen_nombre" readonly>
-                                </div>
+                <div class="columns is-multiline">
+                    <div class="column is-4">
+                        <div class="field">
+                            <label class="label has-text-white">Número de Hogares</label>
+                            <div class="control">
+                                <input class="input entradasTexto" type="text" id="campoHogares" readonly placeholder="0">
                             </div>
                         </div>
                     </div>
-                </form>
+
+                    <div class="column is-4">
+                        <div class="field">
+                            <label class="label has-text-white">Menores de 12 años</label>
+                            <div class="control">
+                                <input class="input entradasTexto" type="text" id="campoMenores" readonly placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="column is-4">
+                        <div class="field">
+                            <label class="label has-text-white">Mayores de 12 años</label>
+                            <div class="control">
+                                <input class="input entradasTexto" type="text" id="campoMayores" readonly placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -162,9 +166,7 @@
             let timeoutBusqueda;
 
             inputLecheria.addEventListener('input', function () {
-
                 const texto = this.value.trim();
-
                 clearTimeout(timeoutBusqueda);
 
                 if (texto.length < 1) {
@@ -173,74 +175,52 @@
                 }
 
                 timeoutBusqueda = setTimeout(() => {
-
                     fetch('buscarLecheria.php?q=' + encodeURIComponent(texto))
-                        .then(response => {
-                            if (!response.ok) return response.text().then(t => {
-                                throw new Error(t)
-                            });
-                            return response.text();
-                        })
-                        .then(textoRaw => {
-                            console.log("Contenido recibido:", textoRaw); // Esto te dirá qué llega realmente
-                            if (!textoRaw.trim()) {
-                                console.warn("Respuesta totalmente vacía del servidor.");
+                        .then(response => response.json())
+                        .then(datos => {
+                            listaSugerencias.innerHTML = '';
+
+                            if (!Array.isArray(datos) || datos.length === 0) {
+                                dropdown.style.display = 'none';
                                 return;
                             }
 
-                            try {
-                                const datos = JSON.parse(textoRaw);
+                            datos.forEach(item => {
+                                const option = document.createElement('a');
+                                option.className = 'dropdown-item';
+                                option.style.cursor = 'pointer';
+                                option.innerHTML = `
+                                    <strong>${item.LECHER}</strong> - ${item.NOMBRELECH}
+                                    <br>
+                                    <small>${item.MUNICIPIO_NOMBRE ?? ''} - ${item.LOCALIDAD_DESC ?? ''}</small>
+                                `;
 
-                                if (datos.error) {
-                                    console.error("Error del servidor:", datos.mensaje);
-                                    return;
-                                }
+                                option.addEventListener('click', () => {
+                                    // Rellenar Sección I
+                                    inputLecheria.value = item.LECHER;
+                                    document.getElementById('campoTienda').value = item.NUM_TIENDA ?? '';
+                                    document.getElementById('campoAlmacen').value = item.ALMACEN_RURAL ?? '';
+                                    document.getElementById('campoMunicipio').value = item.MUNICIPIO_NOMBRE ?? '';
+                                    document.getElementById('campoComunidad').value = item.LOCALIDAD_DESC ?? '';
 
-                                listaSugerencias.innerHTML = ''; // Limpiar resultados anteriores
+                                    // Rellenar Sección III (Cobertura Social)
+                                    document.getElementById('campoHogares').value = item.TOTAL_HOGARES ?? 0;
+                                    document.getElementById('campoMenores').value = item.TOTAL_INFANTILES ?? 0;
+                                    document.getElementById('campoMayores').value = item.TOTAL_RESTO ?? 0;
 
-                                if (!Array.isArray(datos) || datos.length === 0) {
                                     dropdown.style.display = 'none';
-                                    return;
-                                }
-
-                                // Generar los elementos del dropdown
-                                datos.forEach(item => {
-                                    const option = document.createElement('a');
-                                    option.className = 'dropdown-item';
-                                    option.style.cursor = 'pointer';
-
-                                    // Usamos los nombres de columnas que vienen en tu JSON
-                                    option.innerHTML = `
-                    <strong>${item.LECHER}</strong> - ${item.NOMBRELECH}
-                    <br>
-                    <small>${item.MUNICIPIO_NOMBRE ?? ''} - ${item.LOCALIDAD_DESC ?? ''}</small>
-                `;
-option.addEventListener('click', () => {
-    inputLecheria.value = item.LECHER;
-    document.getElementById('campoTienda').value = item.NUM_TIENDA ?? '';
-    document.getElementById('campoAlmacen').value = item.ALMACEN_RURAL ?? '';
-    document.getElementById('campoMunicipio').value = item.MUNICIPIO_NOMBRE ?? '';
-    document.getElementById('campoComunidad').value = item.LOCALIDAD_DESC ?? '';
-    dropdown.style.display = 'none';
-});
-
-                                    listaSugerencias.appendChild(option);
                                 });
 
-                                dropdown.style.display = 'block';
+                                listaSugerencias.appendChild(option);
+                            });
 
-                            } catch (e) {
-                                console.error("Error parseando JSON:", e);
-                            }
+                            dropdown.style.display = 'block';
                         })
-                        .catch(error => {
-                            console.error('Error detallado:', error.message);
-                        });
+                        .catch(error => console.error('Error:', error));
                 }, 300);
             });
 
-            // Ocultar al hacer click fuera
-            document.addEventListener('click', function (e) {
+            document.addEventListener('click', (e) => {
                 if (!inputLecheria.contains(e.target) && !dropdown.contains(e.target)) {
                     dropdown.style.display = 'none';
                 }

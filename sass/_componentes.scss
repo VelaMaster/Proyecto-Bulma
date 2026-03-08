@@ -21,9 +21,11 @@
     border: 1px solid var(--bulma-border);
     transition: all 0.4s ease;
 }
+
 .titulo-seccion-dinamico {
     color: var(--bulma-text) !important;
 }
+
 .entradasTexto {
     @extend .input;
     @extend .is-rounded;
@@ -150,19 +152,25 @@
 }
 
 nav.navbar.nav-base-moderna {
-    background-color: #2e3034 !important;
+    background-color: #292724;
     min-height: 3.5rem !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
+    transition: all 0.4 ease;
+    border-bottom: 1px solid var(--bulma-border-weak);
 
-    // Título pasivo
-    .navbar-link.nav-enlace {
+    .navbar-item.has-dropdown .navbar-link{
+        color: white;
         background-color: transparent !important;
         cursor: default;
 
         &:hover {
             color: white !important;
             border-bottom: none !important;
+        }
+
+        &:hover {
+            border-color: var(--bulma-link) !important;
         }
     }
 
@@ -192,6 +200,7 @@ nav.navbar.nav-base-moderna {
     }
 
     .navbar-link.nav-enlace {
+        color: white !important;
         background-color: transparent !important;
         cursor: default;
 
@@ -230,6 +239,19 @@ nav.navbar.nav-base-moderna {
         }
     }
 
+.navbar-inicio {
+        color: white !important;
+        padding: 0.5rem 0.75rem;
+        display: flex;
+        align-items: center;
+        font-weight: 500;
+        transition: all 0.3s ease;
+
+        &:hover {
+            color: var(--bulma-link) !important;
+            background-color: transparent !important;
+        }
+    }
 }
 .dropdown-menu {
     // Para que el menú se despliegue con suavidad
@@ -262,16 +284,23 @@ nav.navbar.nav-base-moderna {
         &:hover {
             background-color: var(--bulma-link) !important;
             color: white !important;
-            
-            strong, small {
+
+            strong,
+            small {
                 color: white !important;
             }
         }
     }
 }
 
-// Animación de entrada
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

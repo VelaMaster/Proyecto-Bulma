@@ -37,21 +37,21 @@ $nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : $_SESSION['
             <div class="navbar-start">
 
                 <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link is-arrowless nav-enlace">Inventario mensual de leche en polvo.</a>
+                    <a class="navbar-link is-arrowless nav-enlace">Inventario mensual de leche en polvo</a>
                     <div class="navbar-dropdown is-boxed glass-menu">
                         <a href = "generarinventarioMensual.php" class = "navbar-item">Generar</a>
                         <a href = "consultarinventarioMensual.php" class = "navbar-item">Consultar</a>
                     </div>
                 </div>
                 <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link is-arrowless nav-enlace">Reporte mensual de la operacion en lecherias con venta de leche en polvo. </a>
+                    <a class="navbar-link is-arrowless nav-enlace">Reporte mensual de la operacion en lecherias con venta de leche en polvo </a>
                     <div class="navbar-dropdown is-boxed glass-menu">
                         <a class="navbar-item">Generar</a>
                         <a class="navbar-item">Consultar</a>
                     </div>
                 </div>
                 <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link is-arrowless nav-enlace">Requerimiento de leche. </a>
+                    <a class="navbar-link is-arrowless nav-enlace">Requerimiento de leche </a>
                     <div class="navbar-dropdown is-boxed glass-menu">
                         <a class="navbar-item">Generar</a>
                         <a class="navbar-item">Consultar</a>

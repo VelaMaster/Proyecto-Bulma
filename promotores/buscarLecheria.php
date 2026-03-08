@@ -15,16 +15,17 @@ if ($q === '') {
 try {
     $patron = '%' . strtoupper($q) . '%';
 
-    // Nota: Usamos UPPER() y TRIM() para limpiar los datos de Firebird
-// ... (resto del código igual hasta el SQL)
-
+    
     $sql = "SELECT FIRST 20
                 L.LECHER,
                 TRIM(L.NOMBRELECH) as NOMBRELECH,
                 TRIM(M.MUN_DESCRIPCION) as MUNICIPIO_NOMBRE,
                 TRIM(LOC.LOC_DESCRIPCION) as LOCALIDAD_DESC,
                 L.NUM_TIENDA,
-                TRIM(L.ALMACEN_RURAL) as ALMACEN_RURAL
+                TRIM(L.ALMACEN_RURAL) as ALMACEN_RURAL,
+                L.CC_FAM as TOTAL_HOGARES,
+                (L.CC_BT1 + L.CC_BT2) as TOTAL_INFANTILES,
+                (L.CC_BT3 + L.CC_BT4 + L.CC_BT5 + L.CC_BT6 + L.CC_BT7) as TOTAL_RESTO
             FROM LECHERIA L
             LEFT JOIN LOCALIDAD LOC ON 
                 (L.EFD_NUMERO = LOC.EFD_NUMERO AND L.MUN_NUMERO = LOC.MUN_NUMERO AND L.LOC_NUMERO = LOC.LOC_NUMERO)
@@ -34,8 +35,6 @@ try {
             AND (CAST(L.LECHER AS VARCHAR(20)) LIKE :query1 OR UPPER(L.NOMBRELECH) LIKE :query2)
             ORDER BY L.NOMBRELECH";
 
-// ... (resto del código igual)
-
     $stmt = $pdo->prepare($sql);
     $stmt->bindValue(':query1', $patron, PDO::PARAM_STR);
     $stmt->bindValue(':query2', $patron, PDO::PARAM_STR);
@@ -43,11 +42,8 @@ try {
     $stmt->execute();
     $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Si fetchAll devuelve false, aseguramos un array vacío
     $data = $resultados ? $resultados : [];
 
-    // IMPORTANTE: Asegurar que los datos sean UTF-8 antes de codificar
-    // Firebird suele devolver caracteres en Windows-1252 o similar si el Charset es NONE
     array_walk_recursive($data, function (&$item) {
         if (is_string($item)) {
             $item = mb_convert_encoding($item, 'UTF-8', 'UTF-8');

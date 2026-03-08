@@ -22833,18 +22833,24 @@ has-background-danger.is-hoverable:active {
 }
 
 nav.navbar.nav-base-moderna {
-  background-color: #2e3034 !important;
+  background-color: #292724;
   min-height: 3.5rem !important;
   padding-left: 0 !important;
   padding-right: 0 !important;
+  transition: all 0.4 ease;
+  border-bottom: 1px solid var(--bulma-border-weak);
 }
-nav.navbar.nav-base-moderna .navbar-link.nav-enlace {
+nav.navbar.nav-base-moderna .navbar-item.has-dropdown .navbar-link {
+  color: white;
   background-color: transparent !important;
   cursor: default;
 }
-nav.navbar.nav-base-moderna .navbar-link.nav-enlace:hover {
+nav.navbar.nav-base-moderna .navbar-item.has-dropdown .navbar-link:hover {
   color: white !important;
   border-bottom: none !important;
+}
+nav.navbar.nav-base-moderna .navbar-item.has-dropdown .navbar-link:hover {
+  border-color: var(--bulma-link) !important;
 }
 nav.navbar.nav-base-moderna .navbar-brand {
   margin-left: -2rem !important;
@@ -22868,6 +22874,7 @@ nav.navbar.nav-base-moderna .texto-logotipo {
   margin-left: -5px;
 }
 nav.navbar.nav-base-moderna .navbar-link.nav-enlace {
+  color: white !important;
   background-color: transparent !important;
   cursor: default;
 }
@@ -22900,6 +22907,18 @@ nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item:hover {
   color: white !important;
   transform: scale(1.02);
 }
+nav.navbar.nav-base-moderna .navbar-inicio {
+  color: white !important;
+  padding: 0.5rem 0.75rem;
+  display: flex;
+  align-items: center;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+nav.navbar.nav-base-moderna .navbar-inicio:hover {
+  color: var(--bulma-link) !important;
+  background-color: transparent !important;
+}
 
 .dropdown-menu {
   animation: fadeIn 0.2s ease-out;
@@ -22930,7 +22949,8 @@ nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item:hover {
   background-color: var(--bulma-link) !important;
   color: white !important;
 }
-.dropdown-content.glass-menu .dropdown-item:hover strong, .dropdown-content.glass-menu .dropdown-item:hover small {
+.dropdown-content.glass-menu .dropdown-item:hover strong,
+.dropdown-content.glass-menu .dropdown-item:hover small {
   color: white !important;
 }
 
