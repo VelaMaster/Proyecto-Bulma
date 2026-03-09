@@ -23184,7 +23184,7 @@ html[data-theme=light] nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .
 /* --- MODO OSCURO Formularios internos --- */
 html[data-theme=dark] .liquid-glass-box,
 html:not([data-theme=light]) .liquid-glass-box {
-  background: rgba(18, 18, 22, 0.65) !important;
+  background: rgba(42, 42, 51, 0.65) !important;
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
   border-right: 1px solid rgba(0, 0, 0, 0.4);
@@ -23377,4 +23377,122 @@ html[data-theme=light] .label-dinamico {
     width: 100%;
     max-width: 100vw;
   }
+}
+/* =========================================
+   ESTILO DE TABLAS (Cristal Transparente 100%)
+========================================= */
+/* Forzamos que toda la tabla y sus partes internas sean transparentes */
+.tabla-glass,
+.tabla-glass thead,
+.tabla-glass tbody,
+.tabla-glass tr,
+.tabla-glass th,
+.tabla-glass td {
+  background-color: transparent !important;
+}
+
+.tabla-glass {
+  color: var(--bulma-text) !important;
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+/* --- Cabeceras de la tabla --- */
+.tabla-glass th {
+  color: var(--bulma-text) !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  padding: 15px;
+  border-bottom: 2px solid var(--bulma-border) !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  text-align: center;
+  vertical-align: bottom;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); /* Ligero realce del texto */
+}
+
+/* --- Celdas de la tabla --- */
+.tabla-glass td {
+  padding: 15px;
+  border-bottom: 1px solid var(--bulma-border-weak) !important;
+  border-top: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* --- EFECTO COQUETO AL PASAR EL MOUSE (Filas) --- */
+.tabla-glass tbody tr {
+  transition: all 0.3s ease;
+}
+
+.tabla-glass tbody tr:hover td {
+  /* Fondo translúcido de tu color principal */
+  background-color: rgba(var(--bulma-link-rgb), 0.15) !important;
+  /* Pequeño brillo en el texto */
+  color: var(--bulma-link) !important;
+  transform: scale(1.01); /* La fila se agranda apenitas hacia el frente */
+  /* Resplandor sutil */
+  box-shadow: inset 0 0 10px rgba(var(--bulma-link-rgb), 0.1);
+}
+
+/* =========================================
+   Ajustes de Color por Tema para las Tablas
+========================================= */
+/* Tema Oscuro */
+html[data-theme=dark] .tabla-glass th,
+html:not([data-theme=light]) .tabla-glass th {
+  border-bottom-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+html[data-theme=dark] .tabla-glass td,
+html:not([data-theme=light]) .tabla-glass td {
+  border-bottom-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Tema Claro */
+html[data-theme=light] .tabla-glass th {
+  border-bottom-color: rgba(0, 0, 0, 0.15) !important;
+}
+
+html[data-theme=light] .tabla-glass td {
+  border-bottom-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+html[data-theme=light] .tabla-glass th {
+  text-shadow: none; /* Quitamos la sombra del texto en tema claro para que no se vea sucio */
+}
+
+/* =========================================
+   Estilos para Inputs dentro de la tabla
+========================================= */
+.tabla-glass .entradasTexto {
+  height: 36px;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  background-color: rgba(128, 128, 128, 0.1) !important; /* Un hueco muy sutil */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1) !important; /* Sombra interna para parecer hundido */
+  border: 1px solid transparent !important;
+  margin: 0 auto;
+}
+
+.tabla-glass .entradasTexto:hover {
+  transform: scale(1.02);
+  border-color: var(--bulma-link) !important;
+}
+
+.tabla-glass .entradasTexto:focus {
+  transform: scale(1.05); /* Brinca hacia afuera al escribir */
+  border-color: var(--bulma-link) !important;
+  background-color: var(--bulma-scheme-main) !important; /* Se vuelve sólido */
+  box-shadow: 0 0 10px rgba(var(--bulma-link-rgb), 0.4) !important;
 }/*# sourceMappingURL=mainprincipal.css.map */

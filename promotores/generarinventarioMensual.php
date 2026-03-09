@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="stylesheet" href="../mainprincipal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
+
 <body>
     <nav class="navbar nav-base-moderna" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
@@ -34,10 +36,10 @@
         </div>
     </nav>
 
-<section class="section">
+    <section class="section">
         <div class="container">
             <h2 class="title is-4 titulo-seccion-dinamico mb-5">
-                Datos generales del inventario.
+                Datos generales del inventario
             </h2>
 
             <div class="box liquid-glass-box">
@@ -115,12 +117,83 @@
         </div>
     </section>
 
+<section class="section">
+        <div class="container">
+            <h2 class="title is-4 titulo-seccion-dinamico mb-5">
+                l. Existencia de Leche
+            </h2>
+
+            <div class="box liquid-glass-box" style="overflow-x: auto;"> <form id="formInventario">
+                    <table class="table is-fullwidth tabla-glass">
+                        <thead>
+                            <tr>
+                                <th> </th>
+                                <th>Inventario inicial</th>
+                                <th>Abasto total en el mes</th>
+                                <th>Ventas real del mes</th>
+                                <th>Litros registrados</th>
+                                <th>Diferencia entre venta registrada y venta real</th>
+                                <th>Inventario final del mes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                
+                            </tr>
+                            <tr>
+                                <td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td>
+                            </tr>
+                            <tr>
+                                <td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <h2 class="title is-4 titulo-seccion-dinamico mb-5">
+                ll. Surtimientos
+            </h2>
+
+            <div class="box liquid-glass-box" style="overflow-x: auto;">
+                <form id="formInventario">
+                    <table class="table is-fullwidth tabla-glass">
+                        <thead>
+                            <tr>
+                                <th>Fecha </th>
+                                <th>Cajas </th>
+                                <th>Litros </th>
+                                <th>Facturas </th>
+                                <th>Caducidad </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td>
+                            </tr>
+                            <tr>
+                                <td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td>
+                            </tr>
+                            <tr>
+                                <td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+        </div>
+    </section>
+
     <section class="section">
         <div class="container">
             <h2 class="title is-4 titulo-seccion-dinamico mb-5">
                 lll. Cobertura social y dotación asignada según padrón de beneficiarios
             </h2>
-            
+
             <div class="box liquid-glass-box">
                 <div class="columns is-multiline">
                     <div class="column is-4">
@@ -164,7 +237,7 @@
 
             let timeoutBusqueda;
 
-            inputLecheria.addEventListener('input', function () {
+            inputLecheria.addEventListener('input', function() {
                 const texto = this.value.trim();
                 clearTimeout(timeoutBusqueda);
 
@@ -227,5 +300,4 @@
         });
     </script>
 </body>
-
 </html>
