@@ -22703,16 +22703,36 @@ has-background-danger.is-hoverable:active {
   pointer-events: all !important;
 }
 
+/* =========================================
+   TIPOGRAFÍA GLOBAL (Estilo Apple / Moderno)
+========================================= */
+body, button, input, select, textarea {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
+
+/* =========================================
+   AJUSTE DE FONDO TEMA CLARO
+========================================= */
+html[data-theme=light] body {
+  /* Un gris ligeramente más mate y frío para reducir el brillo y que el cristal blanco resalte */
+  background-color: rgba(203, 208, 214, 0.8078431373) !important;
+  transition: background-color 0.4s ease;
+}
+
 .pantallaCentrada {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: var(--bulma-scheme-main-bis);
-  transition: background-color 0.4s ease;
+  background-color: transparent;
+  transition: background-color 0.3s ease;
 }
 
+/* =========================================
+   CONTENEDOR DE INICIO DE SESIÓN (Liquid Glass + Hover)
+========================================= */
 .contenedor-centrado {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 15px;
@@ -22720,45 +22740,153 @@ has-background-danger.is-hoverable:active {
   align-items: center;
   width: 100%;
   max-width: 450px;
-  background-color: var(--bulma-scheme-main);
   padding: 40px;
-  border-radius: 15px;
-  border: 1px solid var(--bulma-border);
+  border-radius: 28px;
+  overflow: hidden;
+  isolation: isolate;
+  backdrop-filter: blur(28px) saturate(120%);
+  -webkit-backdrop-filter: blur(28px) saturate(120%);
+  transition: all 0.4s ease;
+  z-index: 1;
+}
+
+/* Efecto de iluminación al pasar el mouse */
+.contenedor-centrado:hover {
+  transform: translateY(-10px);
+  filter: brightness(1);
+}
+
+/* Capas de Reflejo del Cristal */
+.contenedor-centrado::before,
+.contenedor-centrado::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: -1;
   transition: all 0.4s ease;
 }
 
-.titulo-seccion-dinamico {
-  color: var(--bulma-text) !important;
+/* Asegurar que el contenido no quede tapado por los reflejos */
+.contenedor-centrado form,
+.contenedor-centrado h1,
+.contenedor-centrado .botones-horizontal,
+.contenedor-centrado p {
+  position: relative;
+  z-index: 10;
 }
 
+/* --- MODO OSCURO (Cristal iluminado, un poco más negro) --- */
+html[data-theme=dark] .contenedor-centrado,
+html:not([data-theme=light]) .contenedor-centrado {
+  background: rgba(18, 18, 22, 0.65) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0px 0px 4px 1px rgba(255, 255, 255, 0.1), 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* Brillo extra al hacer hover en oscuro */
+html[data-theme=dark] .contenedor-centrado:hover,
+html:not([data-theme=light]) .contenedor-centrado:hover {
+  box-shadow: inset 0px 0px 6px 2px rgba(255, 255, 255, 0.2), 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(var(--bulma-link-rgb, 59, 130, 246), 0.3);
+}
+
+html[data-theme=dark] .contenedor-centrado::before,
+html:not([data-theme=light]) .contenedor-centrado::before {
+  background: linear-gradient(to left top, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 50%);
+}
+
+html[data-theme=dark] .contenedor-centrado::after,
+html:not([data-theme=light]) .contenedor-centrado::after {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+/* --- MODO CLARO (Cristal Blanco Esmerilado real) --- */
+html[data-theme=light] .contenedor-centrado {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.3) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0px 0px 10px 2px rgba(255, 255, 255, 0.8), 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Brillo extra al hacer hover en claro */
+html[data-theme=light] .contenedor-centrado:hover {
+  box-shadow: inset 0px 0px 15px 4px rgb(255, 255, 255), 0 15px 35px rgba(0, 0, 0, 0.08), 0 0 20px rgba(var(--bulma-link-rgb, 59, 130, 246), 0.15);
+}
+
+html[data-theme=light] .contenedor-centrado::before {
+  background: linear-gradient(to left top, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 50%);
+}
+
+html[data-theme=light] .contenedor-centrado::after {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+/* =========================================
+   INPUTS DE TEXTO (VISIBLES Y TIPOGRAFÍA MODERNA)
+========================================= */
 .entradasTexto {
   width: 100%;
-  max-width: 300px;
-  text-align: center;
-  background-color: transparent;
-  color: var(--bulma-text);
-  border-color: var(--bulma-border);
+  max-width: 100%;
+  text-align: left;
+  padding-left: 1.2rem;
+  color: var(--bulma-text) !important;
   transition: all 0.3s ease-in-out;
+  font-size: 0.95rem; /* Letra un poco más elegante */
+  font-weight: 500;
 }
+
+/* LIMITAR EL TAMAÑO DE LOS INPUTS SOLO EN EL INICIO DE SESIÓN */
+.contenedor-centrado .entradasTexto {
+  max-width: 300px; /* Los hace igual de anchos que el botón */
+}
+
+/* Inputs en Modo Oscuro (Bordes blancos notorios) */
+html[data-theme=dark] .entradasTexto,
+html:not([data-theme=light]) .entradasTexto {
+  background-color: rgba(0, 0, 0, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* Inputs en Modo Claro (Bordes oscuros notorios) */
+html[data-theme=light] .entradasTexto {
+  background-color: rgba(255, 255, 255, 0.5) !important;
+  border: 1px solid rgba(0, 0, 0, 0.25) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
 .entradasTexto::-moz-placeholder {
-  color: var(--bulma-text-weak);
+  color: var(--bulma-text-weak) !important;
+  opacity: 0.8;
+  font-weight: 400;
 }
+
 .entradasTexto::placeholder {
-  color: var(--bulma-text-weak);
+  color: var(--bulma-text-weak) !important;
+  opacity: 0.8;
+  font-weight: 400;
 }
+
 .entradasTexto:hover {
   border-color: var(--bulma-link) !important;
-  filter: brightness(0.8);
-  box-shadow: 0 0 5px var(--bulma-link) !important;
-  opacity: 0.8;
+  opacity: 1;
 }
+
 .entradasTexto:focus {
   border-color: var(--bulma-link) !important;
-  filter: brightness(1.2);
-  box-shadow: 0 0 12px var(--bulma-link) !important;
-  background-color: rgba(128, 128, 128, 0.05);
-  opacity: 1;
+  box-shadow: 0 0 10px rgba(var(--bulma-link-rgb), 0.4) !important;
   outline: none;
+  background-color: var(--bulma-scheme-main) !important;
+}
+
+/* =========================================
+   RESTO DE TUS COMPONENTES (Intactos)
+========================================= */
+.titulo-seccion-dinamico {
+  color: var(--bulma-text) !important;
 }
 
 .olvido-pass {
@@ -22791,6 +22919,7 @@ has-background-danger.is-hoverable:active {
   background-color: var(--bulma-link) !important;
   color: white !important;
   border: none;
+  font-weight: 600; /* Letra de botón más limpia */
   transition: background-color 0.6s ease, transform 0.3s, filter 0.4s;
 }
 .botonTemas:hover {
@@ -22832,33 +22961,31 @@ has-background-danger.is-hoverable:active {
   -webkit-appearance: none;
 }
 
+/* =========================================
+   NAVBAR (Liquid Glass Estilo macOS)
+========================================= */
 nav.navbar.nav-base-moderna {
-  background-color: #292724;
-  min-height: 3.5rem !important;
+  /* Fondo base transparente, el color lo dan los temas */
+  background-color: transparent !important;
+  min-height: 4rem !important; /* Un poco más alta para respirar */
   padding-left: 0 !important;
   padding-right: 0 !important;
-  transition: all 0.4 ease;
-  border-bottom: 1px solid var(--bulma-border-weak);
-}
-nav.navbar.nav-base-moderna .navbar-item.has-dropdown .navbar-link {
-  color: white;
-  background-color: transparent !important;
-  cursor: default;
-}
-nav.navbar.nav-base-moderna .navbar-item.has-dropdown .navbar-link:hover {
-  color: white !important;
-  border-bottom: none !important;
-}
-nav.navbar.nav-base-moderna .navbar-item.has-dropdown .navbar-link:hover {
-  border-color: var(--bulma-link) !important;
+  transition: all 0.4s ease;
+  /* El corazón del Liquid Glass */
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  /* Borde inferior sutil y sombra para separarla del fondo */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  /* --- Elementos de la Navbar --- */
 }
 nav.navbar.nav-base-moderna .navbar-brand {
-  margin-left: -2rem !important;
+  margin-left: 0 !important;
   background-color: transparent !important;
 }
 nav.navbar.nav-base-moderna .navbar-brand .logo-ajustado {
-  padding-left: 0.5rem !important;
-  padding-right: 1rem !important;
+  padding-left: 1.5rem !important; /* Más respiro a los lados */
+  padding-right: 1.5rem !important;
   background-color: transparent !important;
   display: flex;
   align-items: center;
@@ -22867,57 +22994,107 @@ nav.navbar.nav-base-moderna .navbar-brand .logo-ajustado:hover {
   background-color: transparent !important;
 }
 nav.navbar.nav-base-moderna .texto-logotipo {
-  color: white !important;
   font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: 0.5px;
   margin-left: -5px;
+  transition: color 0.4s ease; /* Transición suave de color al cambiar el tema */
 }
 nav.navbar.nav-base-moderna .navbar-link.nav-enlace {
-  color: white !important;
   background-color: transparent !important;
   cursor: default;
+  font-weight: 500;
+  transition: color 0.4s ease;
 }
 nav.navbar.nav-base-moderna .navbar-link.nav-enlace:hover {
-  color: white !important;
   border-bottom: none !important;
 }
-nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu {
-  background-color: rgba(var(--bulma-scheme-main-rgb), 0.5) !important;
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 12px !important;
-  min-width: 180px !important;
-  padding: 0.4rem;
-  margin-top: 2px;
-}
-nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item {
-  color: var(--bulma-text) !important;
-  opacity: 0.8;
-  font-size: 0.85rem;
-  padding: 0.5rem 0.8rem;
-  border-radius: 8px;
-  transition: all 0.2s ease;
-  margin-left: 10px;
-  margin-right: 10px;
-}
-nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item:hover {
-  opacity: 1;
-  background-color: var(--bulma-link) !important;
-  color: white !important;
-  transform: scale(1.02);
-}
 nav.navbar.nav-base-moderna .navbar-inicio {
-  color: white !important;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 1rem; /* Botón de inicio más amplio */
   display: flex;
   align-items: center;
   font-weight: 500;
   transition: all 0.3s ease;
+  border-radius: 8px; /* Bordes suaves al pasar el mouse */
+  margin: 0 0.5rem;
 }
 nav.navbar.nav-base-moderna .navbar-inicio:hover {
-  color: var(--bulma-link) !important;
-  background-color: transparent !important;
+  background-color: rgba(var(--bulma-link-rgb), 0.1) !important; /* Fondo sutil de tu color de acento */
+}
+nav.navbar.nav-base-moderna {
+  /* --- Menú Desplegable (También en Glass) --- */
+}
+nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(25px) saturate(150%);
+  -webkit-backdrop-filter: blur(25px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px !important;
+  min-width: 180px !important;
+  padding: 0.4rem; /* Un borde interno ligero para que al hacer hover no toque el límite */
+  margin-top: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.6rem 1rem;
+  margin: 0; /* MAGIA: Cero márgenes para que no parezcan botones separados */
+  border-radius: 6px; /* Bordes suaves que SOLO se ven en el hover */
+  background-color: transparent !important; /* Totalmente transparente en reposo */
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item:hover {
+  /* Se pinta de tu color de acento solo al pasar el mouse */
+  background-color: var(--bulma-link) !important;
+  color: white !important;
+}
+
+/* =========================================
+   COLORES DE NAVBAR POR TEMA
+========================================= */
+/* --- Tema Oscuro --- */
+html[data-theme=dark] nav.navbar.nav-base-moderna,
+html:not([data-theme=light]) nav.navbar.nav-base-moderna {
+  background-color: rgba(24, 24, 28, 0.7) !important; /* Gris muy oscuro casi negro, translúcido */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+html[data-theme=dark] nav.navbar.nav-base-moderna .texto-logotipo,
+html[data-theme=dark] nav.navbar.nav-base-moderna .navbar-link.nav-enlace,
+html[data-theme=dark] nav.navbar.nav-base-moderna .navbar-inicio,
+html:not([data-theme=light]) nav.navbar.nav-base-moderna .texto-logotipo,
+html:not([data-theme=light]) nav.navbar.nav-base-moderna .navbar-link.nav-enlace,
+html:not([data-theme=light]) nav.navbar.nav-base-moderna .navbar-inicio {
+  color: #ffffff !important;
+}
+html[data-theme=dark] nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu,
+html:not([data-theme=light]) nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu {
+  background-color: rgba(30, 30, 35, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+html[data-theme=dark] nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item,
+html:not([data-theme=light]) nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item {
+  color: #e2e8f0 !important;
+}
+
+/* --- Tema Claro --- */
+html[data-theme=light] nav.navbar.nav-base-moderna {
+  background-color: rgba(255, 255, 255, 0.65) !important; /* Blanco translúcido */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.9); /* Borde blanco para el reflejo */
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05); /* Sombra más ligera */
+}
+html[data-theme=light] nav.navbar.nav-base-moderna .texto-logotipo,
+html[data-theme=light] nav.navbar.nav-base-moderna .navbar-link.nav-enlace,
+html[data-theme=light] nav.navbar.nav-base-moderna .navbar-inicio {
+  color: #1a1c23 !important; /* Texto oscuro para que se lea sobre el fondo claro */
+}
+html[data-theme=light] nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+}
+html[data-theme=light] nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item {
+  color: #2d3748 !important;
 }
 
 .dropdown-menu {
@@ -22962,5 +23139,242 @@ nav.navbar.nav-base-moderna .navbar-inicio:hover {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+/* =========================================
+   EFECTO LIQUID GLASS (Formularios internos)
+========================================= */
+.liquid-glass-box {
+  position: relative;
+  backdrop-filter: blur(28px) saturate(120%);
+  -webkit-backdrop-filter: blur(28px) saturate(120%);
+  border-radius: 28px;
+  padding: 2.5rem;
+  overflow: hidden;
+  isolation: isolate;
+  transition: all 0.4s ease;
+  z-index: 1;
+}
+
+/* Efecto hover en formularios internos */
+.liquid-glass-box:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+/* Capas de Reflejo */
+.liquid-glass-box::before,
+.liquid-glass-box::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: -1;
+  transition: all 0.4s ease;
+}
+
+/* Asegurar contenido encima de los reflejos */
+.liquid-glass-box form,
+.liquid-glass-box .columns {
+  position: relative;
+  z-index: 10;
+}
+
+/* --- MODO OSCURO Formularios internos --- */
+html[data-theme=dark] .liquid-glass-box,
+html:not([data-theme=light]) .liquid-glass-box {
+  background: rgba(18, 18, 22, 0.65) !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  border-right: 1px solid rgba(0, 0, 0, 0.4);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+  box-shadow: inset 0px 0px 4px 1px rgba(255, 255, 255, 0.1), 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+html[data-theme=dark] .liquid-glass-box:hover,
+html:not([data-theme=light]) .liquid-glass-box:hover {
+  box-shadow: inset 0px 0px 6px 2px rgba(255, 255, 255, 0.2), 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(var(--bulma-link-rgb, 59, 130, 246), 0.3);
+}
+
+html[data-theme=dark] .liquid-glass-box::before,
+html:not([data-theme=light]) .liquid-glass-box::before {
+  background: linear-gradient(to left top, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 50%);
+}
+
+html[data-theme=dark] .liquid-glass-box::after,
+html:not([data-theme=light]) .liquid-glass-box::after {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+/* --- MODO CLARO Formularios internos --- */
+html[data-theme=light] .liquid-glass-box {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.3) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: inset 0px 0px 10px 2px rgba(255, 255, 255, 0.8), 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+html[data-theme=light] .liquid-glass-box:hover {
+  box-shadow: inset 0px 0px 15px 4px rgb(255, 255, 255), 0 15px 35px rgba(0, 0, 0, 0.08), 0 0 20px rgba(var(--bulma-link-rgb, 59, 130, 246), 0.15);
+}
+
+html[data-theme=light] .liquid-glass-box::before {
+  background: linear-gradient(to left top, rgba(255, 255, 255, 0.8) 0%, rgba(255, 255, 255, 0) 50%);
+}
+
+html[data-theme=light] .liquid-glass-box::after {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
+}
+
+.liquid-glass-box .field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.liquid-glass-box .control,
+.label-dinamico {
+  width: 100%;
+  max-width: 280px;
+}
+
+.label-dinamico {
+  text-align: left;
+  color: var(--bulma-text) !important;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  transition: color 0.4s ease;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+
+html[data-theme=light] .label-dinamico {
+  text-shadow: none;
+}
+
+/* =========================================
+   INPUTS ANIMADOS (Floating Labels)
+========================================= */
+.input-contenedor-flotante {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+}
+
+/* Ajuste del padding para dar espacio a la etiqueta cuando flota */
+.input-flotante {
+  padding-top: 1.2rem !important;
+  padding-bottom: 0.2rem !important;
+}
+
+/* La etiqueta flotante inicial (se ve como un placeholder normal) */
+.label-flotante {
+  position: absolute;
+  top: 50%;
+  left: 1.2rem;
+  transform: translateY(-50%);
+  color: var(--bulma-text-weak) !important;
+  font-size: 0.95rem;
+  pointer-events: none; /* Para que puedas hacer clic a través de ella */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0.8;
+}
+
+/* LA MAGIA: Cuando el input tiene foco O cuando el input NO ESTÁ VACÍO (por eso pusimos placeholder=" ") */
+.input-flotante:not(:-moz-placeholder) ~ .label-flotante {
+  top: 0.8rem; /* Sube hacia arriba */
+  font-size: 0.65rem; /* Se hace pequeña */
+  font-weight: 600;
+  color: var(--bulma-link) !important; /* Toma el color de tu tema (violeta/verde/naranja) */
+  opacity: 1;
+}
+.input-flotante:focus ~ .label-flotante,
+.input-flotante:not(:placeholder-shown) ~ .label-flotante {
+  top: 0.8rem; /* Sube hacia arriba */
+  font-size: 0.65rem; /* Se hace pequeña */
+  font-weight: 600;
+  color: var(--bulma-link) !important; /* Toma el color de tu tema (violeta/verde/naranja) */
+  opacity: 1;
+}
+
+/* =========================================
+   BOTÓN DE VER CONTRASEÑA (Ojito)
+========================================= */
+.btn-ver-pass {
+  position: absolute;
+  top: 50%;
+  right: 15px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--bulma-text-weak);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.3s ease;
+  z-index: 20;
+}
+
+.btn-ver-pass:hover {
+  color: var(--bulma-link);
+}
+
+.btn-ver-pass:focus {
+  outline: none;
+}
+
+/* =========================================
+   DISEÑO RESPONSIVO (MÓVILES Y TABLETS)
+========================================= */
+@media screen and (max-width: 768px) {
+  /* Login Responsivo */
+  .contenedor-centrado {
+    padding: 25px 20px !important;
+    max-width: 90% !important;
+    border-radius: 20px;
+  }
+  .botones-horizontal.buttons.has-addons {
+    flex-wrap: wrap !important;
+    justify-content: center;
+    gap: 5px;
+  }
+  .botones-horizontal.buttons.has-addons .button, .botones-horizontal.buttons.has-addons .botonTemas {
+    border-radius: 20px !important;
+    flex: 1 1 auto;
+  }
+  .botonTemas {
+    width: 100% !important;
+    max-width: 280px;
+  }
+  /* Asegurar que los inputs del login no se desborden en celular */
+  .contenedor-centrado .entradasTexto {
+    max-width: 100%;
+  }
+  /* Navbar Responsivo */
+  nav.navbar.nav-base-moderna .texto-logotipo {
+    font-size: 1rem;
+    line-height: 1.2;
+    white-space: normal;
+    margin-left: 0;
+  }
+  nav.navbar.nav-base-moderna .logo-ajustado {
+    padding-left: 0.75rem !important;
+    max-width: 75vw;
+  }
+  /* Formularios Internos Responsivos */
+  .liquid-glass-box {
+    padding: 1.5rem !important;
+    border-radius: 16px;
+  }
+  .liquid-glass-box .control,
+  .label-dinamico {
+    max-width: 100%;
+  }
+  .dropdown-menu {
+    width: 100%;
+    max-width: 100vw;
   }
 }/*# sourceMappingURL=mainprincipal.css.map */

@@ -1,8 +1,20 @@
 function cambiarModo() {
     const html = document.documentElement;
     const nuevo = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    html.setAttribute('data-theme', nuevo);
-    localStorage.setItem('tema', nuevo);
+
+    // Función que realmente hace el cambio
+    const aplicarCambio = () => {
+        html.setAttribute('data-theme', nuevo);
+        localStorage.setItem('tema', nuevo);
+    };
+
+    // MAGIA: Verifica si el navegador soporta View Transitions (Efecto coqueto)
+    if (document.startViewTransition) {
+        document.startViewTransition(() => aplicarCambio());
+    } else {
+        // Fallback para navegadores antiguos (cambio normal con transición CSS)
+        aplicarCambio();
+    }
 }
 
 function cambiarAcento(color) {

@@ -7,12 +7,10 @@
     <link rel="stylesheet" href="../mainprincipal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-
 <body>
     <nav class="navbar nav-base-moderna" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
             <a class="navbar-item logo-ajustado" href="#">
-                <span class="icon is-medium mr-2"><i class="fas fa-bolt fa-lg"></i></span>
                 <strong class="texto-logotipo">Inventario mensual de leche en polvo.</strong>
             </a>
             <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navMenuLiconsa">
@@ -36,18 +34,18 @@
         </div>
     </nav>
 
-    <section class="section">
+<section class="section">
         <div class="container">
             <h2 class="title is-4 titulo-seccion-dinamico mb-5">
                 Datos generales del inventario.
             </h2>
 
-            <div class="box glass-menu" style="background-color: rgba(46, 48, 52, 0.4) !important;">
+            <div class="box liquid-glass-box">
                 <form id="formInventario">
                     <div class="columns is-multiline">
                         <div class="column is-4">
                             <div class="field">
-                                <label class="label has-text-white">Fecha</label>
+                                <label class="label label-dinamico">Fecha</label>
                                 <div class="control">
                                     <input class="input entradasTexto" type="date" name="fecha"
                                         value="<?php echo date('Y-m-d'); ?>" required>
@@ -57,7 +55,7 @@
 
                         <div class="column is-4">
                             <div class="field">
-                                <label class="label has-text-white">Clave del punto de venta (LECHER)</label>
+                                <label class="label label-dinamico">Clave del punto de venta (LECHER)</label>
                                 <div class="control is-expanded has-icons-left">
                                     <input class="input entradasTexto" type="text" id="inputLecheria"
                                         name="clave_punto_venta" autocomplete="off"
@@ -74,7 +72,7 @@
 
                         <div class="column is-4">
                             <div class="field">
-                                <label class="label has-text-white">Clave de la tienda</label>
+                                <label class="label label-dinamico">Clave de la tienda</label>
                                 <div class="control">
                                     <input class="input entradasTexto" type="text" id="campoTienda" name="clave_tienda"
                                         placeholder="Automático" readonly>
@@ -84,7 +82,7 @@
 
                         <div class="column is-4">
                             <div class="field">
-                                <label class="label has-text-white">Almacén que surte</label>
+                                <label class="label label-dinamico">Almacén que surte</label>
                                 <div class="control">
                                     <input class="input entradasTexto" type="text" id="campoAlmacen"
                                         name="almacen_nombre" readonly>
@@ -94,7 +92,7 @@
 
                         <div class="column is-4">
                             <div class="field">
-                                <label class="label has-text-white">Municipio</label>
+                                <label class="label label-dinamico">Municipio</label>
                                 <div class="control">
                                     <input class="input entradasTexto" type="text" id="campoMunicipio" name="municipio"
                                         readonly>
@@ -104,7 +102,7 @@
 
                         <div class="column is-4">
                             <div class="field">
-                                <label class="label has-text-white">Comunidad</label>
+                                <label class="label label-dinamico">Comunidad</label>
                                 <div class="control">
                                     <input class="input entradasTexto" type="text" id="campoComunidad" name="comunidad"
                                         readonly>
@@ -122,11 +120,12 @@
             <h2 class="title is-4 titulo-seccion-dinamico mb-5">
                 lll. Cobertura social y dotación asignada según padrón de beneficiarios
             </h2>
-            <div class="box glass-menu" style="background-color: rgba(46, 48, 52, 0.4) !important;">
+            
+            <div class="box liquid-glass-box">
                 <div class="columns is-multiline">
                     <div class="column is-4">
                         <div class="field">
-                            <label class="label has-text-white">Número de Hogares</label>
+                            <label class="label label-dinamico">Número de Hogares</label>
                             <div class="control">
                                 <input class="input entradasTexto" type="text" id="campoHogares" readonly placeholder="0">
                             </div>
@@ -135,7 +134,7 @@
 
                     <div class="column is-4">
                         <div class="field">
-                            <label class="label has-text-white">Menores de 12 años</label>
+                            <label class="label label-dinamico">Menores de 12 años</label>
                             <div class="control">
                                 <input class="input entradasTexto" type="text" id="campoMenores" readonly placeholder="0">
                             </div>
@@ -144,7 +143,7 @@
 
                     <div class="column is-4">
                         <div class="field">
-                            <label class="label has-text-white">Mayores de 12 años</label>
+                            <label class="label label-dinamico">Mayores de 12 años</label>
                             <div class="control">
                                 <input class="input entradasTexto" type="text" id="campoMayores" readonly placeholder="0">
                             </div>
