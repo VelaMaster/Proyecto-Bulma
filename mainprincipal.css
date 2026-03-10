@@ -22703,18 +22703,12 @@ has-background-danger.is-hoverable:active {
   pointer-events: all !important;
 }
 
-/* =========================================
-   TIPOGRAFÍA GLOBAL (Estilo Apple / Moderno)
-========================================= */
 body, button, input, select, textarea {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
 }
 
-/* =========================================
-   AJUSTE DE FONDO TEMA CLARO
-========================================= */
+/* AJUSTE DE FONDO TEMA CLARO*/
 html[data-theme=light] body {
-  /* Un gris ligeramente más mate y frío para reducir el brillo y que el cristal blanco resalte */
   background-color: rgba(203, 208, 214, 0.8078431373) !important;
   transition: background-color 0.4s ease;
 }
@@ -22728,9 +22722,7 @@ html[data-theme=light] body {
   transition: background-color 0.3s ease;
 }
 
-/* =========================================
-   CONTENEDOR DE INICIO DE SESIÓN (Liquid Glass + Hover)
-========================================= */
+/*CONTENEDOR DE INICIO DE SESIÓN (Liquid Glass + Hover)*/
 .contenedor-centrado {
   position: relative;
   display: flex;
@@ -22824,9 +22816,7 @@ html[data-theme=light] .contenedor-centrado::after {
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
-/* =========================================
-   INPUTS DE TEXTO (VISIBLES Y TIPOGRAFÍA MODERNA)
-========================================= */
+/*INPUTS DE TEXTO (VISIBLES Y TIPOGRAFÍA MODERNA)*/
 .entradasTexto {
   width: 100%;
   max-width: 100%;
@@ -22882,9 +22872,7 @@ html[data-theme=light] .entradasTexto {
   background-color: var(--bulma-scheme-main) !important;
 }
 
-/* =========================================
-   RESTO DE TUS COMPONENTES (Intactos)
-========================================= */
+/* RESTO DE TUS COMPONENTES (Intactos) */
 .titulo-seccion-dinamico {
   color: var(--bulma-text) !important;
 }
@@ -22961,13 +22949,10 @@ html[data-theme=light] .entradasTexto {
   -webkit-appearance: none;
 }
 
-/* =========================================
-   NAVBAR (Liquid Glass Estilo macOS)
-========================================= */
+/* NAVBAR Liquid Glass Estilos */
 nav.navbar.nav-base-moderna {
-  /* Fondo base transparente, el color lo dan los temas */
   background-color: transparent !important;
-  min-height: 4rem !important; /* Un poco más alta para respirar */
+  min-height: 2rem !important; /* Un poco más alta para respirar */
   padding-left: 0 !important;
   padding-right: 0 !important;
   transition: all 0.4s ease;
@@ -22977,7 +22962,6 @@ nav.navbar.nav-base-moderna {
   /* Borde inferior sutil y sombra para separarla del fondo */
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  /* --- Elementos de la Navbar --- */
 }
 nav.navbar.nav-base-moderna .navbar-brand {
   margin-left: 0 !important;
@@ -23050,10 +23034,7 @@ nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .navbar-item:hover {
   color: white !important;
 }
 
-/* =========================================
-   COLORES DE NAVBAR POR TEMA
-========================================= */
-/* --- Tema Oscuro --- */
+/* COLORES DE NAVBAR POR TEMA */
 html[data-theme=dark] nav.navbar.nav-base-moderna,
 html:not([data-theme=light]) nav.navbar.nav-base-moderna {
   background-color: rgba(24, 24, 28, 0.7) !important; /* Gris muy oscuro casi negro, translúcido */
@@ -23141,9 +23122,7 @@ html[data-theme=light] nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .
     transform: translateY(0);
   }
 }
-/* =========================================
-   EFECTO LIQUID GLASS (Formularios internos)
-========================================= */
+/* EFECTO LIQUID GLASS (Formularios internos) */
 .liquid-glass-box {
   position: relative;
   backdrop-filter: blur(28px) saturate(120%);
@@ -23253,9 +23232,7 @@ html[data-theme=light] .label-dinamico {
   text-shadow: none;
 }
 
-/* =========================================
-   INPUTS ANIMADOS (Floating Labels)
-========================================= */
+/* INPUTS ANIMADOS (Floating Labels) */
 .input-contenedor-flotante {
   position: relative;
   width: 100%;
@@ -23298,9 +23275,7 @@ html[data-theme=light] .label-dinamico {
   opacity: 1;
 }
 
-/* =========================================
-   BOTÓN DE VER CONTRASEÑA (Ojito)
-========================================= */
+/* BOTÓN DE VER CONTRASEÑA (ojo piojo) */
 .btn-ver-pass {
   position: absolute;
   top: 50%;
@@ -23436,13 +23411,7 @@ html[data-theme=light] .label-dinamico {
 }
 
 .tabla-glass tbody tr:hover td {
-  /* Fondo translúcido de tu color principal */
-  background-color: rgba(var(--bulma-link-rgb), 0.15) !important;
-  /* Pequeño brillo en el texto */
-  color: var(--bulma-link) !important;
-  transform: scale(1.01); /* La fila se agranda apenitas hacia el frente */
-  /* Resplandor sutil */
-  box-shadow: inset 0 0 10px rgba(var(--bulma-link-rgb), 0.1);
+  transform: scale(1.05);
 }
 
 /* =========================================
@@ -23495,4 +23464,53 @@ html[data-theme=light] .tabla-glass th {
   border-color: var(--bulma-link) !important;
   background-color: var(--bulma-scheme-main) !important; /* Se vuelve sólido */
   box-shadow: 0 0 10px rgba(var(--bulma-link-rgb), 0.4) !important;
+}
+
+/* =========================================
+   NOTIFICACIÓN TOAST (Liquid Glass)
+========================================= */
+.notificacion-glass {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: rgba(42, 42, 51, 0.85);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 16px 24px;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  transform: translateY(100px);
+  opacity: 0;
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Efecto rebote suave */
+  font-weight: 500;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notificacion-glass.mostrar {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Modo Claro para la notificación */
+html[data-theme=light] .notificacion-glass {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  color: #1a1c23;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-glass .entradasTexto[type=number]::-webkit-inner-spin-button,
+.tabla-glass .entradasTexto[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.tabla-glass .entradasTexto[type=number] {
+  -moz-appearance: textfield;
 }/*# sourceMappingURL=mainprincipal.css.map */

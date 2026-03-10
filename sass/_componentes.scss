@@ -1,19 +1,11 @@
-/* =========================================
-   TIPOGRAFÍA GLOBAL (Estilo Apple / Moderno)
-========================================= */
 body, button, input, select, textarea {
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
 }
-
-/* =========================================
-   AJUSTE DE FONDO TEMA CLARO
-========================================= */
+/* AJUSTE DE FONDO TEMA CLARO*/
 html[data-theme="light"] body {
-    /* Un gris ligeramente más mate y frío para reducir el brillo y que el cristal blanco resalte */
     background-color: #cbd0d6ce !important; 
     transition: background-color 0.4s ease;
 }
-
 .pantallaCentrada {
     display: flex;
     justify-content: center;
@@ -22,10 +14,7 @@ html[data-theme="light"] body {
     background-color: transparent; 
     transition: background-color 0.3s ease;
 }
-
-/* =========================================
-   CONTENEDOR DE INICIO DE SESIÓN (Liquid Glass + Hover)
-========================================= */
+/*CONTENEDOR DE INICIO DE SESIÓN (Liquid Glass + Hover)*/
 .contenedor-centrado {
     position: relative;
     display: flex;
@@ -45,13 +34,11 @@ html[data-theme="light"] body {
     transition: all 0.4s ease;
     z-index: 1;
 }
-
 /* Efecto de iluminación al pasar el mouse */
 .contenedor-centrado:hover {
     transform: translateY(-10px);
     filter: brightness(1.00);
 }
-
 /* Capas de Reflejo del Cristal */
 .contenedor-centrado::before,
 .contenedor-centrado::after {
@@ -63,7 +50,6 @@ html[data-theme="light"] body {
     z-index: -1;
     transition: all 0.4s ease;
 }
-
 /* Asegurar que el contenido no quede tapado por los reflejos */
 .contenedor-centrado form,
 .contenedor-centrado h1,
@@ -72,7 +58,6 @@ html[data-theme="light"] body {
     position: relative;
     z-index: 10;
 }
-
 /* --- MODO OSCURO (Cristal iluminado, un poco más negro) --- */
 html[data-theme="dark"] .contenedor-centrado,
 html:not([data-theme="light"]) .contenedor-centrado {
@@ -85,7 +70,6 @@ html:not([data-theme="light"]) .contenedor-centrado {
         inset 0px 0px 4px 1px rgba(255, 255, 255, 0.1), 
         0 12px 32px rgba(0, 0, 0, 0.5); 
 }
-
 /* Brillo extra al hacer hover en oscuro */
 html[data-theme="dark"] .contenedor-centrado:hover,
 html:not([data-theme="light"]) .contenedor-centrado:hover {
@@ -94,7 +78,6 @@ html:not([data-theme="light"]) .contenedor-centrado:hover {
         0 15px 40px rgba(0, 0, 0, 0.6),
         0 0 20px rgba(var(--bulma-link-rgb, 59, 130, 246), 0.3);
 }
-
 html[data-theme="dark"] .contenedor-centrado::before,
 html:not([data-theme="light"]) .contenedor-centrado::before {
     background: linear-gradient(to left top, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 50%);
@@ -103,7 +86,6 @@ html[data-theme="dark"] .contenedor-centrado::after,
 html:not([data-theme="light"]) .contenedor-centrado::after {
     background: linear-gradient(to bottom, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 100%);
 }
-
 /* --- MODO CLARO (Cristal Blanco Esmerilado real) --- */
 html[data-theme="light"] .contenedor-centrado {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.3) 100%) !important; 
@@ -112,7 +94,6 @@ html[data-theme="light"] .contenedor-centrado {
         inset 0px 0px 10px 2px rgba(255, 255, 255, 0.8), 
         0 10px 30px rgba(0, 0, 0, 0.05); 
 }
-
 /* Brillo extra al hacer hover en claro */
 html[data-theme="light"] .contenedor-centrado:hover {
     box-shadow: 
@@ -128,9 +109,7 @@ html[data-theme="light"] .contenedor-centrado::after {
     background: linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
 }
 
-/* =========================================
-   INPUTS DE TEXTO (VISIBLES Y TIPOGRAFÍA MODERNA)
-========================================= */
+/*INPUTS DE TEXTO (VISIBLES Y TIPOGRAFÍA MODERNA)*/
 .entradasTexto {
     @extend .input;
     @extend .is-rounded;
@@ -143,12 +122,10 @@ html[data-theme="light"] .contenedor-centrado::after {
     font-size: 0.95rem; /* Letra un poco más elegante */
     font-weight: 500;
 }
-
 /* LIMITAR EL TAMAÑO DE LOS INPUTS SOLO EN EL INICIO DE SESIÓN */
 .contenedor-centrado .entradasTexto {
     max-width: 300px; /* Los hace igual de anchos que el botón */
 }
-
 /* Inputs en Modo Oscuro (Bordes blancos notorios) */
 html[data-theme="dark"] .entradasTexto,
 html:not([data-theme="light"]) .entradasTexto {
@@ -156,40 +133,31 @@ html:not([data-theme="light"]) .entradasTexto {
     border: 1px solid rgba(255, 255, 255, 0.35) !important; 
     box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6) !important;
 }
-
 /* Inputs en Modo Claro (Bordes oscuros notorios) */
 html[data-theme="light"] .entradasTexto {
     background-color: rgba(255, 255, 255, 0.5) !important; 
     border: 1px solid rgba(0, 0, 0, 0.25) !important; 
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08) !important;
 }
-
 .entradasTexto::placeholder {
     color: var(--bulma-text-weak) !important;
     opacity: 0.8;
     font-weight: 400;
 }
-
 .entradasTexto:hover {
     border-color: var(--bulma-link) !important;
     opacity: 1;
 }
-
 .entradasTexto:focus {
     border-color: var(--bulma-link) !important;
     box-shadow: 0 0 10px rgba(var(--bulma-link-rgb), 0.4) !important;
     outline: none;
     background-color: var(--bulma-scheme-main) !important; 
 }
-
-
-/* =========================================
-   RESTO DE TUS COMPONENTES (Intactos)
-========================================= */
+/* RESTO DE TUS COMPONENTES (Intactos) */
 .titulo-seccion-dinamico {
     color: var(--bulma-text) !important;
 }
-
 .olvido-pass {
     color: var(--bulma-text) !important;
     text-decoration: none;
@@ -203,7 +171,6 @@ html[data-theme="light"] .entradasTexto {
         text-decoration: underline;
     }
 }
-
 .select-temas {
     @extend .select;
     @extend .is-rounded;
@@ -220,7 +187,6 @@ html[data-theme="light"] .entradasTexto {
         }
     }
 }
-
 .botonTemas {
     @extend .button;
     @extend .is-rounded;
@@ -238,7 +204,6 @@ html[data-theme="light"] .entradasTexto {
         transform: translateY(-2px);
     }
 }
-
 .botones-horizontal {
     justify-content: center;
     margin-bottom: 10px;
@@ -257,7 +222,6 @@ html[data-theme="light"] .entradasTexto {
             color: var(--bulma-link);
             z-index: 2;
         }
-
         &.is-selected {
             background-color: var(--bulma-link) !important;
             color: white !important;
@@ -267,7 +231,6 @@ html[data-theme="light"] .entradasTexto {
         }
     }
 }
-
 .botones-horizontal.buttons.has-addons {
     .button.is-selected {
         background-color: var(--bulma-link) !important;
@@ -277,27 +240,19 @@ html[data-theme="light"] .entradasTexto {
         -webkit-appearance: none;
     }
 }
-
-/* =========================================
-   NAVBAR (Liquid Glass Estilo macOS)
-========================================= */
+/* NAVBAR Liquid Glass Estilos */
 nav.navbar.nav-base-moderna {
-    /* Fondo base transparente, el color lo dan los temas */
     background-color: transparent !important;
-    min-height: 4rem !important; /* Un poco más alta para respirar */
+    min-height: 2rem !important; /* Un poco más alta para respirar */
     padding-left: 0 !important;
     padding-right: 0 !important;
     transition: all 0.4s ease;
-    
     /* El corazón del Liquid Glass */
     backdrop-filter: blur(20px) saturate(150%);
     -webkit-backdrop-filter: blur(20px) saturate(150%);
-    
     /* Borde inferior sutil y sombra para separarla del fondo */
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-
-    /* --- Elementos de la Navbar --- */
     .navbar-brand {
         margin-left: 0 !important; 
         background-color: transparent !important;
@@ -308,13 +263,11 @@ nav.navbar.nav-base-moderna {
             background-color: transparent !important;
             display: flex;
             align-items: center;
-
             &:hover {
                 background-color: transparent !important;
             }
         }
     }
-
     .texto-logotipo {
         font-size: 1.2rem;
         font-weight: 800;
@@ -322,7 +275,6 @@ nav.navbar.nav-base-moderna {
         margin-left: -5px; 
         transition: color 0.4s ease; /* Transición suave de color al cambiar el tema */
     }
-
     .navbar-link.nav-enlace {
         background-color: transparent !important;
         cursor: default;
@@ -333,7 +285,6 @@ nav.navbar.nav-base-moderna {
             border-bottom: none !important;
         }
     }
-
     .navbar-inicio {
         padding: 0.5rem 1rem; /* Botón de inicio más amplio */
         display: flex;
@@ -347,7 +298,6 @@ nav.navbar.nav-base-moderna {
             background-color: rgba(var(--bulma-link-rgb), 0.1) !important; /* Fondo sutil de tu color de acento */
         }
     }
-
     /* --- Menú Desplegable (También en Glass) --- */
 .navbar-dropdown.glass-menu {
         background-color: rgba(255, 255, 255, 0.1) !important; 
@@ -368,7 +318,6 @@ nav.navbar.nav-base-moderna {
             border-radius: 6px; /* Bordes suaves que SOLO se ven en el hover */
             background-color: transparent !important; /* Totalmente transparente en reposo */
             transition: background-color 0.15s ease, color 0.15s ease;
-
             &:hover {
                 /* Se pinta de tu color de acento solo al pasar el mouse */
                 background-color: var(--bulma-link) !important; 
@@ -379,11 +328,7 @@ nav.navbar.nav-base-moderna {
 
 }
 
-/* =========================================
-   COLORES DE NAVBAR POR TEMA
-========================================= */
-
-/* --- Tema Oscuro --- */
+/* COLORES DE NAVBAR POR TEMA */
 html[data-theme="dark"] nav.navbar.nav-base-moderna,
 html:not([data-theme="light"]) nav.navbar.nav-base-moderna {
     background-color: rgba(24, 24, 28, 0.7) !important; /* Gris muy oscuro casi negro, translúcido */
@@ -394,7 +339,6 @@ html:not([data-theme="light"]) nav.navbar.nav-base-moderna {
     .navbar-inicio {
         color: #ffffff !important;
     }
-    
     .navbar-dropdown.glass-menu {
         background-color: rgba(30, 30, 35, 0.75) !important;
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -402,7 +346,6 @@ html:not([data-theme="light"]) nav.navbar.nav-base-moderna {
         .navbar-item { color: #e2e8f0 !important; }
     }
 }
-
 /* --- Tema Claro --- */
 html[data-theme="light"] nav.navbar.nav-base-moderna {
     background-color: rgba(255, 255, 255, 0.65) !important; /* Blanco translúcido */
@@ -413,21 +356,17 @@ html[data-theme="light"] nav.navbar.nav-base-moderna {
     .navbar-link.nav-enlace,
     .navbar-inicio {
         color: #1a1c23 !important; /* Texto oscuro para que se lea sobre el fondo claro */
-    }
-    
+    }   
     .navbar-dropdown.glass-menu {
         background-color: rgba(255, 255, 255, 0.75) !important;
         border: 1px solid rgba(255, 255, 255, 0.9);
         box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
-        
-        .navbar-item { color: #2d3748 !important; }
+       .navbar-item { color: #2d3748 !important; }
     }
 }
-
 .dropdown-menu {
     animation: fadeIn 0.2s ease-out;
 }
-
 .dropdown-content.glass-menu {
     background-color: var(--bulma-scheme-main-ter) !important; 
     backdrop-filter: blur(12px); 
@@ -435,7 +374,6 @@ html[data-theme="light"] nav.navbar.nav-base-moderna {
     border-radius: 12px !important;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); 
     padding: 0.5rem;
-
     .dropdown-item {
         color: var(--bulma-text) !important;
         font-size: 0.9rem;
@@ -462,7 +400,6 @@ html[data-theme="light"] nav.navbar.nav-base-moderna {
         }
     }
 }
-
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -474,9 +411,7 @@ html[data-theme="light"] nav.navbar.nav-base-moderna {
     }
 }
 
-/* =========================================
-   EFECTO LIQUID GLASS (Formularios internos)
-========================================= */
+/* EFECTO LIQUID GLASS (Formularios internos) */
 .liquid-glass-box {
     position: relative;
     backdrop-filter: blur(28px) saturate(120%);
@@ -488,13 +423,11 @@ html[data-theme="light"] nav.navbar.nav-base-moderna {
     transition: all 0.4s ease;
     z-index: 1;
 }
-
 /* Efecto hover en formularios internos */
 .liquid-glass-box:hover {
     transform: translateY(-2px);
     filter: brightness(1.05);
 }
-
 /* Capas de Reflejo */
 .liquid-glass-box::before,
 .liquid-glass-box::after {
@@ -506,14 +439,12 @@ html[data-theme="light"] nav.navbar.nav-base-moderna {
     z-index: -1;
     transition: all 0.4s ease;
 }
-
 /* Asegurar contenido encima de los reflejos */
 .liquid-glass-box form,
 .liquid-glass-box .columns {
     position: relative;
     z-index: 10;
 }
-
 /* --- MODO OSCURO Formularios internos --- */
 html[data-theme="dark"] .liquid-glass-box,
 html:not([data-theme="light"]) .liquid-glass-box {
@@ -526,7 +457,6 @@ html:not([data-theme="light"]) .liquid-glass-box {
         inset 0px 0px 4px 1px rgba(255, 255, 255, 0.1), 
         0 12px 32px rgba(0, 0, 0, 0.5); 
 }
-
 html[data-theme="dark"] .liquid-glass-box:hover,
 html:not([data-theme="light"]) .liquid-glass-box:hover {
     box-shadow: 
@@ -534,7 +464,6 @@ html:not([data-theme="light"]) .liquid-glass-box:hover {
         0 15px 40px rgba(0, 0, 0, 0.6),
         0 0 20px rgba(var(--bulma-link-rgb, 59, 130, 246), 0.3);
 }
-
 html[data-theme="dark"] .liquid-glass-box::before,
 html:not([data-theme="light"]) .liquid-glass-box::before {
     background: linear-gradient(to left top, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 50%);
@@ -543,7 +472,6 @@ html[data-theme="dark"] .liquid-glass-box::after,
 html:not([data-theme="light"]) .liquid-glass-box::after {
     background: linear-gradient(to bottom, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 100%);
 }
-
 /* --- MODO CLARO Formularios internos --- */
 html[data-theme="light"] .liquid-glass-box {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0.3) 100%) !important; 
@@ -552,34 +480,29 @@ html[data-theme="light"] .liquid-glass-box {
         inset 0px 0px 10px 2px rgba(255, 255, 255, 0.8), 
         0 10px 30px rgba(0, 0, 0, 0.05); 
 }
-
 html[data-theme="light"] .liquid-glass-box:hover {
     box-shadow: 
         inset 0px 0px 15px 4px rgba(255, 255, 255, 1), 
         0 15px 35px rgba(0, 0, 0, 0.08),
         0 0 20px rgba(var(--bulma-link-rgb, 59, 130, 246), 0.15);
 }
-
 html[data-theme="light"] .liquid-glass-box::before {
     background: linear-gradient(to left top, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 50%);
 }
 html[data-theme="light"] .liquid-glass-box::after {
     background: linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
 }
-
 .liquid-glass-box .field {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 1.5rem;
 }
-
 .liquid-glass-box .control,
 .label-dinamico {
     width: 100%;
     max-width: 280px; 
 }
-
 .label-dinamico {
     text-align: left;
     color: var(--bulma-text) !important;
@@ -593,21 +516,17 @@ html[data-theme="light"] .liquid-glass-box::after {
 html[data-theme="light"] .label-dinamico {
     text-shadow: none;
 }
-/* =========================================
-   INPUTS ANIMADOS (Floating Labels)
-========================================= */
+/* INPUTS ANIMADOS (Floating Labels) */
 .input-contenedor-flotante {
     position: relative;
     width: 100%;
     max-width: 300px;
 }
-
 /* Ajuste del padding para dar espacio a la etiqueta cuando flota */
 .input-flotante {
     padding-top: 1.2rem !important;
     padding-bottom: 0.2rem !important;
 }
-
 /* La etiqueta flotante inicial (se ve como un placeholder normal) */
 .label-flotante {
     position: absolute;
@@ -620,7 +539,6 @@ html[data-theme="light"] .label-dinamico {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     opacity: 0.8;
 }
-
 /* LA MAGIA: Cuando el input tiene foco O cuando el input NO ESTÁ VACÍO (por eso pusimos placeholder=" ") */
 .input-flotante:focus ~ .label-flotante,
 .input-flotante:not(:placeholder-shown) ~ .label-flotante {
@@ -631,9 +549,7 @@ html[data-theme="light"] .label-dinamico {
     opacity: 1;
 }
 
-/* =========================================
-   BOTÓN DE VER CONTRASEÑA (Ojito)
-========================================= */
+/* BOTÓN DE VER CONTRASEÑA (ojo piojo) */
 .btn-ver-pass {
     position: absolute;
     top: 50%;
@@ -778,16 +694,9 @@ html[data-theme="light"] .label-dinamico {
 }
 
 .tabla-glass tbody tr:hover td {
-    /* Fondo translúcido de tu color principal */
-    background-color: rgba(var(--bulma-link-rgb), 0.15) !important;
-    /* Pequeño brillo en el texto */
-    color: var(--bulma-link) !important;
-    transform: scale(1.01); /* La fila se agranda apenitas hacia el frente */
-    /* Resplandor sutil */
-    box-shadow: inset 0 0 10px rgba(var(--bulma-link-rgb), 0.1);
+
+    transform: scale(1.05);
 }
-
-
 /* =========================================
    Ajustes de Color por Tema para las Tablas
 ========================================= */
@@ -835,4 +744,51 @@ html[data-theme="light"] .tabla-glass th {
     border-color: var(--bulma-link) !important;
     background-color: var(--bulma-scheme-main) !important; /* Se vuelve sólido */
     box-shadow: 0 0 10px rgba(var(--bulma-link-rgb), 0.4) !important;
+}
+/* =========================================
+   NOTIFICACIÓN TOAST (Liquid Glass)
+========================================= */
+.notificacion-glass {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    background: rgba(42, 42, 51, 0.85); 
+    backdrop-filter: blur(20px) saturate(150%);
+    -webkit-backdrop-filter: blur(20px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+    padding: 16px 24px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Efecto rebote suave */
+    font-weight: 500;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.notificacion-glass.mostrar {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Modo Claro para la notificación */
+html[data-theme="light"] .notificacion-glass {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    color: #1a1c23;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.tabla-glass .entradasTexto[type="number"]::-webkit-inner-spin-button,
+.tabla-glass .entradasTexto[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.tabla-glass .entradasTexto[type="number"] {
+    -moz-appearance: textfield;
 }

@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="../mainprincipal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-
 <body>
     <nav class="navbar nav-base-moderna" role="navigation" aria-label="main navigation">
         <div class="navbar-brand">
@@ -35,7 +34,6 @@
             </div>
         </div>
     </nav>
-
     <section class="section">
         <div class="container">
             <h2 class="title is-4 titulo-seccion-dinamico mb-5">
@@ -120,14 +118,15 @@
 <section class="section">
         <div class="container">
             <h2 class="title is-4 titulo-seccion-dinamico mb-5">
-                l. Existencia de Leche
+                I. Existencia de Leche
             </h2>
 
-            <div class="box liquid-glass-box" style="overflow-x: auto;"> <form id="formInventario">
+            <div class="box liquid-glass-box" style="overflow-x: auto;">
+                <form id="formInventarioExistencia">
                     <table class="table is-fullwidth tabla-glass">
                         <thead>
                             <tr>
-                                <th> </th>
+                                <th></th>
                                 <th>Inventario inicial</th>
                                 <th>Abasto total en el mes</th>
                                 <th>Ventas real del mes</th>
@@ -138,13 +137,31 @@
                         </thead>
                         <tbody>
                             <tr>
-                                
+                                <td><strong>Caja</strong></td>
+                                <td><input type="number" id="inv_ini_caja" class="input entradasTexto" min="0" placeholder="0"></td>
+                                <td><input type="number" id="abasto_caja" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="venta_caja" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="litros_reg_caja" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="dif_caja" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="inv_fin_caja" class="input entradasTexto" readonly placeholder="0"></td>
                             </tr>
                             <tr>
-                                <td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td>
-                            </tr>
+                                <td><strong>Sobres</strong></td>
+                                <td><input type="number" id="inv_ini_sobres" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="abasto_sobres" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="venta_sobres" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="litros_reg_sobres" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="dif_sobres" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="inv_fin_sobres" class="input entradasTexto" readonly placeholder="0"></td>
+                            </tr>                       
                             <tr>
-                                <td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td>
+                                <td><strong>Total en litros</strong></td>
+                                <td><input type="number" id="inv_ini_litros" class="input entradasTexto" min="0" step="72" placeholder="0"></td>
+                                <td><input type="number" id="abasto_litros" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="venta_litros" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="litros_reg_litros" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="dif_litros" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="inv_fin_litros" class="input entradasTexto" readonly placeholder=""></td>
                             </tr>
                         </tbody>
                     </table>
@@ -173,13 +190,10 @@
                         </thead>
                         <tbody>
                             <tr>
-                                <td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td>
+                                <td></td><td></td><td></td><td></td><td></td>
                             </tr>
                             <tr>
-                                <td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td>
-                            </tr>
-                            <tr>
-                                <td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td><td>Dato</td>
+                                <td></td><td></td><td></td><td></td><td></td>
                             </tr>
                         </tbody>
                     </table>
@@ -228,6 +242,7 @@
     </section>
 
     <script src="../js/temas.js"></script>
+    <script src="../js/promotores.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
