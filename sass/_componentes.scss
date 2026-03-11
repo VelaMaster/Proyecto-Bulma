@@ -726,12 +726,18 @@ html[data-theme="light"] .tabla-glass th {
 ========================================= */
 .tabla-glass .entradasTexto {
     height: 36px;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     border-radius: 8px;
-    background-color: rgba(128, 128, 128, 0.1) !important; /* Un hueco muy sutil */
-    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1) !important; /* Sombra interna para parecer hundido */
+    background-color: rgba(128, 128, 128, 0.1) !important; 
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1) !important; 
     border: 1px solid transparent !important; 
     margin: 0 auto;
+    min-width: 90px; 
+    width: 100%;
+    text-align: center;
+    padding-left: 5px; 
+    padding-right: 5px; /* Reducimos el padding de Bulma para que el texto respire */
+    transition: all 0.3s ease;
 }
 
 .tabla-glass .entradasTexto:hover {
@@ -746,12 +752,19 @@ html[data-theme="light"] .tabla-glass th {
     box-shadow: 0 0 10px rgba(var(--bulma-link-rgb), 0.4) !important;
 }
 /* =========================================
-   NOTIFICACIÓN TOAST (Liquid Glass)
+   CONTENEDOR PARA APILAR NOTIFICACIONES
 ========================================= */
-.notificacion-glass {
+#toast-container {
     position: fixed;
     bottom: 30px;
     right: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Espacio entre notificaciones */
+    z-index: 9999;
+}
+
+.notificacion-glass {
     background: rgba(42, 42, 51, 0.85); 
     backdrop-filter: blur(20px) saturate(150%);
     -webkit-backdrop-filter: blur(20px) saturate(150%);
@@ -760,35 +773,34 @@ html[data-theme="light"] .tabla-glass th {
     padding: 16px 24px;
     border-radius: 16px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
-    z-index: 9999;
-    transform: translateY(100px);
+    transform: translateX(120%); /* Entra desde la derecha */
     opacity: 0;
-    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* Efecto rebote suave */
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     font-weight: 500;
     font-size: 0.95rem;
     display: flex;
     align-items: center;
     gap: 12px;
+    min-width: 300px;
+    max-width: 450px; /* Para que el texto largo no se desborde */
 }
-
 .notificacion-glass.mostrar {
-    transform: translateY(0);
+    transform: translateX(0);
     opacity: 1;
 }
-
-/* Modo Claro para la notificación */
 html[data-theme="light"] .notificacion-glass {
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid rgba(0, 0, 0, 0.1);
     color: #1a1c23;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
-
+/* OCULTAR FLECHAS NATIVAS DE NÚMEROS */
 .tabla-glass .entradasTexto[type="number"]::-webkit-inner-spin-button,
 .tabla-glass .entradasTexto[type="number"]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
+    -webkit-appearance: none !important;
+    margin: 0 !important;
 }
+/* Para Firefox */
 .tabla-glass .entradasTexto[type="number"] {
-    -moz-appearance: textfield;
+    -moz-appearance: textfield !important;
 }

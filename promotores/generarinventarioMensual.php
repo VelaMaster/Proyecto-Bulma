@@ -138,10 +138,10 @@
                         <tbody>
                             <tr>
                                 <td><strong>Caja</strong></td>
-                                <td><input type="number" id="inv_ini_caja" class="input entradasTexto" min="0" placeholder="0"></td>
+                                <td><input type="number" id="inv_ini_caja" class="input entradasTexto" min="0" readonly placeholder="0"></td>
                                 <td><input type="number" id="abasto_caja" class="input entradasTexto" readonly placeholder="0"></td>
-                                <td><input type="number" id="venta_caja" class="input entradasTexto" readonly placeholder="0"></td>
-                                <td><input type="number" id="litros_reg_caja" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="venta_caja" class="input entradasTexto" placeholder="0"></td>
+                                <td><input type="number" id="litros_reg_caja" class="input entradasTexto" placeholder="0"></td>
                                 <td><input type="number" id="dif_caja" class="input entradasTexto" readonly placeholder="0"></td>
                                 <td><input type="number" id="inv_fin_caja" class="input entradasTexto" readonly placeholder="0"></td>
                             </tr>
@@ -149,17 +149,17 @@
                                 <td><strong>Sobres</strong></td>
                                 <td><input type="number" id="inv_ini_sobres" class="input entradasTexto" readonly placeholder="0"></td>
                                 <td><input type="number" id="abasto_sobres" class="input entradasTexto" readonly placeholder="0"></td>
-                                <td><input type="number" id="venta_sobres" class="input entradasTexto" readonly placeholder="0"></td>
-                                <td><input type="number" id="litros_reg_sobres" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="venta_sobres" class="input entradasTexto" placeholder="0"></td>
+                                <td><input type="number" id="litros_reg_sobres" class="input entradasTexto" placeholder="0"></td>
                                 <td><input type="number" id="dif_sobres" class="input entradasTexto" readonly placeholder="0"></td>
                                 <td><input type="number" id="inv_fin_sobres" class="input entradasTexto" readonly placeholder="0"></td>
                             </tr>                       
                             <tr>
                                 <td><strong>Total en litros</strong></td>
-                                <td><input type="number" id="inv_ini_litros" class="input entradasTexto" min="0" step="72" placeholder="0"></td>
+                                <td><input type="number" id="inv_ini_litros" class="input entradasTexto" min="0" step="72" readonly placeholder="0"></td>
                                 <td><input type="number" id="abasto_litros" class="input entradasTexto" readonly placeholder="0"></td>
-                                <td><input type="number" id="venta_litros" class="input entradasTexto" readonly placeholder="0"></td>
-                                <td><input type="number" id="litros_reg_litros" class="input entradasTexto" readonly placeholder="0"></td>
+                                <td><input type="number" id="venta_litros" class="input entradasTexto" placeholder="0"></td>
+                                <td><input type="number" id="litros_reg_litros" class="input entradasTexto" placeholder="0"></td>
                                 <td><input type="number" id="dif_litros" class="input entradasTexto" readonly placeholder="0"></td>
                                 <td><input type="number" id="inv_fin_litros" class="input entradasTexto" readonly placeholder=""></td>
                             </tr>
@@ -170,30 +170,31 @@
         </div>
     </section>
 
-    <section class="section">
+<section class="section">
         <div class="container">
             <h2 class="title is-4 titulo-seccion-dinamico mb-5">
-                ll. Surtimientos
+                II. Surtimientos sugeridos
             </h2>
 
             <div class="box liquid-glass-box" style="overflow-x: auto;">
-                <form id="formInventario">
+                <form id="formSurtimiento">
                     <table class="table is-fullwidth tabla-glass">
                         <thead>
                             <tr>
-                                <th>Fecha </th>
-                                <th>Cajas </th>
-                                <th>Litros </th>
-                                <th>Facturas </th>
-                                <th>Caducidad </th>
+                                <th>Fecha</th>
+                                <th>Cajas</th>
+                                <th>Litros</th>
+                                <th>Facturas</th>
+                                <th>Caducidad</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr>
-                                <td></td><td></td><td></td><td></td><td></td>
-                            </tr>
-                            <tr>
-                                <td></td><td></td><td></td><td></td><td></td>
+                                <td><input type="date" id="surt_fecha" class="input entradasTexto" value="<?php echo date('Y-m-d'); ?>"></td>
+                                <td><input type="number" id="surt_cajas" class="input entradasTexto"  placeholder= "Calculando..."></td>
+                                <td><input type="number" id="surt_litros" class="input entradasTexto" placeholder= "Calculando..."></td>
+                                <td><input type="text" id="surt_factura" class="input entradasTexto" placeholder="Ej. F-10293"></td>
+                                <td><input type="date" id="surt_caducidad" class="input entradasTexto"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -201,16 +202,15 @@
             </div>
         </div>
     </section>
-
-    <section class="section">
+<section class="section">
         <div class="container">
             <h2 class="title is-4 titulo-seccion-dinamico mb-5">
-                lll. Cobertura social y dotación asignada según padrón de beneficiarios
+                III. Cobertura social y dotación asignada según padrón de beneficiarios
             </h2>
 
             <div class="box liquid-glass-box">
                 <div class="columns is-multiline">
-                    <div class="column is-4">
+                    <div class="column is-3">
                         <div class="field">
                             <label class="label label-dinamico">Número de Hogares</label>
                             <div class="control">
@@ -219,7 +219,7 @@
                         </div>
                     </div>
 
-                    <div class="column is-4">
+                    <div class="column is-3">
                         <div class="field">
                             <label class="label label-dinamico">Menores de 12 años</label>
                             <div class="control">
@@ -228,11 +228,20 @@
                         </div>
                     </div>
 
-                    <div class="column is-4">
+                    <div class="column is-3">
                         <div class="field">
                             <label class="label label-dinamico">Mayores de 12 años</label>
                             <div class="control">
                                 <input class="input entradasTexto" type="text" id="campoMayores" readonly placeholder="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="column is-3">
+                        <div class="field">
+                            <label class="label label-dinamico">Litros al mes</label>
+                            <div class="control">
+                                <input class="input entradasTexto" type="text" id="campoDotacion" readonly placeholder="0">
                             </div>
                         </div>
                     </div>
@@ -290,12 +299,22 @@
                                     document.getElementById('campoMunicipio').value = item.MUNICIPIO_NOMBRE ?? '';
                                     document.getElementById('campoComunidad').value = item.LOCALIDAD_DESC ?? '';
 
-                                    // Rellenar Sección III (Cobertura Social)
-                                    document.getElementById('campoHogares').value = item.TOTAL_HOGARES ?? 0;
-                                    document.getElementById('campoMenores').value = item.TOTAL_INFANTILES ?? 0;
-                                    document.getElementById('campoMayores').value = item.TOTAL_RESTO ?? 0;
+// Rellenar Sección III (Cobertura Social)
+                                const hogares = item.TOTAL_HOGARES ?? 0;
+                                const menores = item.TOTAL_INFANTILES ?? 0;
+                                const mayores = item.TOTAL_RESTO ?? 0;
+                                
+                                document.getElementById('campoHogares').value = hogares;
+                                document.getElementById('campoMenores').value = menores;
+                                document.getElementById('campoMayores').value = mayores;
 
-                                    dropdown.style.display = 'none';
+                                // Tu fórmula: (Menores + Mayores) * 8 / 36
+                                const totalBeneficiarios = parseInt(menores) + parseInt(mayores);
+                                const dotacionCajas = ((totalBeneficiarios * 8) / 36 * 72).toFixed(0); // A 1 decimal
+                                document.getElementById('campoDotacion').value = dotacionCajas;
+
+                                dropdown.style.display = 'none';
+                                document.dispatchEvent(new Event('lecheriaSeleccionada'));
                                 });
 
                                 listaSugerencias.appendChild(option);
