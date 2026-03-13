@@ -1,70 +1,86 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Inputs Tabla I (Inventario Inicial)
+    // Inputs Tabla I
     const invCaja = document.getElementById('inv_ini_caja');
     const invSobres = document.getElementById('inv_ini_sobres');
     const invLitros = document.getElementById('inv_ini_litros');
     
-    // Inputs Tabla I (Abasto Total)
     const abastoCaja = document.getElementById('abasto_caja');
     const abastoSobres = document.getElementById('abasto_sobres');
     const abastoLitros = document.getElementById('abasto_litros');
 
-    // Inputs Tabla I (Venta Real)
     const ventaCaja = document.getElementById('venta_caja');
     const ventaSobres = document.getElementById('venta_sobres');
     const ventaLitros = document.getElementById('venta_litros');
 
-    // Inputs Tabla I (Litros Registrados)
     const regCaja = document.getElementById('litros_reg_caja');
     const regSobres = document.getElementById('litros_reg_sobres');
     const regLitros = document.getElementById('litros_reg_litros');
 
-    // Inputs Tabla I (Diferencia)
     const difCaja = document.getElementById('dif_caja');
     const difSobres = document.getElementById('dif_sobres');
     const difLitros = document.getElementById('dif_litros');
 
-    // Inputs Tabla I (Inventario Final)
     const finCaja = document.getElementById('inv_fin_caja');
     const finSobres = document.getElementById('inv_fin_sobres');
     const finLitros = document.getElementById('inv_fin_litros');
 
-    // Inputs Tabla II (Surtimientos)
+    // Inputs Tabla II
     const surtCajas = document.getElementById('surt_cajas');
     const surtLitros = document.getElementById('surt_litros');
 
     const SOBRES_POR_CAJA = 36;
     const LITROS_POR_CAJA = 72;
 
-    // --- FUNCIONES MATEMÁTICAS EN CASCADA ESTRICTAS ---
+    // --- FUNCIONES MATEMÁTICAS EN CASCADA ---
 
-    // 1. Calcula la Diferencia (Fórmula Liconsa: (Inv Inicial + Surtimiento) - Inv Final)
+    // 1. Calcula la Diferencia: (Venta Real - Litros Registrados)
     function calcularDiferencia() {
-        const inicial = parseFloat(invCaja.value) || 0;
-        const surtimiento = parseFloat(surtCajas.value) || 0;
-        const final = parseFloat(finCaja.value) || 0;
+        const ventaReal = parseFloat(ventaCaja.value) || 0;
+        const registrado = parseFloat(regCaja.value) || 0;
         
-        // Si no hay datos base, limpiamos
-        if (invCaja.value === '' && surtCajas.value === '' && finCaja.value === '') {
+        // Elementos de la sección 1.1
+        const radioSi = document.querySelector('input[name="venta_igual"][value="Si"]');
+        const radioNo = document.querySelector('input[name="venta_igual"][value="No"]');
+        const causasDiv = document.getElementById('causas_diferencia');
+
+        // Si ambas están vacías, limpiamos
+        if (ventaCaja.value === '' && regCaja.value === '') {
             difCaja.value = ''; difSobres.value = ''; difLitros.value = '';
+            if(radioSi) radioSi.checked = false;
+            if(radioNo) radioNo.checked = false;
+            if(causasDiv) causasDiv.style.display = 'none';
             return;
         }
 
-        const diferencia = (inicial + surtimiento) - final;
+        // FÓRMULA CORREGIDA: Venta Real - Registrado
+        const diferencia = ventaReal - registrado;
 
         difCaja.value = diferencia;
         difSobres.value = diferencia * SOBRES_POR_CAJA;
         difLitros.value = diferencia * LITROS_POR_CAJA;
+
+        // Automatización 1.1: ¿Registrada == Real?
+        if (regCaja.value !== '' && ventaCaja.value !== '') {
+            if (registrado === ventaReal) {
+                if(radioSi) radioSi.checked = true;
+                if(radioNo) radioNo.checked = false;
+                if(causasDiv) causasDiv.style.display = 'none';
+            } else {
+                if(radioNo) radioNo.checked = true;
+                if(radioSi) radioSi.checked = false;
+                if(causasDiv) causasDiv.style.display = 'block';
+            }
+        }
     }
 
-    // 2. Calcula el Inventario Final (Fórmula Liconsa: Abasto - Venta Real)
+    // 2. Calcula Inventario Final: Abasto - Venta Real
     function calcularInventarioFinal(silencioso = true) {
         const abastoActual = parseFloat(abastoCaja.value) || 0;
         const ventaActual = parseFloat(ventaCaja.value) || 0;
 
         if (abastoCaja.value === '' && ventaCaja.value === '') {
             finCaja.value = ''; finSobres.value = ''; finLitros.value = '';
-            calcularDiferencia(); // Limpia abajo también
+            calcularDiferencia();
             return;
         }
 
@@ -73,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (invFinal < 0) {
             finCaja.value = 0; finSobres.value = 0; finLitros.value = 0;
             if (!silencioso) {
-                mostrarNotificacion("La venta real no puede ser mayor al abasto total del mes.", "error");
+                mostrarNotificacion("La venta real excede el abasto total del mes.", "error");
             }
         } else {
             finCaja.value = invFinal;
@@ -81,11 +97,10 @@ document.addEventListener('DOMContentLoaded', () => {
             finLitros.value = invFinal * LITROS_POR_CAJA;
         }
 
-        // Obligatorio: Después de calcular Final, calculamos Diferencia
         calcularDiferencia();
     }
 
-    // 3. Calcula el Abasto Total (Fórmula Liconsa: Inicial + Surtimiento)
+    // 3. Calcula Abasto Total: Inicial + Surtimiento
     function actualizarAbastoTotal() {
         const inicialCajas = parseFloat(invCaja.value) || 0;
         const surtimientoCajas = parseFloat(surtCajas.value) || 0;
@@ -100,37 +115,25 @@ document.addEventListener('DOMContentLoaded', () => {
             abastoLitros.value = totalCajas * LITROS_POR_CAJA;
         }
 
-        // Si el abasto cambia, todo hacia abajo cambia
         calcularInventarioFinal(true);
     }
 
 
-    // --- EVENTOS: VENTA REAL DEL MES ---
+    // --- EVENTOS: VENTA REAL ---
     ventaCaja.addEventListener('input', () => {
-        if (ventaCaja.value === '') { 
-            ventaSobres.value = ''; ventaLitros.value = ''; 
-            calcularInventarioFinal(true); 
-            return; 
-        }
+        if (ventaCaja.value === '') { ventaSobres.value = ''; ventaLitros.value = ''; calcularInventarioFinal(true); return; }
         const cajas = parseFloat(ventaCaja.value);
         if (cajas < 0) { ventaCaja.value = ''; return; }
 
         ventaSobres.value = cajas * SOBRES_POR_CAJA;
         ventaLitros.value = cajas * LITROS_POR_CAJA;
-        
         calcularInventarioFinal(true); 
     });
 
-    ventaCaja.addEventListener('blur', () => {
-        calcularInventarioFinal(false); // Al salir, alerta si venta > abasto
-    });
+    ventaCaja.addEventListener('blur', () => calcularInventarioFinal(false));
 
     ventaLitros.addEventListener('input', () => {
-        if (ventaLitros.value === '') { 
-            ventaCaja.value = ''; ventaSobres.value = ''; 
-            calcularInventarioFinal(true); 
-            return; 
-        }
+        if (ventaLitros.value === '') { ventaCaja.value = ''; ventaSobres.value = ''; calcularInventarioFinal(true); return; }
         const litros = parseFloat(ventaLitros.value);
         if (litros % LITROS_POR_CAJA === 0) {
             const cajas = litros / LITROS_POR_CAJA;
@@ -158,23 +161,25 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // --- EVENTOS: LITROS REGISTRADOS (Solo convierten, no afectan Final ni Diferencia según reglas) ---
+    // --- EVENTOS: LITROS REGISTRADOS ---
     regCaja.addEventListener('input', () => {
-        if (regCaja.value === '') { regSobres.value = ''; regLitros.value = ''; return; }
+        if (regCaja.value === '') { regSobres.value = ''; regLitros.value = ''; calcularDiferencia(); return; }
         const cajas = parseFloat(regCaja.value);
         if (cajas < 0) { regCaja.value = ''; return; }
 
         regSobres.value = cajas * SOBRES_POR_CAJA;
         regLitros.value = cajas * LITROS_POR_CAJA;
+        calcularDiferencia();
     });
 
     regLitros.addEventListener('input', () => {
-        if (regLitros.value === '') { regCaja.value = ''; regSobres.value = ''; return; }
+        if (regLitros.value === '') { regCaja.value = ''; regSobres.value = ''; calcularDiferencia(); return; }
         const litros = parseFloat(regLitros.value);
         if (litros % LITROS_POR_CAJA === 0) {
             const cajas = litros / LITROS_POR_CAJA;
             regCaja.value = cajas;
             regSobres.value = cajas * SOBRES_POR_CAJA;
+            calcularDiferencia();
         } else {
             regCaja.value = ''; regSobres.value = '';
         }
@@ -192,6 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
             regSobres.value = (litrosAjustados / LITROS_POR_CAJA) * SOBRES_POR_CAJA;
             mostrarNotificacion(`Los litros registrados se ajustaron a ${litrosAjustados}L (cajas completas).`, 'error');
         }
+        calcularDiferencia();
     });
 
 
@@ -228,6 +234,22 @@ document.addEventListener('DOMContentLoaded', () => {
             mostrarNotificacion(`El surtimiento se ajustó a ${litrosAjustados}L por cajas completas.`, 'error');
             actualizarAbastoTotal();
         }
+    });
+
+
+    // --- LÓGICA SECCIÓN 1.2 (Venta no registrada) ---
+    const radiosVentaNoIncluida = document.querySelectorAll('input[name="venta_no_incluida"]');
+    const divMotivoNoIncluida = document.getElementById('motivo_no_incluida');
+    
+    radiosVentaNoIncluida.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'Si') {
+                divMotivoNoIncluida.style.display = 'block';
+            } else {
+                divMotivoNoIncluida.style.display = 'none';
+                document.querySelector('input[name="motivo_venta_no_incluida"]').value = '';
+            }
+        });
     });
 
 
@@ -278,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         iniciarCierre(); 
     }
 
-    // --- CONEXIÓN AL BACKEND (IA) ---
+    // --- CONEXIÓN A LA IA AL SELECCIONAR LECHERÍA ---
     document.addEventListener('lecheriaSeleccionada', () => {
         const lecheria = document.getElementById('inputLecheria').value.trim();
         const menores = parseInt(document.getElementById('campoMenores').value) || 0;
@@ -304,9 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 surtCajas.value = data.cajas_surtir;
                 surtLitros.value = data.litros_surtir;
                 
-                // Actualizamos Abasto, y eso dispara Final y Diferencia.
                 actualizarAbastoTotal();
-
                 mostrarNotificacion(data.mensaje, 'info');
             } else {
                 mostrarNotificacion(data.mensaje, 'error');
@@ -331,5 +351,45 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
             });
         }
+    });
+// --- LÓGICA SECCIÓN 2.1 (Falta de surtimiento) ---
+    const radiosFaltaSurtimiento = document.querySelectorAll('input[name="falta_surtimiento"]');
+    const divCausasFalta = document.getElementById('causas_falta_surtimiento');
+    
+    radiosFaltaSurtimiento.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'Si') {
+                divCausasFalta.style.display = 'block';
+            } else {
+                divCausasFalta.style.display = 'none';
+                
+                // Limpiamos los campos automáticamente si cambian de opinión y le dan a "No"
+                document.querySelector('input[name="causa_falta_descripcion"]').value = '';
+                document.querySelector('input[name="causa_falta_a"]').checked = false;
+                document.querySelector('input[name="causa_falta_b"]').checked = false;
+                document.querySelector('input[name="causa_falta_c_texto"]').value = '';
+            }
+        });
+    });
+// --- LÓGICA SECCIÓN 4.1 (Alternativas de solución) ---
+    const radiosContinuarVenta = document.querySelectorAll('input[name="continuar_venta"]');
+    const divAlternativas = document.getElementById('alternativas_solucion');
+    
+    radiosContinuarVenta.forEach(radio => {
+        radio.addEventListener('change', (e) => {
+            if (e.target.value === 'No') {
+                // Mostrar con estilo
+                divAlternativas.style.display = 'block';
+            } else {
+                // Ocultar y limpiar datos
+                divAlternativas.style.display = 'none';
+                
+                document.querySelector('input[name="alternativa_general"]').value = '';
+                document.querySelector('input[name="alt_a"]').checked = false;
+                document.querySelector('input[name="alt_b"]').checked = false;
+                document.querySelector('input[name="alt_c"]').checked = false;
+                document.querySelector('input[name="alt_d_texto"]').value = '';
+            }
+        });
     });
 });
