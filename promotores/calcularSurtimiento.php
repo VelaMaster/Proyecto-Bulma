@@ -51,10 +51,13 @@ try {
     
     // MAGIA: El inventario inicial de HOY es el inventario final del MES MÁS RECIENTE
     $cajasIniciales = 0;
+    $litrosIniciales = 0; // <-- NUEVA VARIABLE PARA LOS LITROS EXACTOS
 
     if ($mesesEncontrados > 0) {
-        // Tomamos el primer registro (el más reciente) como inventario inicial
-        $cajasIniciales = floatval($historial[0]['INVENTARIO_FINAL']) / 72;
+        // Atrapamos los litros exactos directamente de la base de datos (ej. 848)
+        $litrosIniciales = floatval($historial[0]['INVENTARIO_FINAL']);
+        // Calculamos las cajas para la IA interna (ej. 11.777)
+        $cajasIniciales = $litrosIniciales / 72;
 
         foreach ($historial as $reg) {
             $ventasCajas[] = floatval($reg['VENTA_REAL']) / 72;
@@ -95,7 +98,7 @@ try {
     $alerta = "";
     if ($excesoInventario > 0) {
         $cajasCastigadas = ceil($excesoInventario * 0.50); 
-        $alerta = "Nota: Sobraron demasiadas cajas (" . $cajasIniciales . "). El sistema redujo la meta en aprox. " . $cajasCastigadas . " cajas para evitar saturar la tienda.";
+        $alerta = "Nota: Sobraron demasiadas cajas (" . round($cajasIniciales, 1) . "). El sistema redujo la meta en aprox. " . $cajasCastigadas . " cajas para evitar saturar la tienda.";
     }
 
     // 5. CÁLCULO LOGÍSTICO
@@ -110,13 +113,14 @@ try {
         $mensaje .= "<br><strong>" . $alerta . "</strong><br>";
     }
     $mensaje .= "<br>Meta mensual calculada: " . $metaMensual . " cajas.<br>";
-    $mensaje .= "Restando " . $cajasIniciales . " cajas en tienda, <strong>se sugieren " . $cajasSurtir . " cajas a surtir.</strong>";
+    $mensaje .= "Restando " . round($cajasIniciales, 1) . " cajas en tienda, <strong>se sugieren " . round($cajasSurtir, 1) . " cajas a surtir.</strong>";
     $mensaje .= "</div>";
 
-    // Devolvemos el cálculo Y los datos iniciales para que el JS rellene la Tabla I
+    // Devolvemos el cálculo Y los litros puros para que el JS no tenga que adivinar
     echo json_encode([
         'exito' => true,
-        'cajas_iniciales' => $cajasIniciales, // <--- MAGIA NUEVA AQUI
+        'litros_iniciales' => $litrosIniciales, // <-- AHORA MANDAMOS LOS LITROS EXACTOS (ej. 848)
+        'cajas_iniciales' => $cajasIniciales,   
         'cajas_surtir' => $cajasSurtir,
         'litros_surtir' => $litrosSurtir,
         'mensaje' => $mensaje

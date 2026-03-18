@@ -28,23 +28,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const surtCajas = document.getElementById('surt_cajas');
     const surtLitros = document.getElementById('surt_litros');
 
-    const SOBRES_POR_CAJA = 36;
-    const LITROS_POR_CAJA = 72;
+    // Constantes de medida
+    const L_X_CAJA = 72;
+    const L_X_SOBRE = 2;
 
-    // --- FUNCIONES MATEMÁTICAS EN CASCADA ---
+    // --- FUNCIONES MATEMÁTICAS CENTRALIZADAS ---
 
-    // 1. Calcula la Diferencia: (Venta Real - Litros Registrados)
-    function calcularDiferencia() {
-        const ventaReal = parseFloat(ventaCaja.value) || 0;
-        const registrado = parseFloat(regCaja.value) || 0;
+    function formatearCantidades(litrosTotales) {
+        if (isNaN(litrosTotales) || litrosTotales === '') return { cajas: '', sobres: '', litros: '' };
         
-        // Elementos de la sección 1.1
+        const signo = litrosTotales < 0 ? -1 : 1;
+        const absLitros = Math.abs(litrosTotales);
+        
+        const cajas = Math.floor(absLitros / L_X_CAJA) * signo;
+        const sobres = Math.floor((absLitros % L_X_CAJA) / L_X_SOBRE) * signo;
+        
+        return { cajas, sobres, litros: litrosTotales };
+    }
+
+    function obtenerLitrosDeFila(inputCaja, inputSobres) {
+        const cajas = parseFloat(inputCaja.value) || 0;
+        const sobres = parseFloat(inputSobres.value) || 0;
+        return (cajas * L_X_CAJA) + (sobres * L_X_SOBRE);
+    }
+
+    // --- FUNCIONES EN CASCADA ---
+
+    function calcularDiferencia() {
+        const ventaL = parseFloat(ventaLitros.value) || 0;
+        let regL = parseFloat(regLitros.value) || 0;
+        
         const radioSi = document.querySelector('input[name="venta_igual"][value="Si"]');
         const radioNo = document.querySelector('input[name="venta_igual"][value="No"]');
         const causasDiv = document.getElementById('causas_diferencia');
 
-        // Si ambas están vacías, limpiamos
-        if (ventaCaja.value === '' && regCaja.value === '') {
+        // CANDADO 1: No se puede registrar más de lo que se vendió
+        if (regL > ventaL && ventaLitros.value !== '') {
+            mostrarNotificacion("Error: Los litros registrados NO pueden ser mayores a la venta real.", "error");
+            regL = ventaL; // Auto-ajustamos al tope máximo permitido para evitar el negativo
+            
+            const fmtR = formatearCantidades(regL);
+            regCaja.value = fmtR.cajas;
+            regSobres.value = fmtR.sobres;
+            regLitros.value = fmtR.litros;
+        }
+
+        if (ventaLitros.value === '' && regLitros.value === '') {
             difCaja.value = ''; difSobres.value = ''; difLitros.value = '';
             if(radioSi) radioSi.checked = false;
             if(radioNo) radioNo.checked = false;
@@ -52,16 +81,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // FÓRMULA CORREGIDA: Venta Real - Registrado
-        const diferencia = ventaReal - registrado;
+        const difL = ventaL - regL;
+        const fmt = formatearCantidades(difL);
 
-        difCaja.value = diferencia;
-        difSobres.value = diferencia * SOBRES_POR_CAJA;
-        difLitros.value = diferencia * LITROS_POR_CAJA;
+        difCaja.value = fmt.cajas;
+        difSobres.value = fmt.sobres;
+        difLitros.value = fmt.litros;
 
-        // Automatización 1.1: ¿Registrada == Real?
-        if (regCaja.value !== '' && ventaCaja.value !== '') {
-            if (registrado === ventaReal) {
+        if (regLitros.value !== '' && ventaLitros.value !== '') {
+            if (regL === ventaL) {
                 if(radioSi) radioSi.checked = true;
                 if(radioNo) radioNo.checked = false;
                 if(causasDiv) causasDiv.style.display = 'none';
@@ -73,184 +101,232 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 2. Calcula Inventario Final: Abasto - Venta Real
     function calcularInventarioFinal(silencioso = true) {
-        const abastoActual = parseFloat(abastoCaja.value) || 0;
-        const ventaActual = parseFloat(ventaCaja.value) || 0;
+        const abastoL = parseFloat(abastoLitros.value) || 0;
+        const ventaL = parseFloat(ventaLitros.value) || 0;
 
-        if (abastoCaja.value === '' && ventaCaja.value === '') {
+        if (abastoLitros.value === '' && ventaLitros.value === '') {
             finCaja.value = ''; finSobres.value = ''; finLitros.value = '';
             calcularDiferencia();
             return;
         }
 
-        const invFinal = abastoActual - ventaActual;
+        const invFinalL = abastoL - ventaL;
 
-        if (invFinal < 0) {
+        if (invFinalL < 0) {
             finCaja.value = 0; finSobres.value = 0; finLitros.value = 0;
             if (!silencioso) {
                 mostrarNotificacion("La venta real excede el abasto total del mes.", "error");
             }
         } else {
-            finCaja.value = invFinal;
-            finSobres.value = invFinal * SOBRES_POR_CAJA;
-            finLitros.value = invFinal * LITROS_POR_CAJA;
+            const fmt = formatearCantidades(invFinalL);
+            finCaja.value = fmt.cajas;
+            finSobres.value = fmt.sobres;
+            finLitros.value = fmt.litros;
         }
 
         calcularDiferencia();
     }
 
-    // 3. Calcula Abasto Total: Inicial + Surtimiento
     function actualizarAbastoTotal() {
-        const inicialCajas = parseFloat(invCaja.value) || 0;
-        const surtimientoCajas = parseFloat(surtCajas.value) || 0;
+        const invTotalL = parseFloat(invLitros.value) || 0;
+        const surtTotalL = parseFloat(surtLitros.value) || 0;
         
-        const totalCajas = inicialCajas + surtimientoCajas;
+        const abastoL = invTotalL + surtTotalL;
 
-        if (totalCajas === 0 && invCaja.value === '' && surtCajas.value === '') {
+        if (invLitros.value === '' && surtLitros.value === '') {
             abastoCaja.value = ''; abastoSobres.value = ''; abastoLitros.value = '';
         } else {
-            abastoCaja.value = totalCajas;
-            abastoSobres.value = totalCajas * SOBRES_POR_CAJA;
-            abastoLitros.value = totalCajas * LITROS_POR_CAJA;
+            const fmt = formatearCantidades(abastoL);
+            abastoCaja.value = fmt.cajas;
+            abastoSobres.value = fmt.sobres;
+            abastoLitros.value = fmt.litros;
         }
 
         calcularInventarioFinal(true);
     }
 
+    // --- FUNCIÓN: VALIDAR LITROS PARES (AVISA Y MARCA EN ROJO) ---
+    function validarLitrosPares(inputElement, origen) {
+        if (inputElement.value.trim() === '') {
+            inputElement.style.borderColor = "";
+            return;
+        }
+        let litros = parseFloat(inputElement.value);
+        if (!isNaN(litros) && litros % L_X_SOBRE !== 0) {
+            inputElement.style.borderColor = "#ff3860";
+            mostrarNotificacion(`Error en ${origen}: Has ingresado ${litros}L. Recuerda que 1 sobre equivale a 2L, corrige a una cantidad par.`, 'error');
+        } else {
+            inputElement.style.borderColor = ""; // Quita el rojo si ya está bien
+        }
+    }
+
+    // --- EVENTOS: INVENTARIO INICIAL ---
+    function actualizarInvDesdeCajasSobres() {
+        if (invCaja.value === '' && invSobres.value === '') {
+            invLitros.value = '';
+        } else {
+            invLitros.value = obtenerLitrosDeFila(invCaja, invSobres);
+        }
+        actualizarAbastoTotal();
+    }
+
+    invCaja.addEventListener('input', actualizarInvDesdeCajasSobres);
+    invSobres.addEventListener('input', actualizarInvDesdeCajasSobres);
+
+    invLitros.addEventListener('input', () => {
+        if (invLitros.value === '') { 
+            invCaja.value = ''; invSobres.value = ''; 
+            invLitros.style.borderColor = "";
+            actualizarAbastoTotal(); 
+            return; 
+        }
+        const fmt = formatearCantidades(parseFloat(invLitros.value));
+        invCaja.value = fmt.cajas;
+        invSobres.value = fmt.sobres;
+        actualizarAbastoTotal();
+    });
+
+    invLitros.addEventListener('blur', () => validarLitrosPares(invLitros, 'inventario inicial'));
 
     // --- EVENTOS: VENTA REAL ---
-    ventaCaja.addEventListener('input', () => {
-        if (ventaCaja.value === '') { ventaSobres.value = ''; ventaLitros.value = ''; calcularInventarioFinal(true); return; }
-        const cajas = parseFloat(ventaCaja.value);
-        if (cajas < 0) { ventaCaja.value = ''; return; }
+    function actualizarVentaDesdeCajasSobres() {
+        if (ventaCaja.value === '' && ventaSobres.value === '') {
+            ventaLitros.value = '';
+        } else {
+            ventaLitros.value = obtenerLitrosDeFila(ventaCaja, ventaSobres);
+        }
+        calcularInventarioFinal(true);
+    }
 
-        ventaSobres.value = cajas * SOBRES_POR_CAJA;
-        ventaLitros.value = cajas * LITROS_POR_CAJA;
-        calcularInventarioFinal(true); 
-    });
-
-    ventaCaja.addEventListener('blur', () => calcularInventarioFinal(false));
+    ventaCaja.addEventListener('input', actualizarVentaDesdeCajasSobres);
+    ventaSobres.addEventListener('input', actualizarVentaDesdeCajasSobres);
 
     ventaLitros.addEventListener('input', () => {
-        if (ventaLitros.value === '') { ventaCaja.value = ''; ventaSobres.value = ''; calcularInventarioFinal(true); return; }
-        const litros = parseFloat(ventaLitros.value);
-        if (litros % LITROS_POR_CAJA === 0) {
-            const cajas = litros / LITROS_POR_CAJA;
-            ventaCaja.value = cajas;
-            ventaSobres.value = cajas * SOBRES_POR_CAJA;
-            calcularInventarioFinal(true);
-        } else {
-            ventaCaja.value = ''; ventaSobres.value = '';
+        if (ventaLitros.value === '') { 
+            ventaCaja.value = ''; ventaSobres.value = ''; 
+            ventaLitros.style.borderColor = "";
+            calcularInventarioFinal(true); 
+            return; 
         }
+        const fmt = formatearCantidades(parseFloat(ventaLitros.value));
+        ventaCaja.value = fmt.cajas;
+        ventaSobres.value = fmt.sobres;
+        calcularInventarioFinal(true);
     });
 
-    ventaLitros.addEventListener('blur', () => {
-        if (ventaLitros.value.trim() === '') { calcularInventarioFinal(false); return; }
-        let litros = parseFloat(ventaLitros.value);
-        if (!isNaN(litros) && litros % LITROS_POR_CAJA !== 0) {
-            let residuo = litros % LITROS_POR_CAJA;
-            let litrosAjustados = (residuo < (LITROS_POR_CAJA / 2)) ? litros - residuo : litros + (LITROS_POR_CAJA - residuo);
-            
-            ventaLitros.value = litrosAjustados;
-            ventaCaja.value = litrosAjustados / LITROS_POR_CAJA;
-            ventaSobres.value = (litrosAjustados / LITROS_POR_CAJA) * SOBRES_POR_CAJA;
-            mostrarNotificacion(`La venta real se ajustó a ${litrosAjustados}L para coincidir con cajas completas.`, 'error');
-        }
-        calcularInventarioFinal(false);
-    });
+    ventaLitros.addEventListener('blur', () => validarLitrosPares(ventaLitros, 'venta real'));
 
 
     // --- EVENTOS: LITROS REGISTRADOS ---
-    regCaja.addEventListener('input', () => {
-        if (regCaja.value === '') { regSobres.value = ''; regLitros.value = ''; calcularDiferencia(); return; }
-        const cajas = parseFloat(regCaja.value);
-        if (cajas < 0) { regCaja.value = ''; return; }
-
-        regSobres.value = cajas * SOBRES_POR_CAJA;
-        regLitros.value = cajas * LITROS_POR_CAJA;
+    function actualizarRegDesdeCajasSobres() {
+        if (regCaja.value === '' && regSobres.value === '') {
+            regLitros.value = '';
+        } else {
+            regLitros.value = obtenerLitrosDeFila(regCaja, regSobres);
+        }
         calcularDiferencia();
-    });
+    }
+
+    regCaja.addEventListener('input', actualizarRegDesdeCajasSobres);
+    regSobres.addEventListener('input', actualizarRegDesdeCajasSobres);
 
     regLitros.addEventListener('input', () => {
-        if (regLitros.value === '') { regCaja.value = ''; regSobres.value = ''; calcularDiferencia(); return; }
-        const litros = parseFloat(regLitros.value);
-        if (litros % LITROS_POR_CAJA === 0) {
-            const cajas = litros / LITROS_POR_CAJA;
-            regCaja.value = cajas;
-            regSobres.value = cajas * SOBRES_POR_CAJA;
-            calcularDiferencia();
-        } else {
-            regCaja.value = ''; regSobres.value = '';
+        if (regLitros.value === '') { 
+            regCaja.value = ''; regSobres.value = ''; 
+            regLitros.style.borderColor = "";
+            calcularDiferencia(); 
+            return; 
         }
-    });
-
-    regLitros.addEventListener('blur', () => {
-        if (regLitros.value.trim() === '') return;
-        let litros = parseFloat(regLitros.value);
-        if (!isNaN(litros) && litros % LITROS_POR_CAJA !== 0) {
-            let residuo = litros % LITROS_POR_CAJA;
-            let litrosAjustados = (residuo < (LITROS_POR_CAJA / 2)) ? litros - residuo : litros + (LITROS_POR_CAJA - residuo);
-            
-            regLitros.value = litrosAjustados;
-            regCaja.value = litrosAjustados / LITROS_POR_CAJA;
-            regSobres.value = (litrosAjustados / LITROS_POR_CAJA) * SOBRES_POR_CAJA;
-            mostrarNotificacion(`Los litros registrados se ajustaron a ${litrosAjustados}L (cajas completas).`, 'error');
-        }
+        const fmt = formatearCantidades(parseFloat(regLitros.value));
+        regCaja.value = fmt.cajas;
+        regSobres.value = fmt.sobres;
         calcularDiferencia();
     });
+
+    regLitros.addEventListener('blur', () => validarLitrosPares(regLitros, 'litros registrados'));
 
 
     // --- EVENTOS: SURTIMIENTOS MANUALES (TABLA II) ---
     surtCajas.addEventListener('input', () => {
-        if (surtCajas.value === '') { surtLitros.value = ''; actualizarAbastoTotal(); return; }
-        const cajas = parseFloat(surtCajas.value);
-        if (cajas < 0) return;
-
-        surtLitros.value = cajas * LITROS_POR_CAJA;
+        if (surtCajas.value === '') { 
+            surtLitros.value = ''; 
+            surtCajas.style.borderColor = "";
+            surtLitros.style.borderColor = "";
+            actualizarAbastoTotal(); 
+            return; 
+        }
+        surtLitros.value = parseFloat(surtCajas.value) * L_X_CAJA;
+        surtCajas.style.borderColor = "";
+        surtLitros.style.borderColor = "";
         actualizarAbastoTotal();
     });
 
     surtLitros.addEventListener('input', () => {
-        if (surtLitros.value === '') { surtCajas.value = ''; actualizarAbastoTotal(); return; }
-        const litros = parseFloat(surtLitros.value);
-        if (litros % LITROS_POR_CAJA === 0 && litros !== 0) {
-            surtCajas.value = litros / LITROS_POR_CAJA;
-            actualizarAbastoTotal();
-        } else {
-            surtCajas.value = '';
+        if (surtLitros.value === '') { 
+            surtCajas.value = ''; 
+            surtCajas.style.borderColor = "";
+            surtLitros.style.borderColor = "";
+            actualizarAbastoTotal(); 
+            return; 
         }
+        
+        let litros = parseFloat(surtLitros.value);
+        // Si no es un entero, mostramos los decimales en caja para que note el error visualmente
+        surtCajas.value = Number.isInteger(litros / L_X_CAJA) ? (litros / L_X_CAJA) : (litros / L_X_CAJA).toFixed(2);
+        
+        if (litros % L_X_CAJA === 0) {
+            surtCajas.style.borderColor = "";
+            surtLitros.style.borderColor = "";
+        }
+        actualizarAbastoTotal();
     });
 
     surtLitros.addEventListener('blur', () => {
         if (surtLitros.value.trim() === '') return;
         let litros = parseFloat(surtLitros.value);
-        if (!isNaN(litros) && litros % LITROS_POR_CAJA !== 0) {
-            let residuo = litros % LITROS_POR_CAJA;
-            let litrosAjustados = (residuo < (LITROS_POR_CAJA / 2)) ? litros - residuo : litros + (LITROS_POR_CAJA - residuo);
+        
+        if (!isNaN(litros) && litros % L_X_CAJA !== 0) {
+            surtCajas.style.borderColor = "#ff3860";
+            surtLitros.style.borderColor = "#ff3860";
             
-            surtLitros.value = litrosAjustados;
-            surtCajas.value = litrosAjustados / LITROS_POR_CAJA;
-            mostrarNotificacion(`El surtimiento se ajustó a ${litrosAjustados}L por cajas completas.`, 'error');
-            actualizarAbastoTotal();
+            // Calculamos las opciones correctas más cercanas
+            let cajaInferior = Math.floor(litros / L_X_CAJA);
+            let cajaSuperior = Math.ceil(litros / L_X_CAJA);
+            let sugerencia1 = cajaInferior * L_X_CAJA;
+            let sugerencia2 = cajaSuperior * L_X_CAJA;
+            
+            mostrarNotificacion(`Aviso en Surtimiento: Ingresaste ${litros}L. Recuerda que se surte en múltiplos de 72L.<br>Sugerencia más próxima: <strong>${sugerencia1}L</strong> (${cajaInferior} cajas) o <strong>${sugerencia2}L</strong> (${cajaSuperior} cajas).`, 'error');
         }
     });
 
 
-    // --- LÓGICA SECCIÓN 1.2 (Venta no registrada) ---
-    const radiosVentaNoIncluida = document.querySelectorAll('input[name="venta_no_incluida"]');
-    const divMotivoNoIncluida = document.getElementById('motivo_no_incluida');
-    
-    radiosVentaNoIncluida.forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            if (e.target.value === 'Si') {
-                divMotivoNoIncluida.style.display = 'block';
-            } else {
-                divMotivoNoIncluida.style.display = 'none';
-                document.querySelector('input[name="motivo_venta_no_incluida"]').value = '';
-            }
-        });
-    });
+    // --- LÓGICA SECCIÓN 1.2, 2.1 y 4.1 ---
+    document.querySelectorAll('input[name="venta_no_incluida"]').forEach(r => r.addEventListener('change', (e) => {
+        document.getElementById('motivo_no_incluida').style.display = e.target.value === 'Si' ? 'block' : 'none';
+        if(e.target.value === 'No') document.querySelector('input[name="motivo_venta_no_incluida"]').value = '';
+    }));
+
+    document.querySelectorAll('input[name="falta_surtimiento"]').forEach(r => r.addEventListener('change', (e) => {
+        document.getElementById('causas_falta_surtimiento').style.display = e.target.value === 'Si' ? 'block' : 'none';
+        if(e.target.value === 'No') {
+            document.querySelector('input[name="causa_falta_descripcion"]').value = '';
+            document.querySelector('input[name="causa_falta_a"]').checked = false;
+            document.querySelector('input[name="causa_falta_b"]').checked = false;
+            document.querySelector('input[name="causa_falta_c_texto"]').value = '';
+        }
+    }));
+
+    document.querySelectorAll('input[name="continuar_venta"]').forEach(r => r.addEventListener('change', (e) => {
+        document.getElementById('alternativas_solucion').style.display = e.target.value === 'No' ? 'block' : 'none';
+        if(e.target.value === 'Si') {
+            document.querySelector('input[name="alternativa_general"]').value = '';
+            document.querySelector('input[name="alt_a"]').checked = false;
+            document.querySelector('input[name="alt_b"]').checked = false;
+            document.querySelector('input[name="alt_c"]').checked = false;
+            document.querySelector('input[name="alt_d_texto"]').value = '';
+        }
+    }));
 
 
     // --- SISTEMA DE NOTIFICACIONES ---
@@ -283,14 +359,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     toast.style.opacity = '0';
                     setTimeout(() => toast.remove(), 400);
                 }
-            }, 15000); 
+            }, 10000); 
         };
 
         toast.addEventListener('mouseenter', () => clearTimeout(timeoutId));
         toast.addEventListener('mouseleave', iniciarCierre);
 
-        const btnCerrar = toast.querySelector('.btn-cerrar-toast');
-        btnCerrar.addEventListener('click', () => {
+        toast.querySelector('.btn-cerrar-toast').addEventListener('click', () => {
             toast.style.transform = 'translateX(120%)';
             toast.style.opacity = '0';
             setTimeout(() => toast.remove(), 400);
@@ -319,12 +394,23 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.json())
         .then(data => {
             if (data.exito) {
-                invCaja.value = data.cajas_iniciales;
-                invSobres.value = data.cajas_iniciales * SOBRES_POR_CAJA;
-                invLitros.value = data.cajas_iniciales * LITROS_POR_CAJA;
+                
+                let litrosInicialesBDD = 0;
+                
+                if (data.litros_iniciales !== undefined) {
+                    litrosInicialesBDD = Math.round(parseFloat(data.litros_iniciales));
+                } else if (data.cajas_iniciales !== undefined) {
+                    litrosInicialesBDD = Math.round(parseFloat(data.cajas_iniciales) * L_X_CAJA);
+                }
 
-                surtCajas.value = data.cajas_surtir;
-                surtLitros.value = data.litros_surtir;
+                const invFmt = formatearCantidades(litrosInicialesBDD);
+                invCaja.value = invFmt.cajas;
+                invSobres.value = invFmt.sobres;
+                invLitros.value = invFmt.litros;
+
+                const surtL = parseFloat(data.litros_surtir) || 0;
+                surtLitros.value = surtL;
+                surtCajas.value = surtL / L_X_CAJA;
                 
                 actualizarAbastoTotal();
                 mostrarNotificacion(data.mensaje, 'info');
@@ -338,13 +424,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- BLOQUEO DE CARACTERES ---
+// --- BLOQUEO DE CARACTERES ---
     function bloquearCaracteresInvalidos(e) {
         if (['Backspace', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Delete', '-'].includes(e.key)) return;
         if (!/^[0-9]$/.test(e.key)) e.preventDefault();
     }
     
-    [ventaCaja, ventaLitros, regCaja, regLitros, surtCajas, surtLitros].forEach(input => {
+    [invCaja, invSobres, invLitros, ventaCaja, ventaSobres, ventaLitros, regCaja, regSobres, regLitros, surtCajas, surtLitros].forEach(input => {
         if(input) {
             input.addEventListener('keydown', bloquearCaracteresInvalidos);
             input.addEventListener('keydown', (e) => {
@@ -352,53 +438,34 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
-// --- LÓGICA SECCIÓN 2.1 (Falta de surtimiento) ---
-    const radiosFaltaSurtimiento = document.querySelectorAll('input[name="falta_surtimiento"]');
-    const divCausasFalta = document.getElementById('causas_falta_surtimiento');
-    
-    radiosFaltaSurtimiento.forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            if (e.target.value === 'Si') {
-                divCausasFalta.style.display = 'block';
-            } else {
-                divCausasFalta.style.display = 'none';
-                
-                // Limpiamos los campos automáticamente si cambian de opinión y le dan a "No"
-                document.querySelector('input[name="causa_falta_descripcion"]').value = '';
-                document.querySelector('input[name="causa_falta_a"]').checked = false;
-                document.querySelector('input[name="causa_falta_b"]').checked = false;
-                document.querySelector('input[name="causa_falta_c_texto"]').value = '';
-            }
-        });
-    });
-// --- LÓGICA SECCIÓN 4.1 (Alternativas de solución) ---
-    const radiosContinuarVenta = document.querySelectorAll('input[name="continuar_venta"]');
-    const divAlternativas = document.getElementById('alternativas_solucion');
-    
-    radiosContinuarVenta.forEach(radio => {
-        radio.addEventListener('change', (e) => {
-            if (e.target.value === 'No') {
-                // Mostrar con estilo
-                divAlternativas.style.display = 'block';
-            } else {
-                // Ocultar y limpiar datos
-                divAlternativas.style.display = 'none';
-                
-                document.querySelector('input[name="alternativa_general"]').value = '';
-                document.querySelector('input[name="alt_a"]').checked = false;
-                document.querySelector('input[name="alt_b"]').checked = false;
-                document.querySelector('input[name="alt_c"]').checked = false;
-                document.querySelector('input[name="alt_d_texto"]').value = '';
-            }
-        });
-    });
-// --- GENERAR PDF ---
+
+    // --- GENERAR PDF ---
     const btnGenerarPDF = document.getElementById('btnGenerarPDF');
     if (btnGenerarPDF) {
         btnGenerarPDF.addEventListener('click', () => {
-            // 1. Recopilar todos los datos del formulario
+            
+            // CANDADO 2: Bloqueo de seguridad para que no avancen con errores
+            if (!document.getElementById('inputLecheria').value) {
+                mostrarNotificacion('Debe seleccionar un punto de venta primero.', 'error');
+                return;
+            }
+
+            const sL = parseFloat(surtLitros.value) || 0;
+            if (surtLitros.value !== '' && sL % L_X_CAJA !== 0) {
+                mostrarNotificacion('Corrige el Surtimiento a un múltiplo de 72L antes de guardar el reporte.', 'error');
+                return;
+            }
+
+            const checkInputs = [invLitros, ventaLitros, regLitros];
+            for (let input of checkInputs) {
+                if (input.value !== '' && parseFloat(input.value) % L_X_SOBRE !== 0) {
+                    mostrarNotificacion('Existen casillas en rojo con litros impares. Corrígelo a cantidades pares (2L) antes de guardar.', 'error');
+                    return;
+                }
+            }
+            
+            // Si todo está correcto, recopila y envía
             const datosPDF = {
-                // Datos Generales
                 fecha: document.querySelector('input[name="fecha"]').value,
                 lecheria: document.getElementById('inputLecheria').value,
                 tienda: document.getElementById('campoTienda').value,
@@ -406,7 +473,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 municipio: document.getElementById('campoMunicipio').value,
                 comunidad: document.getElementById('campoComunidad').value,
 
-                // Tabla I
                 inv_ini_caja: document.getElementById('inv_ini_caja').value,
                 inv_ini_sobres: document.getElementById('inv_ini_sobres').value,
                 inv_ini_litros: document.getElementById('inv_ini_litros').value,
@@ -431,7 +497,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 fin_sobres: document.getElementById('inv_fin_sobres').value,
                 fin_litros: document.getElementById('inv_fin_litros').value,
 
-                // 1.1 y 1.2
                 venta_igual: document.querySelector('input[name="venta_igual"]:checked')?.value || 'Si',
                 causa_desc: document.querySelector('input[name="causa_descripcion"]').value,
                 causa_a: document.querySelector('input[name="causa_a"]').checked,
@@ -442,33 +507,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 venta_no_incluida: document.querySelector('input[name="venta_no_incluida"]:checked')?.value || 'No',
                 motivo_no_incluida: document.querySelector('input[name="motivo_venta_no_incluida"]').value,
 
-                // Tabla II (Surtimientos)
                 surt_fecha: document.getElementById('surt_fecha').value,
                 surt_cajas: document.getElementById('surt_cajas').value,
                 surt_litros: document.getElementById('surt_litros').value,
                 surt_factura: document.getElementById('surt_factura').value,
                 surt_caducidad: document.getElementById('surt_caducidad').value,
 
-                // 2.1
                 falta_surt: document.querySelector('input[name="falta_surtimiento"]:checked')?.value || 'No',
                 causa_falta_desc: document.querySelector('input[name="causa_falta_descripcion"]').value,
                 causa_falta_a: document.querySelector('input[name="causa_falta_a"]').checked,
                 causa_falta_b: document.querySelector('input[name="causa_falta_b"]').checked,
                 causa_falta_c: document.querySelector('input[name="causa_falta_c_texto"]').value,
 
-                // Sección III
                 hogares: document.getElementById('campoHogares').value,
                 menores: document.getElementById('campoMenores').value,
                 mayores: document.getElementById('campoMayores').value,
                 dotacion: document.getElementById('campoDotacion').value,
 
-                // Sección IV
                 prob_a: document.querySelector('input[name="prob_a"]').checked,
                 prob_b: document.querySelector('input[name="prob_b"]').checked,
                 prob_c: document.querySelector('input[name="prob_c"]').checked,
                 prob_d: document.querySelector('input[name="prob_d_texto"]').value,
 
-                // 4.1
                 continuar: document.querySelector('input[name="continuar_venta"]:checked')?.value || 'Si',
                 alt_general: document.querySelector('input[name="alternativa_general"]').value,
                 alt_a: document.querySelector('input[name="alt_a"]').checked,
@@ -477,15 +537,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 alt_d: document.querySelector('input[name="alt_d_texto"]').value
             };
 
-            // Validar que al menos hayan puesto la lechería
-            if(!datosPDF.lecheria) {
-                mostrarNotificacion('Debe seleccionar un punto de venta primero.', 'error');
-                return;
-            }
-
             btnGenerarPDF.classList.add('is-loading');
 
-            // 2. Enviar por POST al nuevo archivo que dibujará el PDF
             fetch('generar_pdf.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -493,15 +546,13 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(response => {
                 if (!response.ok) throw new Error('Error en el servidor');
-                return response.blob(); // Recibimos un archivo (blob)
+                return response.blob(); 
             })
             .then(blob => {
-                // 3. Descargar el archivo mágicamente en el navegador
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                // Nombre del archivo: Inventario_Lecheria_Mes.pdf
                 a.download = `Inventario_${datosPDF.lecheria}_${datosPDF.fecha}.pdf`;
                 document.body.appendChild(a);
                 a.click();

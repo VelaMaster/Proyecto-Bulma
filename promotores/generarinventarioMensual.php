@@ -139,8 +139,7 @@
                         <tbody>
                             <tr>
                                 <td><strong>Caja</strong></td>
-                                <td><input type="number" id="inv_ini_caja" class="input entradasTexto" min="0" readonly
-                                        placeholder="0"></td>
+                                <td><input type="number" id="inv_ini_caja" class="input entradasTexto" min="0" readonly placeholder="0"></td>
                                 <td><input type="number" id="abasto_caja" class="input entradasTexto" readonly
                                         placeholder="0"></td>
                                 <td><input type="number" id="venta_caja" class="input entradasTexto" placeholder="0">
@@ -188,12 +187,12 @@
             </div>
         </div>
     </section>
-<section class="section" style="padding-top: 0;">
+    <section class="section" style="padding-top: 0;">
         <div class="container">
             <div class="box liquid-glass-box" style="padding: 2.5rem;">
-                
+
                 <h2 class="title is-5 titulo-seccion-dinamico mb-3" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px; text-align: left;">1.1 DIFERENCIAS</h2>
-                
+
                 <div class="field mb-4" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
                     <label class="label label-dinamico mb-2" style="text-align: left;">¿La venta registrada es igual a la venta real?</label>
                     <div class="control" style="display: flex; gap: 30px; align-items: center;">
@@ -244,7 +243,7 @@
                 </div>
 
                 <h2 class="title is-5 titulo-seccion-dinamico mb-3 mt-5" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px; text-align: left;">1.2 VENTA NO REGISTRADA</h2>
-                
+
                 <div class="field mb-4" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
                     <label class="label label-dinamico mb-2" style="text-align: left;">a) ¿Se vendió leche a personas no incluidas en el libro de retiro?</label>
                     <div class="control" style="display: flex; gap: 30px; align-items: center;">
@@ -306,12 +305,12 @@
             </div>
         </div>
     </section>
-<section class="section" style="padding-top: 0;">
+    <section class="section" style="padding-top: 0;">
         <div class="container">
             <div class="box liquid-glass-box" style="padding: 2.5rem;">
-                
+
                 <h2 class="title is-5 titulo-seccion-dinamico mb-3" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px; text-align: left;">2.1 FALTA DE SURTIMIENTO</h2>
-                
+
                 <div class="field mb-4" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
                     <label class="label label-dinamico mb-2" style="text-align: left;">¿Hubo falta de surtimiento?</label>
                     <div class="control" style="display: flex; gap: 30px; align-items: center;">
@@ -325,7 +324,7 @@
                 </div>
 
                 <div id="causas_falta_surtimiento" style="display: none; background: rgba(0,0,0,0.02); padding: 25px 20px; border-radius: 12px; border: 1px solid rgba(128,128,128,0.1);">
-                    
+
                     <div class="field mb-5" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
                         <label class="label label-dinamico mb-2" style="text-align: left;">¿Señale o describa la causa?</label>
                         <div class="control" style="width: 100%; max-width: 600px;">
@@ -409,14 +408,14 @@
             </div>
         </div>
     </section>
-<section class="section">
+    <section class="section">
         <div class="container">
             <h2 class="title is-4 titulo-seccion-dinamico mb-5">
                 IV. Problemas de operación en el punto de venta
             </h2>
 
             <div class="box liquid-glass-box" style="padding: 2.5rem;">
-                
+
                 <div class="columns is-multiline mb-5" style="margin: 0;">
                     <div class="column is-6" style="padding-left: 0;">
                         <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
@@ -448,7 +447,7 @@
                 <h3 class="title is-5 titulo-seccion-dinamico mb-3 mt-5" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px; text-align: left;">
                     4.1 ¿Se puede continuar con la venta de leche Liconsa?
                 </h3>
-                
+
                 <div class="field mb-5" style="align-items: flex-start !important; width: 100%;">
                     <div class="control" style="display: flex; gap: 30px; justify-content: flex-start; width: 100%;">
                         <label class="radio" style="color: var(--bulma-text); font-weight: 600; font-size: 1.1rem; margin-left: 0;">
@@ -461,7 +460,7 @@
                 </div>
 
                 <div id="alternativas_solucion" style="display: none; padding-top: 10px;">
-                    
+
                     <div class="field mb-4" style="align-items: flex-start !important; width: 100%;">
                         <label class="label label-dinamico mb-2" style="text-align: left;">Alternativas de solución:</label>
                         <div class="control" style="width: 100%; max-width: 600px;">
@@ -501,8 +500,8 @@
         </div>
     </section>
     </div>
-            </div>
-        </div>
+    </div>
+    </div>
     </section>
 
     <section class="section" style="padding-top: 1rem; padding-bottom: 4rem;">
@@ -525,7 +524,7 @@
 
             let timeoutBusqueda;
 
-            inputLecheria.addEventListener('input', function () {
+            inputLecheria.addEventListener('input', function() {
                 const texto = this.value.trim();
                 clearTimeout(timeoutBusqueda);
 
