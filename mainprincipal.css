@@ -23518,10 +23518,7 @@ html[data-theme=light] .notificacion-glass {
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
-/* =========================================
-   OCULTAR FLECHAS NATIVAS DE NÚMEROS
-========================================= */
-/* Para Chrome, Safari, Edge, Opera */
+/* OCULTAR FLECHAS NATIVAS DE NÚMEROS */
 .tabla-glass .entradasTexto[type=number]::-webkit-inner-spin-button,
 .tabla-glass .entradasTexto[type=number]::-webkit-outer-spin-button {
   -webkit-appearance: none !important;
@@ -23531,4 +23528,12 @@ html[data-theme=light] .notificacion-glass {
 /* Para Firefox */
 .tabla-glass .entradasTexto[type=number] {
   -moz-appearance: textfield !important;
+}
+
+/* =========================================
+   TEMA DINÁMICO PARA CHECKBOXES Y RADIOS
+========================================= */
+input[type=checkbox],
+input[type=radio] {
+  accent-color: var(--bulma-link) !important;
 }/*# sourceMappingURL=mainprincipal.css.map */

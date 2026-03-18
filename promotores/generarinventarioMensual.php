@@ -190,97 +190,78 @@
     </section>
 <section class="section" style="padding-top: 0;">
         <div class="container">
-            <div class="box liquid-glass-box" style="padding: 2rem;">
+            <div class="box liquid-glass-box" style="padding: 2.5rem;">
                 
-                <h2 class="title is-5 titulo-seccion-dinamico mb-3" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px;">1.1 DIFERENCIAS</h2>
+                <h2 class="title is-5 titulo-seccion-dinamico mb-3" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px; text-align: left;">1.1 DIFERENCIAS</h2>
                 
-                <div class="columns is-vcentered mb-4">
-                    <div class="column is-narrow">
-                        <label class="label label-dinamico mb-0">¿La venta registrada es igual a la venta real?</label>
-                    </div>
-                    <div class="column">
-                        <div class="control" style="display: flex; gap: 20px; align-items: center;">
-                            <label class="radio" style="color: var(--bulma-text); font-weight: 500;">
-                                <input type="radio" name="venta_igual" value="No" disabled> No
-                            </label>
-                            <label class="radio" style="color: var(--bulma-text); font-weight: 500;">
-                                <input type="radio" name="venta_igual" value="Si" disabled> Sí
-                            </label>
-                            <span class="help" style="color: var(--bulma-text-weak); margin: 0;">*Automático</span>
-                        </div>
+                <div class="field mb-4" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
+                    <label class="label label-dinamico mb-2" style="text-align: left;">¿La venta registrada es igual a la venta real?</label>
+                    <div class="control" style="display: flex; gap: 30px; align-items: center;">
+                        <label class="radio" style="color: var(--bulma-text); font-weight: 600; font-size: 1.1rem; margin-left: 0;">
+                            <input type="radio" name="venta_igual" value="No" disabled style="transform: scale(1.3); margin-right: 8px;"> No
+                        </label>
+                        <label class="radio" style="color: var(--bulma-text); font-weight: 600; font-size: 1.1rem; margin-left: 0;">
+                            <input type="radio" name="venta_igual" value="Si" disabled style="transform: scale(1.3); margin-right: 8px;"> Sí
+                        </label>
+                        <span class="help" style="color: var(--bulma-text-weak); margin: 0;">*Automático</span>
                     </div>
                 </div>
 
-                <div id="causas_diferencia" style="display: none; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 8px; margin-bottom: 25px;">
-                    <div class="field is-horizontal align-items-center mb-4">
-                        <div class="field-label is-normal" style="flex-grow: 0; margin-right: 15px; text-align: left;">
-                            <label class="label label-dinamico mb-0">¿Señale o describa la causa?</label>
-                        </div>
-                        <div class="field-body">
-                            <div class="control" style="width: 100%;">
-                                <input class="input entradasTexto" type="text" name="causa_descripcion" placeholder="Escriba aquí la causa general..." style="max-width: 100%;">
-                            </div>
+                <div id="causas_diferencia" style="display: none; background: rgba(0,0,0,0.02); padding: 25px 20px; border-radius: 12px; border: 1px solid rgba(128,128,128,0.1); margin-bottom: 25px;">
+                    <div class="field mb-5" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
+                        <label class="label label-dinamico mb-2" style="text-align: left;">¿Señale o describa la causa?</label>
+                        <div class="control" style="width: 100%; max-width: 600px;">
+                            <input class="input entradasTexto" type="text" name="causa_descripcion" placeholder="Escriba aquí la causa general..." style="width: 100%; margin: 0;">
                         </div>
                     </div>
 
-                    <div class="columns is-multiline" style="margin-left: 10px;">
-                        <div class="column is-6 py-2">
-                            <label class="checkbox" style="color: var(--bulma-text);">
-                                <input type="checkbox" name="causa_a"> a) Falta de capacitación al responsable de la venta
-                            </label>
+                    <div class="columns is-multiline" style="margin: 0;">
+                        <div class="column is-6" style="padding-left: 0;">
+                            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                                <span style="color: var(--bulma-text); font-weight: 500;">a) Falta de capacitación al responsable de la venta</span>
+                                <input type="checkbox" name="causa_a" style="transform: scale(1.2); cursor: pointer;">
+                            </div>
                         </div>
-                        <div class="column is-6 py-2">
-                            <label class="checkbox" style="color: var(--bulma-text);">
-                                <input type="checkbox" name="causa_b"> b) Omisión del responsable de la venta
-                            </label>
+                        <div class="column is-6" style="padding-right: 0;">
+                            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                                <span style="color: var(--bulma-text); font-weight: 500;">b) Omisión del responsable de la venta</span>
+                                <input type="checkbox" name="causa_b" style="transform: scale(1.2); cursor: pointer;">
+                            </div>
                         </div>
-                        <div class="column is-6 py-2">
-                            <label class="checkbox" style="color: var(--bulma-text);">
-                                <input type="checkbox" name="causa_c"> c) Resistencia de las personas titulares
-                            </label>
+                        <div class="column is-6" style="padding-left: 0;">
+                            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                                <span style="color: var(--bulma-text); font-weight: 500;">c) Resistencia de las personas titulares</span>
+                                <input type="checkbox" name="causa_c" style="transform: scale(1.2); cursor: pointer;">
+                            </div>
                         </div>
-                        <div class="column is-6 py-2">
-                            <div class="field is-horizontal align-items-center">
-                                <div class="field-label is-normal" style="flex-grow: 0; margin-right: 10px; text-align: left;">
-                                    <label class="label label-dinamico mb-0">d) Otros:</label>
-                                </div>
-                                <div class="field-body">
-                                    <div class="control">
-                                        <input class="input entradasTexto is-small" type="text" name="causa_d_texto" placeholder="..." style="height: 30px;">
-                                    </div>
-                                </div>
+                        <div class="column is-6" style="padding-right: 0;">
+                            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                                <span style="color: var(--bulma-text); font-weight: 500; white-space: nowrap;">d) Otros:</span>
+                                <input class="input entradasTexto is-small" type="text" name="causa_d_texto" placeholder="Especifique..." style="height: 30px; width: 100%; max-width: 300px; margin: 0;">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <h2 class="title is-5 titulo-seccion-dinamico mb-3 mt-5" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px;">1.2 VENTA NO REGISTRADA</h2>
+                <h2 class="title is-5 titulo-seccion-dinamico mb-3 mt-5" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px; text-align: left;">1.2 VENTA NO REGISTRADA</h2>
                 
-                <div class="columns is-vcentered">
-                    <div class="column is-narrow">
-                        <label class="label label-dinamico mb-0">a) ¿Se vendió leche a personas no incluidas en el libro de retiro?</label>
-                    </div>
-                    <div class="column is-narrow">
-                        <div class="control" style="display: flex; gap: 20px;">
-                            <label class="radio" style="color: var(--bulma-text); font-weight: 500;">
-                                <input type="radio" name="venta_no_incluida" value="No" checked> No
-                            </label>
-                            <label class="radio" style="color: var(--bulma-text); font-weight: 500;">
-                                <input type="radio" name="venta_no_incluida" value="Si"> Sí
-                            </label>
-                        </div>
+                <div class="field mb-4" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
+                    <label class="label label-dinamico mb-2" style="text-align: left;">a) ¿Se vendió leche a personas no incluidas en el libro de retiro?</label>
+                    <div class="control" style="display: flex; gap: 30px; align-items: center;">
+                        <label class="radio" style="color: var(--bulma-text); font-weight: 600; font-size: 1.1rem; margin-left: 0;">
+                            <input type="radio" name="venta_no_incluida" value="No" checked style="transform: scale(1.3); margin-right: 8px;"> No
+                        </label>
+                        <label class="radio" style="color: var(--bulma-text); font-weight: 600; font-size: 1.1rem; margin-left: 0;">
+                            <input type="radio" name="venta_no_incluida" value="Si" style="transform: scale(1.3); margin-right: 8px;"> Sí
+                        </label>
                     </div>
                 </div>
 
-                <div id="motivo_no_incluida" style="display: none; margin-top: 10px; padding-left: 20px;">
-                    <div class="field is-horizontal align-items-center">
-                        <div class="field-label is-normal" style="flex-grow: 0; margin-right: 15px; text-align: left;">
-                            <label class="label label-dinamico mb-0">Anote el motivo:</label>
-                        </div>
-                        <div class="field-body">
-                            <div class="control" style="width: 100%;">
-                                <input class="input entradasTexto" type="text" name="motivo_venta_no_incluida" placeholder="Describa el motivo..." style="max-width: 600px;">
-                            </div>
+                <div id="motivo_no_incluida" style="display: none; padding-top: 10px;">
+                    <div class="field" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
+                        <label class="label label-dinamico mb-2" style="text-align: left;">Anote el motivo:</label>
+                        <div class="control" style="width: 100%; max-width: 600px;">
+                            <input class="input entradasTexto" type="text" name="motivo_venta_no_incluida" placeholder="Describa el motivo..." style="width: 100%; margin: 0;">
                         </div>
                     </div>
                 </div>
@@ -325,62 +306,50 @@
             </div>
         </div>
     </section>
-    <section class="section" style="padding-top: 0;">
+<section class="section" style="padding-top: 0;">
         <div class="container">
-            <div class="box liquid-glass-box" style="padding: 2rem;">
+            <div class="box liquid-glass-box" style="padding: 2.5rem;">
                 
-                <h2 class="title is-5 titulo-seccion-dinamico mb-3" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px;">2.1 FALTA DE SURTIMIENTO</h2>
+                <h2 class="title is-5 titulo-seccion-dinamico mb-3" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px; text-align: left;">2.1 FALTA DE SURTIMIENTO</h2>
                 
-                <div class="columns is-vcentered mb-4">
-                    <div class="column is-narrow">
-                        <label class="label label-dinamico mb-0">¿Hubo falta de surtimiento?</label>
-                    </div>
-                    <div class="column">
-                        <div class="control" style="display: flex; gap: 20px; align-items: center;">
-                            <label class="radio" style="color: var(--bulma-text); font-weight: 500;">
-                                <input type="radio" name="falta_surtimiento" value="No" checked> No
-                            </label>
-                            <label class="radio" style="color: var(--bulma-text); font-weight: 500;">
-                                <input type="radio" name="falta_surtimiento" value="Si"> Sí
-                            </label>
-                        </div>
+                <div class="field mb-4" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
+                    <label class="label label-dinamico mb-2" style="text-align: left;">¿Hubo falta de surtimiento?</label>
+                    <div class="control" style="display: flex; gap: 30px; align-items: center;">
+                        <label class="radio" style="color: var(--bulma-text); font-weight: 600; font-size: 1.1rem; margin-left: 0;">
+                            <input type="radio" name="falta_surtimiento" value="No" checked style="transform: scale(1.3); margin-right: 8px;"> No
+                        </label>
+                        <label class="radio" style="color: var(--bulma-text); font-weight: 600; font-size: 1.1rem; margin-left: 0;">
+                            <input type="radio" name="falta_surtimiento" value="Si" style="transform: scale(1.3); margin-right: 8px;"> Sí
+                        </label>
                     </div>
                 </div>
 
-                <div id="causas_falta_surtimiento" style="display: none; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 8px;">
+                <div id="causas_falta_surtimiento" style="display: none; background: rgba(0,0,0,0.02); padding: 25px 20px; border-radius: 12px; border: 1px solid rgba(128,128,128,0.1);">
                     
-                    <div class="field is-horizontal align-items-center mb-4">
-                        <div class="field-label is-normal" style="flex-grow: 0; margin-right: 15px; text-align: left;">
-                            <label class="label label-dinamico mb-0">¿Señale o describa la causa?</label>
-                        </div>
-                        <div class="field-body">
-                            <div class="control" style="width: 100%;">
-                                <input class="input entradasTexto" type="text" name="causa_falta_descripcion" placeholder="Escriba aquí la causa general..." style="max-width: 100%;">
-                            </div>
+                    <div class="field mb-5" style="display: flex; flex-direction: column; align-items: flex-start; width: 100%;">
+                        <label class="label label-dinamico mb-2" style="text-align: left;">¿Señale o describa la causa?</label>
+                        <div class="control" style="width: 100%; max-width: 600px;">
+                            <input class="input entradasTexto" type="text" name="causa_falta_descripcion" placeholder="Escriba aquí la causa general..." style="width: 100%; margin: 0;">
                         </div>
                     </div>
 
-                    <div class="columns is-multiline" style="margin-left: 10px;">
-                        <div class="column is-6 py-2">
-                            <label class="checkbox" style="color: var(--bulma-text);">
-                                <input type="checkbox" name="causa_falta_a"> a) Adeudo del responsable de la venta
-                            </label>
+                    <div class="columns is-multiline" style="margin: 0;">
+                        <div class="column is-6" style="padding-left: 0;">
+                            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                                <span style="color: var(--bulma-text); font-weight: 500;">a) Adeudo del responsable de la venta</span>
+                                <input type="checkbox" name="causa_falta_a" style="transform: scale(1.2); cursor: pointer;">
+                            </div>
                         </div>
-                        <div class="column is-6 py-2">
-                            <label class="checkbox" style="color: var(--bulma-text);">
-                                <input type="checkbox" name="causa_falta_b"> b) Retraso en la distribución
-                            </label>
+                        <div class="column is-6" style="padding-right: 0;">
+                            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                                <span style="color: var(--bulma-text); font-weight: 500;">b) Retraso en la distribución</span>
+                                <input type="checkbox" name="causa_falta_b" style="transform: scale(1.2); cursor: pointer;">
+                            </div>
                         </div>
-                        <div class="column is-12 py-2">
-                            <div class="field is-horizontal align-items-center">
-                                <div class="field-label is-normal" style="flex-grow: 0; margin-right: 10px; text-align: left;">
-                                    <label class="label label-dinamico mb-0">c) Otros:</label>
-                                </div>
-                                <div class="field-body">
-                                    <div class="control">
-                                        <input class="input entradasTexto is-small" type="text" name="causa_falta_c_texto" placeholder="Especifique..." style="height: 30px; max-width: 400px;">
-                                    </div>
-                                </div>
+                        <div class="column is-6" style="padding-left: 0;">
+                            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                                <span style="color: var(--bulma-text); font-weight: 500; white-space: nowrap;">c) Otros:</span>
+                                <input class="input entradasTexto is-small" type="text" name="causa_falta_c_texto" placeholder="Especifique..." style="height: 30px; width: 100%; max-width: 300px; margin: 0;">
                             </div>
                         </div>
                     </div>
@@ -440,104 +409,108 @@
             </div>
         </div>
     </section>
-    <section class="section">
+<section class="section">
         <div class="container">
             <h2 class="title is-4 titulo-seccion-dinamico mb-5">
                 IV. Problemas de operación en el punto de venta
             </h2>
 
-            <div class="box liquid-glass-box">
-                <div class="columns is-multiline mb-2">
-                    <div class="column is-6 py-2">
-                        <label class="checkbox" style="color: var(--bulma-text);">
-                            <input type="checkbox" name="prob_a"> a) Cierre por reubicación de punto de venta
-                        </label>
+            <div class="box liquid-glass-box" style="padding: 2.5rem;">
+                
+                <div class="columns is-multiline mb-5" style="margin: 0;">
+                    <div class="column is-6" style="padding-left: 0;">
+                        <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                            <span style="color: var(--bulma-text); font-weight: 500;">a) Cierre por reubicación de punto de venta</span>
+                            <input type="checkbox" name="prob_a" style="transform: scale(1.2); cursor: pointer;">
+                        </div>
                     </div>
-                    <div class="column is-6 py-2">
-                        <label class="checkbox" style="color: var(--bulma-text);">
-                            <input type="checkbox" name="prob_b"> b) Renuncia o baja del responsable
-                        </label>
+                    <div class="column is-6" style="padding-right: 0;">
+                        <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                            <span style="color: var(--bulma-text); font-weight: 500;">b) Renuncia o baja del responsable</span>
+                            <input type="checkbox" name="prob_b" style="transform: scale(1.2); cursor: pointer;">
+                        </div>
                     </div>
-                    <div class="column is-6 py-2">
-                        <label class="checkbox" style="color: var(--bulma-text);">
-                            <input type="checkbox" name="prob_c"> c) Adeudo del responsable
-                        </label>
+
+                    <div class="column is-6" style="padding-left: 0;">
+                        <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                            <span style="color: var(--bulma-text); font-weight: 500;">c) Adeudo del responsable</span>
+                            <input type="checkbox" name="prob_c" style="transform: scale(1.2); cursor: pointer;">
+                        </div>
                     </div>
-                    <div class="column is-6 py-2">
-                        <div class="field is-horizontal align-items-center">
-                            <div class="field-label is-normal" style="flex-grow: 0; margin-right: 10px; text-align: left;">
-                                <label class="label label-dinamico mb-0">d) Otros:</label>
-                            </div>
-                            <div class="field-body">
-                                <div class="control">
-                                    <input class="input entradasTexto is-small" type="text" name="prob_d_texto" placeholder="Especifique..." style="height: 30px; max-width: 400px;">
-                                </div>
-                            </div>
+                    <div class="column is-6" style="padding-right: 0;">
+                        <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                            <span style="color: var(--bulma-text); font-weight: 500; white-space: nowrap;">d) Otros:</span>
+                            <input class="input entradasTexto is-small" type="text" name="prob_d_texto" placeholder="Especifique..." style="height: 30px; width: 100%; max-width: 300px; margin: 0;">
                         </div>
                     </div>
                 </div>
 
-                <h3 class="title is-5 titulo-seccion-dinamico mb-3 mt-5" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px;">
+                <h3 class="title is-5 titulo-seccion-dinamico mb-3 mt-5" style="border-bottom: 2px solid var(--bulma-border); padding-bottom: 5px; text-align: left;">
                     4.1 ¿Se puede continuar con la venta de leche Liconsa?
                 </h3>
-                <div class="field is-horizontal align-items-center mb-4">
-                    <div class="field-body">
-                        <div class="control" style="display: flex; gap: 20px; align-items: center;">
-                            <label class="radio" style="color: var(--bulma-text); font-weight: 500;">
-                                <input type="radio" name="continuar_venta" value="Si" checked> Sí
-                            </label>
-                            <label class="radio" style="color: var(--bulma-text); font-weight: 500;">
-                                <input type="radio" name="continuar_venta" value="No"> No
-                            </label>
-                        </div>
+                
+                <div class="field mb-5" style="align-items: flex-start !important; width: 100%;">
+                    <div class="control" style="display: flex; gap: 30px; justify-content: flex-start; width: 100%;">
+                        <label class="radio" style="color: var(--bulma-text); font-weight: 600; font-size: 1.1rem; margin-left: 0;">
+                            <input type="radio" name="continuar_venta" value="Si" checked style="transform: scale(1.3); margin-right: 8px;"> Sí
+                        </label>
+                        <label class="radio" style="color: var(--bulma-text); font-weight: 600; font-size: 1.1rem; margin-left: 0;">
+                            <input type="radio" name="continuar_venta" value="No" style="transform: scale(1.3); margin-right: 8px;"> No
+                        </label>
                     </div>
                 </div>
 
-                <div id="alternativas_solucion" style="display: none; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 8px;">
+                <div id="alternativas_solucion" style="display: none; padding-top: 10px;">
                     
-                    <div class="field is-horizontal align-items-center mb-4">
-                        <div class="field-label is-normal" style="flex-grow: 0; margin-right: 15px; text-align: left; width: auto;">
-                            <label class="label label-dinamico mb-0">Alternativas de solución:</label>
-                        </div>
-                        <div class="field-body">
-                            <div class="control" style="width: 100%;">
-                                <input class="input entradasTexto" type="text" name="alternativa_general" placeholder="Describa la alternativa..." style="max-width: 100%;">
-                            </div>
+                    <div class="field mb-4" style="align-items: flex-start !important; width: 100%;">
+                        <label class="label label-dinamico mb-2" style="text-align: left;">Alternativas de solución:</label>
+                        <div class="control" style="width: 100%; max-width: 600px;">
+                            <input class="input entradasTexto" type="text" name="alternativa_general" placeholder="Describa la alternativa principal..." style="width: 100%; margin: 0;">
                         </div>
                     </div>
 
-                    <div class="columns is-multiline" style="margin-left: 10px;">
-                        <div class="column is-6 py-2">
-                            <label class="checkbox" style="color: var(--bulma-text);">
-                                <input type="checkbox" name="alt_a"> a) Propuesta de un nuevo local
-                            </label>
+                    <div class="columns is-multiline" style="margin: 0;">
+                        <div class="column is-6" style="padding-left: 0;">
+                            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                                <span style="color: var(--bulma-text); font-weight: 500;">a) Propuesta de un nuevo local</span>
+                                <input type="checkbox" name="alt_a" style="transform: scale(1.2); cursor: pointer;">
+                            </div>
                         </div>
-                        <div class="column is-6 py-2">
-                            <label class="checkbox" style="color: var(--bulma-text);">
-                                <input type="checkbox" name="alt_b"> b) Fusión de beneficiarios
-                            </label>
+                        <div class="column is-6" style="padding-right: 0;">
+                            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                                <span style="color: var(--bulma-text); font-weight: 500;">b) Fusión de beneficiarios</span>
+                                <input type="checkbox" name="alt_b" style="transform: scale(1.2); cursor: pointer;">
+                            </div>
                         </div>
-                        <div class="column is-6 py-2">
-                            <label class="checkbox" style="color: var(--bulma-text);">
-                                <input type="checkbox" name="alt_c"> c) Baja del padrón de beneficiarios
-                            </label>
+                        <div class="column is-6" style="padding-left: 0;">
+                            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                                <span style="color: var(--bulma-text); font-weight: 500;">c) Baja del padrón de beneficiarios</span>
+                                <input type="checkbox" name="alt_c" style="transform: scale(1.2); cursor: pointer;">
+                            </div>
                         </div>
-                        <div class="column is-6 py-2">
-                            <div class="field is-horizontal align-items-center">
-                                <div class="field-label is-normal" style="flex-grow: 0; margin-right: 10px; text-align: left;">
-                                    <label class="label label-dinamico mb-0">d) Otra:</label>
-                                </div>
-                                <div class="field-body">
-                                    <div class="control">
-                                        <input class="input entradasTexto is-small" type="text" name="alt_d_texto" placeholder="Especifique..." style="height: 30px; max-width: 300px;">
-                                    </div>
-                                </div>
+                        <div class="column is-6" style="padding-right: 0;">
+                            <div style="display: flex; justify-content: flex-start; align-items: center; gap: 15px; border-bottom: 1px solid rgba(128,128,128,0.1); padding-bottom: 8px; height: 100%;">
+                                <span style="color: var(--bulma-text); font-weight: 500; white-space: nowrap;">d) Otra:</span>
+                                <input class="input entradasTexto is-small" type="text" name="alt_d_texto" placeholder="Especifique..." style="height: 30px; width: 100%; max-width: 300px; margin: 0;">
                             </div>
                         </div>
                     </div>
                 </div>
 
             </div>
+        </div>
+    </section>
+    </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" style="padding-top: 1rem; padding-bottom: 4rem;">
+        <div class="container" style="display: flex; justify-content: flex-end;">
+            <button id="btnGenerarPDF" class="button is-rounded is-medium" style="background-color: var(--bulma-link); color: white; border: none; font-weight: 600; padding: 1rem 3rem; box-shadow: 0 8px 20px rgba(0,0,0,0.2); transition: all 0.3s ease;">
+                <i class="fas fa-file-pdf" style="margin-right: 10px;"></i>
+                Guardar datos
+            </button>
         </div>
     </section>
 
