@@ -7,8 +7,19 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $password     = isset($_POST['password']) ? trim($_POST['password']) : '';
     $rol_esperado = isset($_POST['rol_id']) ? (string)$_POST['rol_id'] : '';
 
+    // Mapeo para saber a qué página regresar si hay un error
+    $paginas_login = [
+        '0' => 'iniciosesionPromotor.php',
+        '1' => 'iniciosesionSupervisor.php',
+        '2' => 'iniciosesionDistribucion.php'
+    ];
+    
+    // Si no detecta rol (muy raro), lo mandamos al de promotor por defecto
+    $pagina_redirect = isset($paginas_login[$rol_esperado]) ? $paginas_login[$rol_esperado] : 'iniciosesionPromotor.php';
+
     if (empty($usuario) || empty($password) || $rol_esperado === '') {
-        echo "<script>alert('Por favor, complete todos los campos.'); window.history.back();</script>";
+        // Redirige con un error general (campos vacíos)
+        header("Location: " . $pagina_redirect . "?error=1");
         exit();
     }
 
@@ -44,13 +55,15 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                     header("Location: distribucion/inicio.php");
                     break;
                 default:
-                    echo "<script>alert('Rol no reconocido.'); window.history.back();</script>";
+                    // Error de rol no reconocido
+                    header("Location: " . $pagina_redirect . "?error=1");
                     break;
             }
             exit();
             
         } else {
-            echo "<script>alert('Acceso denegado: Usuario o contraseña incorrectos.'); window.history.back();</script>";
+            // MAGIA AQUÍ: En lugar de alert(), mandamos la variable ?error=1 en la URL
+            header("Location: " . $pagina_redirect . "?error=1");
             exit();
         }
     } catch (PDOException $e) {

@@ -1,52 +1,129 @@
+<?php
+require_once 'conexion.php';
+?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">
+
 <head>
     <meta charset="UTF-8">
-    <title>Inventario - Leche para el Bienestar</title>
-    <link rel="stylesheet" href="mainprincipal.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD3 - Distribución</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+
+    <link rel="stylesheet" href="main_md3.css">
+
+    <script type="importmap">
+        {
+      "imports": {
+        "@material/web/": "https://esm.run/@material/web/"
+      }
+    }
+    </script>
+    <script type="module">
+        import '@material/web/all.js';
+    </script>
 </head>
+
 <body>
 
-    <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; align-items: center; z-index: 10;">
-        <button onclick="cambiarModo()" class="button is-small is-rounded">
-            🌓 Modo
-        </button>
-        
-        <div class="select-temas">
-            <select onchange="cambiarAcento(this.value)" id="selectorColor">
-                <option value="violeta">Tema Violeta</option>
-                <option value="verde">Tema Verde</option>
-                <option value="naranja">Tema Naranja</option>
-            </select>
-        </div>
+    <div class="top-controls">
+        <md-outlined-button id="btnModo" onclick="cambiarModo()">
+            <md-icon slot="icon">dark_mode</md-icon>
+            Modo
+        </md-outlined-button>
+
+        <select id="selectorColor" class="md3-native-select" onchange="cambiarAcento(this.value)">
+            <option value="violeta">Tema Violeta</option>
+            <option value="verde">Tema Verde</option>
+            <option value="naranja">Tema Naranja</option>
+        </select>
     </div>
 
     <div class="pantallaCentrada">
-        <div class="contenedor-centrado">
-            <h1 class="title is-4">Inventarios de Leche en polvo</h1>
+        <div class="md3-surface-container">
 
+            <h1 class="md3-title">Inventarios de Leche</h1>
 
-<div class="botones-horizontal buttons has-addons">
-        <button id="btn-promotor" class="button is-rounded" onclick="location.href='iniciosesionPromotor.php';">
-        Promotor
-    </button>
-    <button id="btn-supervisor" class="button" onclick="location.href='iniciosesionSupervisor.php';">
-        Supervisor
-    </button>
-        <button id="btn-distribucion" class="button is-rounded is-selected" onclick="location.href='iniciosesionDistribucion.php';">
-        Distribucion
-    </button>
-</div>
-            <input type="text" class="entradasTexto" placeholder="Usuario">
-            <input type="password" class="entradasTexto" placeholder="Contraseña">
-            
-            <a href="#" class="olvido-pass">¿Olvidó su contraseña?</a>
+            <div class="role-selector">
+                <md-text-button onclick="location.href='iniciosesionPromotor.php';">Promotor</md-text-button>
+                <md-text-button onclick="location.href='iniciosesionSupervisor.php';">Supervisor</md-text-button>
+                <md-filled-button onclick="location.href='iniciosesionDistribucion.php';">Distribución</md-filled-button>
+            </div>
 
-            <button class="botonTemas">
-                Ingresar
-            </button>
+            <form action="login_proceso.php" method="POST" class="md3-form">
+                <input type="hidden" name="rol_id" value="2"> <md-outlined-text-field
+                    label="Usuario (Distribución)"
+                    name="usuario"
+                    required
+                    style="width: 100%;">
+                    <md-icon slot="leading-icon">local_shipping</md-icon>
+                </md-outlined-text-field>
+
+                <md-outlined-text-field
+                    id="password-field"
+                    label="Contraseña"
+                    type="password"
+                    name="password"
+                    required
+                    style="width: 100%;">
+                    <md-icon slot="leading-icon">lock</md-icon>
+                    <md-icon-button slot="trailing-icon" id="toggle-password" type="button" onclick="togglePassword()">
+                        <md-icon id="eye-icon">visibility</md-icon>
+                    </md-icon-button>
+                </md-outlined-text-field>
+
+                <div class="form-actions">
+                    <a href="#" class="md3-link">¿Olvidó su contraseña?</a>
+                </div>
+
+                <md-filled-button type="submit" style="width: 100%; margin-top: 10px;">
+                    Ingresar
+                    <md-icon slot="icon">login</md-icon>
+                </md-filled-button>
+            </form>
+
+            <p class="conexion-text">
+                Conectado a: <span><?php echo $origen_conexion; ?></span>
+            </p>
         </div>
     </div>
-    <script src="js/temas.js"></script>
+    <md-dialog id="dialogo-error">
+        <div slot="headline" style="display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-error, #B3261E);">
+            <md-icon>error</md-icon>
+            Credenciales incorrectas
+        </div>
+        <form slot="content" id="form-error" method="dialog">
+            El usuario o la contraseña no coinciden. Por favor, verifica tus datos e intenta de nuevo.
+        </form>
+        <div slot="actions">
+            <md-text-button form="form-error">Aceptar</md-text-button>
+        </div>
+    </md-dialog>
+
+    <script>
+        <?php if (isset($_GET['error'])): ?>
+            document.addEventListener('DOMContentLoaded', () => {
+                document.getElementById('dialogo-error').show();
+            });
+        <?php endif; ?>
+    </script>
+    <script src="js/temas_md3.js"></script>
+    <script>
+        function togglePassword() {
+            const passField = document.getElementById('password-field');
+            const eyeIcon = document.getElementById('eye-icon');
+
+            if (passField.type === 'password') {
+                passField.type = 'text';
+                eyeIcon.textContent = 'visibility_off';
+            } else {
+                passField.type = 'password';
+                eyeIcon.textContent = 'visibility';
+            }
+        }
+    </script>
 </body>
+
 </html>

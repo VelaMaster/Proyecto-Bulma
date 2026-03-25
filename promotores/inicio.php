@@ -1,5 +1,6 @@
 <?php
 session_start();
+// Validación de sesión
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     header("Location: ../iniciosesionPromotor.php");
     exit();
@@ -8,61 +9,227 @@ $nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : $_SESSION['
 ?>
 
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark" data-theme-accent="violeta">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Promotor - Leche para el Bienestar</title>
-    <link rel="stylesheet" href="../mainprincipal.css">
+    <title>Panel Promotor - MD3</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+
+    <link rel="stylesheet" href="../main_md3.css">
+
+    <script type="importmap">
+        {
+      "imports": {
+        "@material/web/": "https://esm.run/@material/web/"
+      }
+    }
+    </script>
+    <script type="module">
+        import '@material/web/all.js';
+    </script>
 </head>
 
 <body>
-    <nav class="navbar nav-base-moderna" role="navigation" aria-label="main navigation">
-        <div class="navbar-brand">
-            <a class="navbar-item logo-ajustado" href="#">
-                <span class="icon is-medium mr-2"><i class="fas fa-bolt fa-lg"></i></span>
-                <strong class="texto-logotipo">Leche para el bienestar.</strong>
-            </a>
+    <header class="md3-top-app-bar">
+        <div class="app-bar-start">
+            <md-icon-button class="mobile-menu-btn" onclick="toggleDrawer()">
+                <md-icon>menu</md-icon>
+            </md-icon-button>
 
-            <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navMenuLiconsa">
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-                <span aria-hidden="true"></span>
-            </a>
-        </div>
-
-        <div id="navMenuLiconsa" class="navbar-menu">
-            <div class="navbar-start">
-
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link is-arrowless nav-enlace">Inventario mensual de leche en polvo</a>
-                    <div class="navbar-dropdown is-boxed glass-menu">
-                        <a href = "generarinventarioMensual.php" class = "navbar-item">Generar</a>
-                        <a href = "consultarinventarioMensual.php" class = "navbar-item">Consultar</a>
-                    </div>
-                </div>
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link is-arrowless nav-enlace">Reporte mensual de la operacion en lecherias con venta de leche en polvo </a>
-                    <div class="navbar-dropdown is-boxed glass-menu">
-                        <a class="navbar-item">Generar</a>
-                        <a class="navbar-item">Consultar</a>
-                    </div>
-                </div>
-                <div class="navbar-item has-dropdown is-hoverable">
-                    <a class="navbar-link is-arrowless nav-enlace">Requerimiento de leche </a>
-                    <div class="navbar-dropdown is-boxed glass-menu">
-                        <a class="navbar-item">Generar</a>
-                        <a class="navbar-item">Consultar</a>
-                        <a class="navbar-item">Enviar reportes a supervisor</a>
-                    </div>
-                </div>
-
+            <div class="app-brand">
+                <span>Leche del bienestar</span>
             </div>
         </div>
-    </nav>
-    <script src="../js/temas.js"> </script>
-</body>
 
+        <div class="app-bar-end">
+            <div class="desktop-nav">
+                
+                <div style="position: relative;">
+                    <md-text-button id="btn-inv" onclick="abrirMenu('menu-inv')">
+                        Inventario mensual
+                        <md-icon slot="icon">arrow_drop_down</md-icon>
+                    </md-text-button>
+                    <md-menu id="menu-inv" anchor="btn-inv">
+                        <md-menu-item href="generarinventarioMensual.php">
+                            <div slot="headline">Generar</div>
+                            <md-icon slot="start">add_box</md-icon>
+                        </md-menu-item>
+                        <md-menu-item href="consultarinventarioMensual.php">
+                            <div slot="headline">Consultar</div>
+                            <md-icon slot="start">search</md-icon>
+                        </md-menu-item>
+                    </md-menu>
+                </div>
+
+                <div style="position: relative;">
+                    <md-text-button id="btn-rep" onclick="abrirMenu('menu-rep')">
+                        Reporte lecherías
+                        <md-icon slot="icon">arrow_drop_down</md-icon>
+                    </md-text-button>
+                    <md-menu id="menu-rep" anchor="btn-rep">
+                        <md-menu-item href="#">
+                            <div slot="headline">Generar</div>
+                            <md-icon slot="start">receipt_long</md-icon>
+                        </md-menu-item>
+                        <md-menu-item href="#">
+                            <div slot="headline">Consultar</div>
+                            <md-icon slot="start">find_in_page</md-icon>
+                        </md-menu-item>
+                    </md-menu>
+                </div>
+
+                <div style="position: relative;">
+                    <md-text-button id="btn-req" onclick="abrirMenu('menu-req')">
+                        Requerimiento
+                        <md-icon slot="icon">arrow_drop_down</md-icon>
+                    </md-text-button>
+                    <md-menu id="menu-req" anchor="btn-req">
+                        <md-menu-item href="#">
+                            <div slot="headline">Generar</div>
+                            <md-icon slot="start">inventory</md-icon>
+                        </md-menu-item>
+                        <md-menu-item href="#">
+                            <div slot="headline">Consultar</div>
+                            <md-icon slot="start">manage_search</md-icon>
+                        </md-menu-item>
+                        <md-menu-item href="#">
+                            <div slot="headline">Enviar reportes</div>
+                            <md-icon slot="start">send</md-icon>
+                        </md-menu-item>
+                    </md-menu>
+                </div>
+            </div> 
+            
+            <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left: 16px;">
+                <md-icon slot="icon">logout</md-icon>
+                Salir
+            </md-filled-tonal-button>
+
+        </div>
+    </header>
+
+    <div class="md3-drawer-scrim" id="drawer-scrim" onclick="toggleDrawer()"></div>
+<aside class="md3-drawer" id="mobile-drawer">
+        
+        <div style="padding-top: 24px;"></div>
+
+        <div style="overflow-y: auto; flex-grow: 1;">
+            <md-list style="background: transparent;">
+                <div class="drawer-section-title">Inventario mensual</div>
+                <md-list-item href="generarinventarioMensual.php" type="button">
+                    <div slot="headline">Generar</div>
+                    <md-icon slot="start">add_box</md-icon>
+                </md-list-item>
+                <md-list-item href="consultarinventarioMensual.php" type="button">
+                    <div slot="headline">Consultar</div>
+                    <md-icon slot="start">search</md-icon>
+                </md-list-item>
+
+                <md-divider style="margin: 8px 0;"></md-divider>
+
+                <div class="drawer-section-title">Reporte lecherías</div>
+                <md-list-item href="#" type="button">
+                    <div slot="headline">Generar</div>
+                    <md-icon slot="start">receipt_long</md-icon>
+                </md-list-item>
+                <md-list-item href="#" type="button">
+                    <div slot="headline">Consultar</div>
+                    <md-icon slot="start">find_in_page</md-icon>
+                </md-list-item>
+
+                <md-divider style="margin: 8px 0;"></md-divider>
+
+                <div class="drawer-section-title">Requerimiento</div>
+                <md-list-item href="#" type="button">
+                    <div slot="headline">Generar</div>
+                    <md-icon slot="start">inventory</md-icon>
+                </md-list-item>
+                <md-list-item href="#" type="button">
+                    <div slot="headline">Consultar</div>
+                    <md-icon slot="start">manage_search</md-icon>
+                </md-list-item>
+                <md-list-item href="#" type="button">
+                    <div slot="headline">Enviar a supervisor</div>
+                    <md-icon slot="start">send</md-icon>
+                </md-list-item>
+            </md-list>
+        </div>
+    </aside>
+
+    <main class="panel-content">
+        
+        <div class="md3-hero-card">
+            <h2 style="font-size: 2.25rem; font-weight: 500; margin: 0; letter-spacing: -0.5px;">¡Hola, <?php echo htmlspecialchars($nombre_usuario); ?>!</h2>
+            <p style="font-size: 1.1rem; margin: 0; max-width: 600px; line-height: 1.5; opacity: 0.9;">
+                Bienvenido al nuevo panel de gestión. 
+                Aquí tienes acceso rápido a todas las herramientas necesarias para la operación y registro de las lecherías Liconsa.
+            </p>
+            <div style="margin-top: 12px;">
+                <md-filled-button onclick="location.href='generarinventarioMensual.php'" style="--md-filled-button-container-shape: 16px; height: 48px;">
+                    <md-icon slot="icon">add_box</md-icon>
+                    Nuevo Inventario
+                </md-filled-button>
+            </div>
+        </div>
+
+        <h3 style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 16px; margin-bottom: 0;">Accesos Rápidos</h3>
+
+        <div class="md3-dashboard-grid">
+            
+            <a href="consultarinventarioMensual.php" class="md3-action-card">
+                <div class="action-card-icon">
+                    <md-icon>search</md-icon>
+                </div>
+                <h4 class="action-card-title">Consultar Inventarios</h4>
+                <p class="action-card-desc">Revisa y descarga los inventarios mensuales generados previamente.</p>
+            </a>
+
+            <a href="#" class="md3-action-card">
+                <div class="action-card-icon" style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
+                    <md-icon>receipt_long</md-icon>
+                </div>
+                <h4 class="action-card-title">Reporte de Lecherías</h4>
+                <p class="action-card-desc">Genera el reporte mensual de operación de ventas.</p>
+            </a>
+
+            <a href="#" class="md3-action-card">
+                <div class="action-card-icon" style="background-color: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container);">
+                    <md-icon>send</md-icon>
+                </div>
+                <h4 class="action-card-title">Requerimientos</h4>
+                <p class="action-card-desc">Calcula y envía los reportes de requerimiento a tu supervisor.</p>
+            </a>
+
+        </div>
+
+    </main>
+
+    <script src="../js/temas_md3.js"></script>
+    <script>
+        function abrirMenu(id) {
+            document.querySelectorAll('md-menu').forEach(menu => {
+                if (menu.id !== id) menu.open = false;
+            });
+            const menu = document.getElementById(id);
+            menu.open = !menu.open;
+        }
+
+        function toggleDrawer() {
+            const drawer = document.getElementById('mobile-drawer');
+            const scrim = document.getElementById('drawer-scrim');
+            drawer.classList.toggle('open');
+            scrim.classList.toggle('open');
+        }
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('md-menu') && !event.target.closest('md-text-button')) {
+                document.querySelectorAll('md-menu').forEach(menu => menu.open = false);
+            }
+        });
+    </script>
+</body>
 </html>
