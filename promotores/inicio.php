@@ -1,6 +1,5 @@
 <?php
 session_start();
-// Validación de sesión
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     header("Location: ../iniciosesionPromotor.php");
     exit();
@@ -14,7 +13,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : $_SESSION['
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel Promotor - MD3</title>
+    <title>Inicio - Promotor</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">

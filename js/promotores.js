@@ -54,25 +54,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- FUNCIONES EN CASCADA ---
 
-    function calcularDiferencia() {
+function calcularDiferencia() {
         const ventaL = parseFloat(ventaLitros.value) || 0;
         let regL = parseFloat(regLitros.value) || 0;
         
         const radioSi = document.querySelector('input[name="venta_igual"][value="Si"]');
         const radioNo = document.querySelector('input[name="venta_igual"][value="No"]');
         const causasDiv = document.getElementById('causas_diferencia');
-
-        // CANDADO 1: No se puede registrar más de lo que se vendió
-        if (regL > ventaL && ventaLitros.value !== '') {
-            mostrarNotificacion("Error: Los litros registrados NO pueden ser mayores a la venta real.", "error");
-            regL = ventaL; // Auto-ajustamos al tope máximo permitido para evitar el negativo
-            
-            const fmtR = formatearCantidades(regL);
-            regCaja.value = fmtR.cajas;
-            regSobres.value = fmtR.sobres;
-            regLitros.value = fmtR.litros;
-        }
-
         if (ventaLitros.value === '' && regLitros.value === '') {
             difCaja.value = ''; difSobres.value = ''; difLitros.value = '';
             if(radioSi) radioSi.checked = false;
@@ -80,10 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if(causasDiv) causasDiv.style.display = 'none';
             return;
         }
-
-        const difL = ventaL - regL;
+        const difL = Math.abs(ventaL - regL);
         const fmt = formatearCantidades(difL);
-
         difCaja.value = fmt.cajas;
         difSobres.value = fmt.sobres;
         difLitros.value = fmt.litros;
