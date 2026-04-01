@@ -11,3 +11,4 @@ RUN docker-php-ext-install pdo_firebird
 
 # Activamos rewrite para las rutas de tu app
 RUN a2enmod rewrite
+RUN a2enmod headers

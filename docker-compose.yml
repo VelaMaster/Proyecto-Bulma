@@ -6,6 +6,7 @@ services:
       - "8080:80"
     volumes:
       - .:/var/www/html
+      - ./dev-php.ini:/usr/local/etc/php/conf.d/dev-php.ini
     environment:
       - DB_HOST=db
       - DB_PATH=/firebird/data/inventario.fdb

@@ -1,6 +1,10 @@
 <?php
+session_start();
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 require_once 'conexion.php';
-// Aseguramos la variable para evitar el warning de PHP
 $origen_conexion = $origen_conexion ?? 'Desconocido';
 ?>
 <!DOCTYPE html>
@@ -93,6 +97,7 @@ $origen_conexion = $origen_conexion ?? 'Desconocido';
             </p>
         </div>
     </div>
+
     <md-dialog id="dialogo-error">
         <div slot="headline" style="display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-error, #B3261E);">
             <md-icon>error</md-icon>
@@ -107,25 +112,24 @@ $origen_conexion = $origen_conexion ?? 'Desconocido';
     </md-dialog>
 
     <script>
-        // Si PHP detecta un error de login (ej. viene de login_proceso.php?error=1)
         <?php if (isset($_GET['error'])): ?>
             document.addEventListener('DOMContentLoaded', () => {
                 const dialog = document.getElementById('dialogo-error');
-                // .show() es el método nativo del web component
                 dialog.show();
             });
         <?php endif; ?>
     </script>
+
     <script src="js/temas_md3.js"></script>
+
     <script>
-        // Lógica MD3 para el botón de contraseña
         function togglePassword() {
             const passField = document.getElementById('password-field');
             const eyeIcon = document.getElementById('eye-icon');
 
             if (passField.type === 'password') {
                 passField.type = 'text';
-                eyeIcon.textContent = 'visibility_off'; // Usa el icono de Material
+                eyeIcon.textContent = 'visibility_off';
             } else {
                 passField.type = 'password';
                 eyeIcon.textContent = 'visibility';
