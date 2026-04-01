@@ -231,7 +231,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : $_SESSION['
         </div>
     </div>
     
-    <div class="md3-card" style="display:flex; flex-direction:column; gap:24px;">
+    <div class="md3-card" style="display: none; flex-direction:column; gap:24px;">
         <div>
             <p class="subsection-title">1.1 Diferencias</p>
             <div class="field-group" style="gap:10px;">
@@ -339,7 +339,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : $_SESSION['
         </div>
     </div>
     
-    <div class="md3-card">
+    <div class="md3-card" style="display: none">
         <p class="subsection-title">2.1 Falta de surtimiento</p>
 
         <div class="field-group" style="gap:10px;">
@@ -409,7 +409,7 @@ $nombre_usuario = isset($_SESSION['nombre']) ? $_SESSION['nombre'] : $_SESSION['
         </div>
     </div>
     
-    <div class="form-section">
+    <div class="form-section" style="display: none">
         <div class="section-header">
             <div class="section-badge">IV</div>
             <h2 class="section-title">Problemas de operación</h2>
