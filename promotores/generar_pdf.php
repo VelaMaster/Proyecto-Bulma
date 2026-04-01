@@ -12,8 +12,6 @@ if (!$datos) {
 function d($str) {
     return utf8_decode($str ?? '');
 }
-
-// Función helper para dibujar un checkbox con una X
 function drawCheckbox($pdf, $x, $y, $isChecked) {
     $pdf->Rect($x, $y, 4, 4); // Dibuja el cuadrito
     if ($isChecked) {
@@ -23,27 +21,22 @@ function drawCheckbox($pdf, $x, $y, $isChecked) {
         $pdf->SetFont('Arial', '', 8);
     }
 }
-
 // Inicializar PDF
 $pdf = new FPDF('P', 'mm', 'Letter');
 $pdf->AddPage();
 $pdf->SetAutoPageBreak(false); // Para control manual
-
 // --- LOGOS (Simulados) ---
 $pdf->SetFont('Arial', 'B', 9);
 $pdf->Cell(40, 15, '[LOGO SADER]', 1, 0, 'C');
 $pdf->Cell(115, 15, '', 0, 0, 'C');
 $pdf->Cell(40, 15, '[LOGO LICONSA]', 1, 1, 'C');
 $pdf->Ln(5);
-
 // --- TÍTULO ---
 $pdf->SetFont('Arial', 'B', 12);
 $pdf->Cell(0, 6, d('INVENTARIO MENSUAL DE LECHE EN POLVO'), 0, 1, 'C');
 $pdf->Ln(3);
-
 // --- DATOS GENERALES ---
 $pdf->SetFont('Arial', '', 9);
-
 $pdf->Cell(15, 6, 'Fecha:', 0, 0);
 $pdf->Cell(35, 6, d($datos['fecha']), 'B', 0, 'C');
 $pdf->Cell(40, 6, 'Clave del punto de venta:', 0, 0);
@@ -55,13 +48,11 @@ $pdf->Cell(18, 6, 'Municipio:', 0, 0);
 $pdf->Cell(70, 6, d($datos['municipio']), 'B', 0, 'C');
 $pdf->Cell(20, 6, 'Comunidad:', 0, 0);
 $pdf->Cell(87, 6, d($datos['comunidad']), 'B', 1, 'C');
-
 $pdf->Ln(4);
 
 // --- I. EXISTENCIA ---
 $pdf->SetFont('Arial', 'B', 9);
 $pdf->Cell(0, 6, d('I.- EXISTENCIA DE LECHE.'), 0, 1);
-
 $pdf->SetFont('Arial', 'B', 7);
 $w = array(25, 25, 28, 28, 28, 30, 31);
 $pdf->Cell($w[0], 8, '', 1, 0, 'C');
@@ -78,7 +69,6 @@ $rowsExistencia = [
     ['Sobres', 'inv_ini_sobres', 'abasto_sobres', 'venta_sobres', 'reg_sobres', 'dif_sobres', 'fin_sobres'],
     ['Total en litros', 'inv_ini_litros', 'abasto_litros', 'venta_litros', 'reg_litros', 'dif_litros', 'fin_litros']
 ];
-
 foreach($rowsExistencia as $r) {
     $pdf->Cell($w[0], 6, d($r[0]), 1, 0, 'C');
     for($i=1; $i<=6; $i++) {
@@ -87,7 +77,6 @@ foreach($rowsExistencia as $r) {
     $pdf->Ln();
 }
 $pdf->Ln(4);
-
 // --- 1.1 DIFERENCIAS ---
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->Cell(40, 5, '1.1 DIFERENCIAS', 0, 0);
@@ -119,7 +108,6 @@ $pdf->Cell(15, 6, 'd) Otros:', 0, 0);
 $pdf->Cell(0, 6, d($datos['causa_d']), 'B', 1);
 
 $pdf->Ln(2);
-
 // --- 1.2 VENTA NO REGISTRADA ---
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->Cell(0, 5, '1.2 VENTA NO REGISTRADA.', 0, 1);
@@ -133,9 +121,7 @@ drawCheckbox($pdf, $pdf->GetX(), $pdf->GetY()+0.5, ($datos['venta_no_incluida'] 
 $pdf->Cell(15, 5, '', 0, 0);
 $pdf->Cell(25, 5, 'Anote el motivo:', 0, 0);
 $pdf->Cell(0, 5, d($datos['motivo_no_incluida']), 'B', 1);
-
 $pdf->Ln(5);
-
 // --- II. SURTIMIENTOS ---
 $pdf->SetFont('Arial', 'B', 9);
 $pdf->Cell(0, 6, 'II.- SURTIMIENTOS.', 0, 1);
@@ -155,7 +141,6 @@ $pdf->Cell($w2[3], 6, d($datos['surt_factura']), 1, 0, 'C');
 $pdf->Cell($w2[4], 6, d($datos['surt_caducidad']), 1, 1, 'C');
 
 $pdf->Ln(4);
-
 // --- 2.1 FALTA DE SURTIMIENTO ---
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->Cell(40, 5, 'II.1 DESABASTO', 0, 1);
@@ -184,7 +169,6 @@ $pdf->Ln(4);
 // --- III. COBERTURA SOCIAL ---
 $pdf->SetFont('Arial', 'B', 8);
 $pdf->Cell(0, 6, d('III.- COBERTURA SOCIAL Y DOTACIÓN ASIGNADA SEGÚN PADRÓN DE BENEFICIARIOS.'), 0, 1);
-
 $w3 = array(40, 40, 40, 40);
 // Centramos la tabla (Ajustamos el X inicial)
 $pdf->SetX(28); 
@@ -192,7 +176,6 @@ $pdf->Cell($w3[0], 6, 'HOGARES', 1, 0, 'C');
 $pdf->Cell($w3[1], 6, 'MENORES', 1, 0, 'C');
 $pdf->Cell($w3[2], 6, 'PERSONAS ADULTAS', 1, 0, 'C');
 $pdf->Cell($w3[3], 6, 'LITROS AL MES', 1, 1, 'C');
-
 $pdf->SetX(28);
 $pdf->SetFont('Arial', '', 10);
 $pdf->Cell($w3[0], 8, d($datos['hogares']), 1, 0, 'C');
@@ -200,7 +183,6 @@ $pdf->Cell($w3[1], 8, d($datos['menores']), 1, 0, 'C');
 $pdf->Cell($w3[2], 8, d($datos['mayores']), 1, 0, 'C');
 $pdf->Cell($w3[3], 8, d($datos['dotacion']), 1, 1, 'C');
 $pdf->Ln(4);
-
 // --- IV. PROBLEMAS DE OPERACIÓN ---
 $pdf->SetX(15);
 $pdf->SetFont('Arial', 'B', 8);
@@ -244,22 +226,23 @@ $pdf->Cell(40, 6, '', 0, 0);
 $pdf->Cell(15, 6, 'd) Otra:', 0, 0);
 $pdf->Cell(0, 6, d($datos['alt_d']), 'B', 1);
 $pdf->Ln(15);
-
 // --- FIRMAS ---
 $pdf->Cell(80, 0, '', 'T', 0, 'C'); // Línea 1
 $pdf->Cell(35, 0, '', 0, 0, 'C');    // Espacio medio
 $pdf->Cell(80, 0, '', 'T', 1, 'C'); // Línea 2
-
 $pdf->Cell(80, 5, 'Nombre y firma del Promotor(a) Social', 0, 0, 'C');
 $pdf->Cell(35, 5, '', 0, 0, 'C');
 $pdf->Cell(80, 5, d('Nombre y firma del distribuidor(a) mercantil'), 0, 1, 'C');
 $pdf->Cell(80, 4, '', 0, 0, 'C');
 $pdf->Cell(35, 4, '', 0, 0, 'C');
 $pdf->Cell(80, 4, d('o encargado(a) de la tienda Diconsa'), 0, 1, 'C');
-
 // MAGIA 2: Limpieza de buffer
 if (ob_get_length()) ob_end_clean();
-
-// Salida PDF
-$pdf->Output('I', 'inventario.pdf');
+// --- NUEVA LÓGICA: GUARDAR EN SERVIDOR Y MOSTRAR ---
+$nombreArchivo = 'Inventario_' . $datos['lecheria'] . '_' . $datos['fecha'] . '.pdf';
+$rutaDestino = '../datos/promotores/' . $nombreArchivo;
+// Guardar físicamente en el servidor
+$pdf->Output('F', $rutaDestino);
+// Salida al navegador para que el JS lo abra
+$pdf->Output('I', $nombreArchivo);
 ?>
