@@ -51,7 +51,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
         <div class="app-bar-end">
             <div class="desktop-nav">
-                
+
                 <div style="position: relative;">
                     <md-text-button id="btn-inv" onclick="abrirMenu('menu-inv')">
                         Inventario mensual
@@ -61,6 +61,10 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                         <md-menu-item href="generarinventarioMensual.php">
                             <div slot="headline">Generar</div>
                             <md-icon slot="start">add_box</md-icon>
+                        </md-menu-item>
+                        <md-menu-item href="editarinventarioMensual.php">
+                            <div slot="headline">Editar</div>
+                            <md-icon slot="start">edit</md-icon>
                         </md-menu-item>
                         <md-menu-item href="consultarinventarioMensual.php">
                             <div slot="headline">Consultar</div>
@@ -106,8 +110,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                         </md-menu-item>
                     </md-menu>
                 </div>
-            </div> 
-            
+            </div>
+
             <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left: 16px;">
                 <md-icon slot="icon">logout</md-icon>
                 Salir
@@ -117,8 +121,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     </header>
 
     <div class="md3-drawer-scrim" id="drawer-scrim" onclick="toggleDrawer()"></div>
-<aside class="md3-drawer" id="mobile-drawer">
-        
+    <aside class="md3-drawer" id="mobile-drawer">
+
         <div style="padding-top: 24px;"></div>
 
         <div style="overflow-y: auto; flex-grow: 1;">
@@ -165,25 +169,30 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     </aside>
 
     <main class="panel-content">
-        
+
         <div class="md3-hero-card">
-            <h2 style="font-size: 2.25rem; font-weight: 500; margin: 0; letter-spacing: -0.5px;">¡Hola, <?php echo htmlspecialchars($nombre_usuario); ?>!</h2>
+            <h2 style="font-size: 2.25rem; font-weight: 500; margin: 0; letter-spacing: -0.5px;">¡Hola,
+                <?php echo htmlspecialchars($nombre_usuario); ?>!</h2>
             <p style="font-size: 1.1rem; margin: 0; max-width: 600px; line-height: 1.5; opacity: 0.9;">
-                Bienvenido al nuevo panel de gestión. 
-                Aquí tienes acceso rápido a todas las herramientas necesarias para la operación y registro de las lecherías Liconsa.
+                Bienvenido al nuevo panel de gestión.
+                Aquí tienes acceso rápido a todas las herramientas necesarias para la operación y registro de las
+                lecherías Liconsa.
             </p>
             <div style="margin-top: 12px;">
-                <md-filled-button onclick="location.href='generarinventarioMensual.php'" style="--md-filled-button-container-shape: 16px; height: 48px;">
+                <md-filled-button onclick="location.href='generarinventarioMensual.php'"
+                    style="--md-filled-button-container-shape: 16px; height: 48px;">
                     <md-icon slot="icon">add_box</md-icon>
                     Nuevo Inventario
                 </md-filled-button>
             </div>
         </div>
 
-        <h3 style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 16px; margin-bottom: 0;">Accesos Rápidos</h3>
+        <h3
+            style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 16px; margin-bottom: 0;">
+            Accesos Rápidos</h3>
 
         <div class="md3-dashboard-grid">
-            
+
             <a href="consultarinventarioMensual.php" class="md3-action-card">
                 <div class="action-card-icon">
                     <md-icon>search</md-icon>
@@ -193,7 +202,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </a>
 
             <a href="#" class="md3-action-card">
-                <div class="action-card-icon" style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
+                <div class="action-card-icon"
+                    style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
                     <md-icon>receipt_long</md-icon>
                 </div>
                 <h4 class="action-card-title">Reporte de Lecherías</h4>
@@ -201,7 +211,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </a>
 
             <a href="#" class="md3-action-card">
-                <div class="action-card-icon" style="background-color: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container);">
+                <div class="action-card-icon"
+                    style="background-color: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container);">
                     <md-icon>send</md-icon>
                 </div>
                 <h4 class="action-card-title">Requerimientos</h4>
@@ -236,4 +247,5 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         });
     </script>
 </body>
+
 </html>

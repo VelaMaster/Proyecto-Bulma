@@ -424,11 +424,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
-
-    // --- GENERAR PDF ---
+// --- GUARDAR EN BDD Y GENERAR PDF ---
     const btnGenerarPDF = document.getElementById('btnGenerarPDF');
     if (btnGenerarPDF) {
-        btnGenerarPDF.addEventListener('click', () => {
+        // Agregamos 'async' aquí para poder usar 'await' dentro
+        btnGenerarPDF.addEventListener('click', async () => {
 
             // 1. Validaciones de seguridad
             if (!document.getElementById('inputLecheria').value) {
@@ -436,8 +436,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 2. Aquí agrupamos todos los datos que se van al PDF
-            const datosPDF = {
+            // 2. Aquí agrupamos todos los datos que se van a guardar y al PDF
+            const datosFormulario = {
                 fecha: document.querySelector('input[name="fecha"]').value,
                 lecheria: document.getElementById('inputLecheria').value,
                 tienda: document.getElementById('campoTienda').value,
@@ -485,28 +485,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
             btnGenerarPDF.classList.add('is-loading');
 
-            // 3. ENVIAR AL SERVIDOR
-            fetch('generar_pdf.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datosPDF)
-            })
-                .then(response => {
-                    if (!response.ok) throw new Error('Error en el servidor');
-                    return response.blob();
-                })
-                .then(blob => {
-                    const url = window.URL.createObjectURL(blob);
-                    window.open(url, '_blank'); // Abrir en pestaña nueva
-                    mostrarNotificacion('¡PDF generado y guardado en servidor!', 'info');
-                    btnGenerarPDF.classList.remove('is-loading');
-                    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-                })
-                .catch(error => {
-                    console.error(error);
-                    mostrarNotificacion('Error al generar el PDF.', 'error');
-                    btnGenerarPDF.classList.remove('is-loading');
+            try {
+                // 3. PRIMER PASO: Enviar a guardar a la Base de Datos
+                const respuestaGuardado = await fetch('guardar_inventario.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosFormulario)
                 });
-        }); // Este cierra el click del botón
+
+                const resultado = await respuestaGuardado.json();
+
+                if (resultado.status !== 'success') {
+                    throw new Error(resultado.mensaje || 'Error desconocido al guardar en base de datos');
+                }
+
+                // Si llegamos aquí, se guardó correctamente.
+                mostrarNotificacion('Datos guardados en la base de datos.', 'info');
+
+                // 4. SEGUNDO PASO: Generar el PDF (usando exactamente el mismo payload)
+                const respuestaPDF = await fetch('generar_pdf.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datosFormulario)
+                });
+
+                if (!respuestaPDF.ok) throw new Error('Error en el servidor al generar el PDF');
+                
+                const blob = await respuestaPDF.blob();
+                const url = window.URL.createObjectURL(blob);
+                
+                // Abrir en pestaña nueva y limpiar
+                window.open(url, '_blank'); 
+                mostrarNotificacion('¡PDF generado exitosamente!', 'info');
+                setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+
+            } catch (error) {
+                console.error(error);
+                mostrarNotificacion(error.message || 'Ocurrió un error en el proceso.', 'error');
+            } finally {
+                // Quitar estado de carga sea cual sea el resultado
+                btnGenerarPDF.classList.remove('is-loading');
+            }
+        }); 
     }
-}); // Este cierra el DOMContentLoaded
+}); // Fin del DOMContentLoaded (Mantenlo intacto)
