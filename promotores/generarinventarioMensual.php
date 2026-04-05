@@ -5,7 +5,7 @@ header("Pragma: no-cache");
 header("Expires: 0");
 
 if (!isset($_SESSION['usuario']) || !isset($_SESSION['rol']) || $_SESSION['rol'] !== 'promotor') {
-    header("Location: ../iniciosesionPromotor.php");
+    header("Location: ../index.php");
     exit();
 }
 

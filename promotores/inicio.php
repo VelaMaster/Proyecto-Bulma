@@ -25,6 +25,28 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
     <link rel="stylesheet" href="../main_md3.css">
 
+    <!-- Estilo extra solo para el hero animado -->
+    <style>
+        /* El canvas va abajo, el contenido del card encima */
+        .md3-hero-card > *:not(canvas) {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Refuerzo: el hero tiene overflow hidden para que los blobs
+           no se salgan de los bordes redondeados */
+        .md3-hero-card {
+            overflow: hidden;
+            /* Asegura que el canvas de fondo sea visible */
+            isolation: isolate;
+        }
+
+        /* Transición suave al cargar el canvas */
+        .md3-hero-card canvas {
+            will-change: transform;
+        }
+    </style>
+
     <script type="importmap">
         {
       "imports": {
@@ -174,9 +196,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             <h2 style="font-size: 2.25rem; font-weight: 500; margin: 0; letter-spacing: -0.5px;">¡Hola,
                 <?php echo htmlspecialchars($nombre_usuario); ?>!</h2>
             <p style="font-size: 1.1rem; margin: 0; max-width: 600px; line-height: 1.5; opacity: 0.9;">
-                Bienvenido al nuevo panel de gestión.
-                Aquí tienes acceso rápido a todas las herramientas necesarias para la operación y registro de las
-                lecherías Liconsa.
+                Bienvenido al panel principal.
+                Aquí tienes acceso rápido a todas las herramientas proporcionadas por nuestra aplicacion web Bulma, para facilitar la operacion de tus lecherias asignadas, buena suerte.
             </p>
             <div style="margin-top: 12px;">
                 <md-filled-button onclick="location.href='generarinventarioMensual.php'"
@@ -224,6 +245,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     </main>
 
     <script src="../js/temas_md3.js"></script>
+
     <script>
         function abrirMenu(id) {
             document.querySelectorAll('md-menu').forEach(menu => {
