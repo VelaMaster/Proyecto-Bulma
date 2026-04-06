@@ -1,15 +1,12 @@
 <?php
 session_start();
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Pragma: no-cache");
-header("Expires: 0");
-
-if (!isset($_SESSION['usuario']) || !isset($_SESSION['rol']) || $_SESSION['rol'] !== 'promotor') {
-    header("Location: ../index.php");
+require_once '../Database.php'; 
+if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
+    header("Location: ../iniciosesionPromotor.php");
     exit();
 }
-
 $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
+$origen_conexion = Database::getEnvName(); 
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">

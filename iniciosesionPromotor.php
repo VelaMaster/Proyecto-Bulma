@@ -1,12 +1,7 @@
 <?php
-$_SESSION['clave_promotor'] = $fila['CLAVE_PROMOTOR'] ?? null;
 session_start();
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Pragma: no-cache");
-header("Expires: 0");
-
-require_once 'conexion.php';
-$origen_conexion = $origen_conexion ?? 'Desconocido';
+require_once 'Database.php';
+$origen_conexion = Database::getEnvName();
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">
@@ -62,20 +57,11 @@ $origen_conexion = $origen_conexion ?? 'Desconocido';
             <form action="login_proceso.php" method="POST" class="md3-form">
                 <input type="hidden" name="rol_id" value="0">
 
-                <md-outlined-text-field
-                    label="Usuario"
-                    name="usuario"
-                    required
-                    style="width: 100%;">
+                <md-outlined-text-field label="Usuario" name="usuario" required style="width: 100%;">
                     <md-icon slot="leading-icon">person</md-icon>
                 </md-outlined-text-field>
 
-                <md-outlined-text-field
-                    id="password-field"
-                    label="Contraseña"
-                    type="password"
-                    name="password"
-                    required
+                <md-outlined-text-field id="password-field" label="Contraseña" type="password" name="password" required
                     style="width: 100%;">
                     <md-icon slot="leading-icon">lock</md-icon>
                     <md-icon-button slot="trailing-icon" id="toggle-password" type="button" onclick="togglePassword()">
@@ -100,7 +86,8 @@ $origen_conexion = $origen_conexion ?? 'Desconocido';
     </div>
 
     <md-dialog id="dialogo-error">
-        <div slot="headline" style="display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-error, #B3261E);">
+        <div slot="headline"
+            style="display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-error, #B3261E);">
             <md-icon>error</md-icon>
             Credenciales incorrectas
         </div>
@@ -138,4 +125,5 @@ $origen_conexion = $origen_conexion ?? 'Desconocido';
         }
     </script>
 </body>
+
 </html>

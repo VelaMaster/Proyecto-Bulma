@@ -1,14 +1,9 @@
 <?php
 session_start();
-header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
-header("Pragma: no-cache");
-header("Expires: 0");
-
-if (!isset($_SESSION['usuario']) || !isset($_SESSION['rol']) || $_SESSION['rol'] !== 'promotor') {
+if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     header("Location: ../iniciosesionPromotor.php");
     exit();
 }
-
 $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 ?>
 
