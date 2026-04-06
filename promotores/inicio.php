@@ -19,10 +19,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inicio - Promotor</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
-
     <link rel="stylesheet" href="../main_md3.css">
 
     <style>
@@ -30,26 +28,18 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             overflow: hidden;
             isolation: isolate;
             position: relative;
-            /* Fondo base sutil para que contrasten las formas */
             background-color: var(--md-sys-color-surface-container-low, #1e1e1e);
         }
-
-        /* El contenido de la tarjeta flota por encima del canvas */
-        .md3-hero-card > *:not(canvas) {
+        .md3-hero-card>*:not(canvas) {
             position: relative;
             z-index: 2;
-            /* Sombra sutil para que el texto resalte siempre */
-            text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
         }
-
-        /* El canvas con vectores limpios */
         .md3-hero-card canvas {
             will-change: transform, opacity;
             z-index: 1;
-            /* Se eliminó el desenfoque para tener vectores nítidos estilo Expressive */
         }
     </style>
-
     <script type="importmap">
         {
       "imports": {
@@ -61,14 +51,12 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         import '@material/web/all.js';
     </script>
 </head>
-
 <body>
     <header class="md3-top-app-bar">
         <div class="app-bar-start">
             <md-icon-button class="mobile-menu-btn" onclick="toggleDrawer()">
                 <md-icon>menu</md-icon>
             </md-icon-button>
-
             <div class="app-brand">
                 <span>Leche del bienestar</span>
             </div>
@@ -197,10 +185,12 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
         <div class="md3-hero-card">
             <h2 style="font-size: 2.25rem; font-weight: 500; margin: 0; letter-spacing: -0.5px;">¡Hola,
-                <?php echo htmlspecialchars($nombre_usuario); ?>!</h2>
+                <?php echo htmlspecialchars($nombre_usuario); ?>!
+            </h2>
             <p style="font-size: 1.1rem; margin: 0; max-width: 600px; line-height: 1.5; opacity: 0.9;">
                 Bienvenido al panel principal.
-                Aquí tienes acceso rápido a todas las herramientas proporcionadas por nuestra aplicación web Bulma, para facilitar la operación de tus lecherías asignadas, buena suerte.
+                Aquí tienes acceso rápido a todas las herramientas proporcionadas por nuestra aplicación web Bulma, para
+                facilitar la operación de tus lecherías asignadas, buena suerte.
             </p>
             <div style="margin-top: 12px;">
                 <md-filled-button onclick="location.href='generarinventarioMensual.php'"
@@ -214,9 +204,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         <h3
             style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 16px; margin-bottom: 0;">
             Accesos Rápidos</h3>
-
         <div class="md3-dashboard-grid">
-
             <a href="consultarinventarioMensual.php" class="md3-action-card">
                 <div class="action-card-icon">
                     <md-icon>search</md-icon>
@@ -244,12 +232,9 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </a>
 
         </div>
-
     </main>
-
     <script src="../js/temas_md3.js"></script>
     <script src="../js/hero_physics.js"></script>
-
     <script>
         function abrirMenu(id) {
             document.querySelectorAll('md-menu').forEach(menu => {
@@ -258,14 +243,12 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             const menu = document.getElementById(id);
             menu.open = !menu.open;
         }
-
         function toggleDrawer() {
             const drawer = document.getElementById('mobile-drawer');
             const scrim = document.getElementById('drawer-scrim');
             drawer.classList.toggle('open');
             scrim.classList.toggle('open');
         }
-
         document.addEventListener('click', (event) => {
             if (!event.target.closest('md-menu') && !event.target.closest('md-text-button')) {
                 document.querySelectorAll('md-menu').forEach(menu => menu.open = false);
@@ -273,5 +256,4 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         });
     </script>
 </body>
-
 </html>

@@ -1,18 +1,10 @@
-/**
- * hero_physics.js
- * MD3 Expressive Morphing Vectors
- * Formas nítidas que cambian dinámicamente entre Óvalos, Estrellas y Pentágonos
- * con rutas de movimiento caóticas y no repetitivas.
- */
-
 (function () {
   'use strict';
 
-  /* ─── Configuración ─────────────────────────────────────────── */
   const CONFIG = {
     blobCount: 7,           // Cantidad de vectores flotantes
     moveSpeed: 0.0004,      // Velocidad base de desplazamiento
-    rotSpeedBase: 0.0015,   // Velocidad de giro
+    rotSpeedBase: 0.0015,
     colors: [],
   };
 
@@ -54,10 +46,10 @@
       // Para que no repitan el mismo círculo aburrido, combinamos 2 frecuencias por eje
       this.fX1 = rand(0.5, 1.5); this.fX2 = rand(0.5, 1.5);
       this.fY1 = rand(0.5, 1.5); this.fY2 = rand(0.5, 1.5);
-      
+
       this.pX1 = rand(0, Math.PI * 2); this.pX2 = rand(0, Math.PI * 2);
       this.pY1 = rand(0, Math.PI * 2); this.pY2 = rand(0, Math.PI * 2);
-      
+
       this.aX1 = rand(w * 0.1, w * 0.25); this.aX2 = rand(w * 0.05, w * 0.15);
       this.aY1 = rand(h * 0.1, h * 0.25); this.aY2 = rand(h * 0.05, h * 0.15);
 
@@ -65,11 +57,11 @@
       this.rotation = rand(0, Math.PI * 2);
       this.rotDirection = Math.random() > 0.5 ? 1 : -1;
       this.rotSpeed = CONFIG.rotSpeedBase * rand(0.5, 1.5) * this.rotDirection;
-      
+
       // --- MORFOLOGÍA ---
-      this.morphPhase = rand(0, Math.PI * 2); 
+      this.morphPhase = rand(0, Math.PI * 2);
       this.morphSpeed = rand(0.004, 0.007); // Velocidad a la que "respira" la forma
-      
+
       // Estado inicial de la forma
       const initialShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
       this.currentSides = initialShape.sides;
@@ -79,13 +71,13 @@
 
     update(t) {
       // 1. Movimiento impredecible sumando senos y cosenos a diferentes ritmos
-      this.x = this.baseX + 
-               Math.sin(t * CONFIG.moveSpeed * this.fX1 + this.pX1) * this.aX1 +
-               Math.cos(t * CONFIG.moveSpeed * this.fX2 + this.pX2) * this.aX2;
+      this.x = this.baseX +
+        Math.sin(t * CONFIG.moveSpeed * this.fX1 + this.pX1) * this.aX1 +
+        Math.cos(t * CONFIG.moveSpeed * this.fX2 + this.pX2) * this.aX2;
 
-      this.y = this.baseY + 
-               Math.cos(t * CONFIG.moveSpeed * this.fY1 + this.pY1) * this.aY1 +
-               Math.sin(t * CONFIG.moveSpeed * this.fY2 + this.pY2) * this.aY2;
+      this.y = this.baseY +
+        Math.cos(t * CONFIG.moveSpeed * this.fY1 + this.pY1) * this.aY1 +
+        Math.sin(t * CONFIG.moveSpeed * this.fY2 + this.pY2) * this.aY2;
 
       // 2. Rotación constante
       this.rotation += this.rotSpeed;
@@ -93,14 +85,14 @@
       // 3. Lógica de Morfología Mágica
       // morphAngle es el "tiempo" de la respiración de la forma
       const morphAngle = t * this.morphSpeed + this.morphPhase;
-      
+
       // Cada vez que la onda cruza por Pi (es decir, el seno se vuelve 0 y la forma es un círculo perfecto)
       // contamos un nuevo ciclo.
       const currentCycle = Math.floor(morphAngle / Math.PI);
 
       if (currentCycle !== this.lastCycle) {
         this.lastCycle = currentCycle;
-        
+
         // ¡Magia! Como en este milisegundo la amplitud es 0 (es un círculo), 
         // cambiamos el número de lados sin que el usuario vea un "salto" raro.
         const nextShape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
@@ -121,7 +113,7 @@
 
       for (let i = 0; i <= resolution; i++) {
         const theta = (i / resolution) * Math.PI * 2;
-        
+
         // La ecuación polar que genera todas las formas
         const r = this.radius * (1 + this.currentAmplitude * Math.cos(this.currentSides * (theta + this.rotation)));
 
@@ -139,7 +131,7 @@
       // Color sólido semi-transparente
       ctx.fillStyle = color;
       ctx.fill();
-      
+
       ctx.restore();
     }
   }
@@ -215,8 +207,6 @@
       const ctx = this.ctx;
       const w = this.w;
       const h = this.h;
-
-      // Borrado completo para mantener vectores afilados
       ctx.clearRect(0, 0, w, h);
 
       // Actualizar y dibujar
@@ -229,8 +219,6 @@
       this.raf = requestAnimationFrame(() => this.loop());
     }
   }
-
-  /* ─── Inicialización ────────────────────────────────────────── */
   function init() {
     const card = document.querySelector('.md3-hero-card');
     if (!card) return;
@@ -244,16 +232,16 @@
 
     const themeColors = {
       violeta: [
-        'rgba(147, 112, 219, 0.40)', 
-        'rgba(138, 43, 226, 0.45)', 
+        'rgba(147, 112, 219, 0.40)',
+        'rgba(138, 43, 226, 0.45)',
         'rgba(218, 112, 214, 0.35)',
-        'rgba(75, 0, 130, 0.50)',   
+        'rgba(75, 0, 130, 0.50)',
       ],
       azul: [
-        'rgba(100, 149, 237, 0.40)', 
-        'rgba(30, 144, 255, 0.45)',  
-        'rgba(0, 191, 255, 0.35)',   
-        'rgba(65, 105, 225, 0.50)',  
+        'rgba(100, 149, 237, 0.40)',
+        'rgba(30, 144, 255, 0.45)',
+        'rgba(0, 191, 255, 0.35)',
+        'rgba(65, 105, 225, 0.50)',
       ],
       verde: [
         'rgba(60, 179, 113, 0.40)',
