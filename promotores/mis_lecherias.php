@@ -6,7 +6,9 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     echo json_encode([]); exit();
 }
 
-require_once('../conexion.php');
+// 1. AQUÍ ESTÁ EL CAMBIO MÁGICO 👇
+require_once __DIR__ . '/../Database.php';
+$pdo = Database::getInstance();
 
 $clavePromotor = $_SESSION['clave_promotor'] ?? null;
 if (!$clavePromotor) {
@@ -56,6 +58,6 @@ try {
 
     echo json_encode($rows, JSON_UNESCAPED_UNICODE);
 
-} catch (PDOException $e) {
+} catch (Exception $e) { // Cambiado a Exception general por si acaso
     echo json_encode(['error' => true, 'mensaje' => $e->getMessage()]);
 }

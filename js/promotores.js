@@ -184,7 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         calcularInventarioFinal(true);
     }
-
     ventaCaja.addEventListener('input', actualizarVentaDesdeCajasSobres);
     ventaSobres.addEventListener('input', actualizarVentaDesdeCajasSobres);
 
@@ -202,8 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     ventaLitros.addEventListener('blur', () => validarLitrosPares(ventaLitros, 'venta real'));
-
-
     // --- EVENTOS: LITROS REGISTRADOS ---
     function actualizarRegDesdeCajasSobres() {
         if (regCaja.value === '' && regSobres.value === '') {
@@ -213,7 +210,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         calcularDiferencia();
     }
-
     regCaja.addEventListener('input', actualizarRegDesdeCajasSobres);
     regSobres.addEventListener('input', actualizarRegDesdeCajasSobres);
 
@@ -231,8 +227,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     regLitros.addEventListener('blur', () => validarLitrosPares(regLitros, 'litros registrados'));
-
-
     // --- EVENTOS: SURTIMIENTOS MANUALES (TABLA II) ---
     surtCajas.addEventListener('input', () => {
         if (surtCajas.value === '') {
@@ -285,9 +279,6 @@ document.addEventListener('DOMContentLoaded', () => {
             mostrarNotificacion(`Aviso en Surtimiento: Ingresaste ${litros}L. Recuerda que se surte en múltiplos de 72L.<br>Sugerencia más próxima: <strong>${sugerencia1}L</strong> (${cajaInferior} cajas) o <strong>${sugerencia2}L</strong> (${cajaSuperior} cajas).`, 'error');
         }
     });
-
-
-    // --- LÓGICA SECCIÓN 1.2, 2.1 y 4.1 ---
     document.querySelectorAll('input[name="venta_no_incluida"]').forEach(r => r.addEventListener('change', (e) => {
         document.getElementById('motivo_no_incluida').style.display = e.target.value === 'Si' ? 'block' : 'none';
         if (e.target.value === 'No') document.querySelector('input[name="motivo_venta_no_incluida"]').value = '';
@@ -313,9 +304,6 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelector('input[name="alt_d_texto"]').value = '';
         }
     }));
-
-
-    // --- SISTEMA DE NOTIFICACIONES ---
     function mostrarNotificacion(mensaje, tipo = 'info') {
         let contenedor = document.getElementById('toast-container');
         if (!contenedor) {
@@ -360,8 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => toast.classList.add('mostrar'), 10);
         iniciarCierre();
     }
-
-    // --- CONEXIÓN A LA IA AL SELECCIONAR LECHERÍA ---
     document.addEventListener('lecheriaSeleccionada', () => {
         const lecheria = document.getElementById('inputLecheria').value.trim();
         const menores = parseInt(document.getElementById('campoMenores').value) || 0;
@@ -406,11 +392,9 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .catch(error => {
                 console.error('Error:', error);
-                mostrarNotificacion('Error de conexión con el servidor IA.', 'error');
+                mostrarNotificacion('Error de conexión con el servidor.', 'error');
             });
     });
-
-    // --- BLOQUEO DE CARACTERES ---
     function bloquearCaracteresInvalidos(e) {
         if (['Backspace', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Delete', '-'].includes(e.key)) return;
         if (!/^[0-9]$/.test(e.key)) e.preventDefault();
@@ -424,19 +408,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
-// --- GUARDAR EN BDD Y GENERAR PDF ---
     const btnGenerarPDF = document.getElementById('btnGenerarPDF');
     if (btnGenerarPDF) {
-        // Agregamos 'async' aquí para poder usar 'await' dentro
         btnGenerarPDF.addEventListener('click', async () => {
-
-            // 1. Validaciones de seguridad
             if (!document.getElementById('inputLecheria').value) {
                 mostrarNotificacion('Debe seleccionar un punto de venta primero.', 'error');
                 return;
             }
-
-            // 2. Aquí agrupamos todos los datos que se van a guardar y al PDF
             const datosFormulario = {
                 fecha: document.querySelector('input[name="fecha"]').value,
                 lecheria: document.getElementById('inputLecheria').value,
@@ -486,6 +464,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btnGenerarPDF.classList.add('is-loading');
 
             try {
+                    console.log("DATOS QUE SE ENVÍAN:");
+    console.log(datosFormulario);
                 // 3. PRIMER PASO: Enviar a guardar a la Base de Datos
                 const respuestaGuardado = await fetch('guardar_inventario.php', {
                     method: 'POST',
@@ -498,23 +478,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (resultado.status !== 'success') {
                     throw new Error(resultado.mensaje || 'Error desconocido al guardar en base de datos');
                 }
-
-                // Si llegamos aquí, se guardó correctamente.
                 mostrarNotificacion('Datos guardados en la base de datos.', 'info');
-
-                // 4. SEGUNDO PASO: Generar el PDF (usando exactamente el mismo payload)
                 const respuestaPDF = await fetch('generar_pdf.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datosFormulario)
                 });
 
-                if (!respuestaPDF.ok) throw new Error('Error en el servidor al generar el PDF');
-                
+                if (!respuestaPDF.ok) throw new Error('Error en el servidor al generar el PDF');             
                 const blob = await respuestaPDF.blob();
                 const url = window.URL.createObjectURL(blob);
-                
-                // Abrir en pestaña nueva y limpiar
                 window.open(url, '_blank'); 
                 mostrarNotificacion('¡PDF generado exitosamente!', 'info');
                 setTimeout(() => window.URL.revokeObjectURL(url), 1000);
@@ -528,4 +501,4 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }); 
     }
-}); // Fin del DOMContentLoaded (Mantenlo intacto)
+});

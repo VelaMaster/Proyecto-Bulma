@@ -2,7 +2,7 @@
 // src/Repositories/LecheriaRepository.php
 require_once __DIR__ . '/../../Database.php';
 
-class LecheriaRepository {
+class LecheriaRepositorio {
     private $db;
 
     public function __construct() {

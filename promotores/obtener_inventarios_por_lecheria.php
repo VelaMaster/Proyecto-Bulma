@@ -1,45 +1,32 @@
 <?php
+// promotores/obtener_inventarios_por_lecheria.php
 session_start();
 header('Content-Type: application/json; charset=utf-8');
 
+// Seguridad: Solo promotores
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     echo json_encode([]); exit();
 }
 
-require_once('../conexion.php');
-
-$clave  = trim($_GET['clave'] ?? '');
-$fecha  = trim($_GET['fecha'] ?? ''); // filtro opcional
-
-if ($clave === '') { echo json_encode([]); exit; }
-
 try {
-    $where = "WHERE UPPER(CLAVE_LECHERIA) = ?";
-    $params = [strtoupper($clave)];
+    require_once __DIR__ . '/../src/Repositorio/InventarioRepositorio.php';
 
-    if ($fecha !== '') {
-        $where .= " AND CAST(FECHA AS VARCHAR(20)) CONTAINING ?";
-        $params[] = $fecha;
-    }
+    $clave = trim($_GET['clave'] ?? '');
+    $fecha = trim($_GET['fecha'] ?? '');
 
-    $sql = "SELECT FIRST 50
-                ID, CLAVE_LECHERIA, FECHA, MUNICIPIO, COMUNIDAD,
-                ESTADO, CREATED_AT, UPDATED_AT,
-                FIN_LITROS, FIN_CAJA, FIN_SOBRES
-            FROM INVENTARIOS_MENSUALES
-            $where
-            ORDER BY FECHA DESC";
+    if ($clave === '') { echo json_encode([]); exit; }
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $repositorio = new InventarioRepositorio();
+    $filas = $repositorio->buscarPorLecheria($clave, $fecha);
 
-    array_walk_recursive($rows, function (&$v) {
+    // Limpieza de caracteres (UTF-8) para que el JSON no truene
+    array_walk_recursive($filas, function (&$v) {
         if (is_string($v)) $v = mb_convert_encoding($v, 'UTF-8', 'UTF-8');
     });
 
-    echo json_encode($rows, JSON_UNESCAPED_UNICODE);
+    echo json_encode($filas, JSON_UNESCAPED_UNICODE);
 
-} catch (PDOException $e) {
+} catch (Exception $e) {
+    http_response_code(500);
     echo json_encode(['error' => $e->getMessage()]);
 }

@@ -1,88 +1,48 @@
 <?php
-// calcularSurtimiento.php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
+// promotores/calcularSurtimiento.php
 header('Content-Type: application/json; charset=utf-8');
-require_once '../conexion.php'; 
+require_once __DIR__ . '/../src/Repositorio/InventarioRepositorio.php';
+require_once __DIR__ . '/../src/Servicio/NeuronaLiconsa.php';
 
 $datos = json_decode(file_get_contents('php://input'), true);
-
 $lecher = $datos['lecher'] ?? '';
 $menores = intval($datos['menores'] ?? 0);
 $mayores = intval($datos['mayores'] ?? 0);
 
-if ($lecher === '') {
-    echo json_encode(['error' => true, 'mensaje' => 'Clave de lechería no proporcionada.']);
-    exit();
-}
-
-// 🧠 CLASE NEURONA ARTIFICIAL
-class NeuronaLiconsa {
-    private $pesos;
-    private $bias;
-
-    public function __construct($pesos, $bias) {
-        $this->pesos = $pesos;
-        $this->bias = $bias;
-    }
-
-    public function predecir_meta($entradas) {
-        $sumaPonderada = $this->bias;
-        for ($i = 0; $i < count($entradas); $i++) {
-            $sumaPonderada += ($entradas[$i] * $this->pesos[$i]);
-        }
-        return max(0, ceil($sumaPonderada));
-    }
-}
-
 try {
-    // 1. Obtener historial de ventas e inventarios
-    $sql = "SELECT VENTA_REAL, INVENTARIO_FINAL 
-            FROM INVENTARIO_LEP_SUBSIDIADA 
-            WHERE LECHER = :lecher 
-            ORDER BY ANIO_PERIODO DESC, MES_PERIODO DESC";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':lecher' => $lecher]);
-    $historial = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $repo = new InventarioRepositorio();
+    $historial = $repo->obtenerHistorialLecheria($lecher);
 
-    $mesesEncontrados = count($historial);
+    // 1. Preparación de datos (Cajas y Litros iniciales)
+    $meses = count($historial);
+    $litrosIniciales = $meses > 0 ? floatval($historial[0]['INVENTARIO_FINAL']) : 0;
+    $cajasIniciales = $litrosIniciales / 72;
+
     $ventasCajas = [];
     $sobrantesCajas = [];
-    
-    // MAGIA: El inventario inicial de HOY es el inventario final del MES MÁS RECIENTE
-    $cajasIniciales = 0;
-    $litrosIniciales = 0; // <-- NUEVA VARIABLE PARA LOS LITROS EXACTOS
-
-    if ($mesesEncontrados > 0) {
-        // Atrapamos los litros exactos directamente de la base de datos (ej. 848)
-        $litrosIniciales = floatval($historial[0]['INVENTARIO_FINAL']);
-        // Calculamos las cajas para la IA interna (ej. 11.777)
-        $cajasIniciales = $litrosIniciales / 72;
-
-        foreach ($historial as $reg) {
-            $ventasCajas[] = floatval($reg['VENTA_REAL']) / 72;
-            $sobrantesCajas[] = floatval($reg['INVENTARIO_FINAL']) / 72;
-        }
+    foreach ($historial as $reg) {
+        $ventasCajas[] = floatval($reg['VENTA_REAL']) / 72;
+        $sobrantesCajas[] = floatval($reg['INVENTARIO_FINAL']) / 72;
     }
 
-    // 2. PREPARACIÓN DE DATOS PARA LA NEURONA
-    $historialReal = ($mesesEncontrados > 0) ? (array_sum($ventasCajas) / $mesesEncontrados) : 0;
-    
+    // 2. Cálculo de promedios para la Neurona
+    $historialReal = $meses > 0 ? (array_sum($ventasCajas) / $meses) : 0;
     $totalBeneficiarios = $menores + $mayores;
     $demandaTeorica = ($totalBeneficiarios > 0) ? (($totalBeneficiarios * 8) / 36) : 0;
+    $mediaSobrante = ($meses > 0) ? (array_sum($sobrantesCajas) / $meses) : 0;
 
-    $mediaSobrante = ($mesesEncontrados > 0) ? (array_sum($sobrantesCajas) / $mesesEncontrados) : 0;
+    // Lógica de exceso de inventario
     $excesoInventario = 0;
-    
     if ($cajasIniciales >= 10 && $cajasIniciales > ($mediaSobrante + 5)) {
         $excesoInventario = $cajasIniciales - $mediaSobrante;
     }
 
-    // 3. INICIALIZAR LA NEURONA
-    if ($mesesEncontrados >= 2) {
+    // 3. Configuración de la Neurona y Explicación
+    $alerta = "";
+    if ($meses >= 2) {
         $pesos = [0.85, 0.15, -0.50]; 
-        $explicacion = "Se priorizó el consumo histórico promedio (" . round($historialReal) . " cajas), con un leve ajuste del padrón.";
-    } elseif ($mesesEncontrados == 1) {
+        $explicacion = "Se priorizó el consumo histórico promedio (" . round($historialReal) . " cajas), con un ajuste por padrón.";
+    } elseif ($meses == 1) {
         $pesos = [0.50, 0.50, -0.50];
         $explicacion = "Cálculo promediado entre el único mes de historial y la capacidad del padrón.";
     } else {
@@ -90,44 +50,36 @@ try {
         $explicacion = "Sin historial previo. El cálculo se basa enteramente en el padrón de beneficiarios.";
     }
     
-    $neurona = new NeuronaLiconsa($pesos, 0);
-    $entradas_X = [$historialReal, $demandaTeorica, $excesoInventario];
-    $metaMensual = $neurona->predecir_meta($entradas_X);
-
-    // 4. ALERTAS
-    $alerta = "";
     if ($excesoInventario > 0) {
         $cajasCastigadas = ceil($excesoInventario * 0.50); 
-        $alerta = "Nota: Sobraron demasiadas cajas (" . round($cajasIniciales, 1) . "). El sistema redujo la meta en aprox. " . $cajasCastigadas . " cajas para evitar saturar la tienda.";
+        $alerta = "⚠️ **Nota:** Sobraron demasiadas cajas (" . round($cajasIniciales, 1) . "). El sistema redujo la meta en aprox. " . $cajasCastigadas . " cajas para evitar saturación.";
     }
 
-    // 5. CÁLCULO LOGÍSTICO
-    $cajasSurtir = $metaMensual - $cajasIniciales;
-    if ($cajasSurtir < 0) $cajasSurtir = 0;
-    $litrosSurtir = $cajasSurtir * 72;
+    $neurona = new NeuronaLiconsa($pesos);
+    $metaMensual = $neurona->predecir([$historialReal, $demandaTeorica, $excesoInventario]);
 
-    $mensaje = "<div style='color: var(--bulma-text); line-height: 1.5;'>";
-    $mensaje .= "<strong>Análisis de Surtimiento:</strong><br>";
+    // 4. Cálculo Logístico Final
+    $cajasSurtir = max(0, $metaMensual - $cajasIniciales);
+
+    // 5. Construcción del mensaje detallado (HTML para el Toast de Bulma)
+    $mensaje = "<div style='line-height: 1.4;'>";
+    $mensaje .= "<strong>Análisis inteligente:</strong><br>";
     $mensaje .= $explicacion . "<br>";
     if ($alerta !== "") {
-        $mensaje .= "<br><strong>" . $alerta . "</strong><br>";
+        $mensaje .= "<br><span style='color: #ffd000;'>" . $alerta . "</span><br>";
     }
-    $mensaje .= "<br>Meta mensual calculada: " . $metaMensual . " cajas.<br>";
-    $mensaje .= "Restando " . round($cajasIniciales, 1) . " cajas en tienda, <strong>se sugieren " . round($cajasSurtir, 1) . " cajas a surtir.</strong>";
+    $mensaje .= "<br>Meta mensual sugerida: <strong>" . $metaMensual . " cajas</strong>.<br>";
+    $mensaje .= "Restando las " . round($cajasIniciales, 1) . " en tienda, se deben surtir <strong>" . round($cajasSurtir, 1) . " cajas.</strong>";
     $mensaje .= "</div>";
 
-    // Devolvemos el cálculo Y los litros puros para que el JS no tenga que adivinar
     echo json_encode([
         'exito' => true,
-        'litros_iniciales' => $litrosIniciales, // <-- AHORA MANDAMOS LOS LITROS EXACTOS (ej. 848)
-        'cajas_iniciales' => $cajasIniciales,   
+        'litros_iniciales' => $litrosIniciales,
         'cajas_surtir' => $cajasSurtir,
-        'litros_surtir' => $litrosSurtir,
+        'litros_surtir' => $cajasSurtir * 72,
         'mensaje' => $mensaje
     ]);
 
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['error' => true, 'mensaje' => 'Error BD: ' . $e->getMessage()]);
+} catch (Exception $e) {
+    echo json_encode(['exito' => false, 'mensaje' => "Error en Neurona: " . $e->getMessage()]);
 }
-?>

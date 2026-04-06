@@ -9,7 +9,7 @@ try {
         echo json_encode([]);
         exit();
     }
-    $repo = new LecheriaRepository();
+    $repo = new LecheriaRepositorio();
     $data = $repo->searchByTerm($q);
     array_walk_recursive($data, function (&$item) {
         if (is_string($item)) {

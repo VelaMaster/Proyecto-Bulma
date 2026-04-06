@@ -549,15 +549,6 @@ $origen_conexion = Database::getEnvName();
                                 <strong>${item.LECHER}</strong> &ndash; ${item.NOMBRELECH}<br>
                                 <small>${item.MUNICIPIO_NOMBRE ?? ''} &ndash; ${item.LOCALIDAD_DESC ?? ''}</small>
                             `;
-
-                            /*
-                             * FIX RACE CONDITION:
-                             * Usamos 'mousedown' en lugar de 'click'.
-                             * mousedown se dispara ANTES de que el input pierda el foco (blur),
-                             * así que podemos marcar ignorarBlur=true y evitar que el documento
-                             * cierre el dropdown antes de procesar la selección.
-                             * e.preventDefault() evita que el input pierda el foco en absoluto.
-                             */
                             opt.addEventListener('mousedown', (e) => {
                                 e.preventDefault(); // impide blur en el input
                                 ignorarBlur = true;

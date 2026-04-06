@@ -31,7 +31,7 @@ class Database {
             }
 
             try {
-                $dsn = "firebird:dbname=$host/$puerto:$db_path;charset=UTF8";
+$dsn = "firebird:dbname=$host/$puerto:$db_path;charset=NONE";
                 self::$instance = new PDO($dsn, $user, $pass, [
                     PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
                     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC

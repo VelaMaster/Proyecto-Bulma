@@ -221,3 +221,197 @@
 
         /* ══ FORMULARIO ══════════════════════════════════════════════ */
         #formularioPrincipal { transition: opacity .4s ease; }
+
+        /* ══ ESTILOS DEL MODAL DE INVENTARIOS ══════════════════════════════ */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease;
+        }
+        .modal-backdrop.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: var(--md-sys-color-surface-container);
+            border-radius: 24px;
+            width: 92%;
+            max-width: 680px;
+            max-height: 82vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            transform: translateY(20px);
+            transition: transform 0.25s ease;
+        }
+        .modal-backdrop.open .modal-card {
+            transform: translateY(0);
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+        }
+        .modal-header-info { display: flex; flex-direction: column; gap: 4px; }
+        .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--md-sys-color-on-surface);
+            margin: 0;
+        }
+        .modal-subtitle {
+            font-size: 0.8rem;
+            color: var(--md-sys-color-on-surface-variant);
+            margin: 0;
+        }
+        .modal-close-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--md-sys-color-on-surface-variant);
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .modal-close-btn:hover { background: var(--md-sys-color-surface-container-highest); }
+        .modal-filter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--md-sys-color-outline-variant);
+            flex-wrap: wrap;
+        }
+        .modal-filter label { font-size: 0.85rem; color: var(--md-sys-color-on-surface-variant); }
+        .modal-filter-clear {
+            background: none;
+            border: 1px solid var(--md-sys-color-outline);
+            border-radius: 20px;
+            padding: 4px 14px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--md-sys-color-on-surface);
+            transition: all 0.2s;
+        }
+        .modal-filter-clear:hover { background: var(--md-sys-color-surface-container-highest); }
+        .modal-body {
+            overflow-y: auto;
+            flex: 1;
+            padding: 12px 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .modal-loading, .modal-empty {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 12px; padding: 40px;
+            color: var(--md-sys-color-on-surface-variant);
+            text-align: center;
+        }
+        .inv-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 16px;
+            border-radius: 14px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+        }
+        .inv-item:hover {
+            background: var(--md-sys-color-surface-container-highest);
+            border-color: var(--md-sys-color-primary);
+        }
+        .inv-item-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .icon-guardado { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+        .icon-editado  { background: var(--md-sys-color-tertiary-container);  color: var(--md-sys-color-on-tertiary-container); }
+        .inv-item-info { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+        .inv-item-fecha { font-size: 0.9rem; font-weight: 500; color: var(--md-sys-color-on-surface); }
+        .inv-item-meta  { font-size: 0.78rem; color: var(--md-sys-color-on-surface-variant); }
+        .inv-item-arrow { color: var(--md-sys-color-on-surface-variant); font-size: 20px; }
+        .estado-pill {
+            font-size: 0.7rem; font-weight: 600; padding: 3px 10px;
+            border-radius: 20px; white-space: nowrap; text-transform: capitalize;
+        }
+        .pill-guardado { background: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container); }
+        .pill-editado  { background: var(--md-sys-color-tertiary-container);  color: var(--md-sys-color-on-tertiary-container); }
+
+        /* ══ BANNER EDICIÓN ══════════════════════════════════════════════ */
+        .edit-banner {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 20px;
+            background: var(--md-sys-color-tertiary-container);
+            color: var(--md-sys-color-on-tertiary-container);
+            border-radius: 14px;
+            font-size: 0.875rem; font-weight: 500;
+            border: 1px solid var(--md-sys-color-outline-variant);
+        }
+
+        /* ══ GRID DE CARDS (igual que consultarInventarioMensual) ════════ */
+        /* Se reutilizan las clases del CSS consultarInventarioMensual.css  */
+        /* Solo sobreescribimos el estado hover para indicar "editar"        */
+        .lech-card-edit-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--md-sys-color-tertiary-container);
+            color: var(--md-sys-color-on-tertiary-container);
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: none; /* se muestra sólo en cards con inventarios */
+        }
+        .lech-card:hover .lech-card-edit-badge { display: inline-block; }
+
+        /* El chip de "Sin inventarios" en modo edición queda disabled */
+        .chip-sin-edit {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .lech-card.no-inv { cursor: not-allowed; }
+        .lech-card.no-inv:hover {
+            border-color: transparent;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Hint flotante cuando no tiene inventarios */
+        .lech-card.no-inv::after {
+            content: 'Sin inventarios para editar';
+            position: absolute;
+            bottom: -36px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--md-sys-color-surface-container-highest);
+            color: var(--md-sys-color-on-surface-variant);
+            font-size: 0.75rem;
+            padding: 4px 12px;
+            border-radius: 8px;
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .lech-card.no-inv:hover::after { opacity: 1; }
+
+        /* ── Sección oculta hasta que carga ── */
+        #formularioPrincipal {
+            transition: opacity 0.3s ease;
+        }
