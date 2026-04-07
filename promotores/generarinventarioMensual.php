@@ -131,7 +131,7 @@ $origen_conexion = Database::getEnvName();
 
         <div class="md3-card">
             <div class="form-grid fg-3">
-
+<input type="hidden" id="inputUsuarioOculto" value="<?php echo htmlspecialchars($nombre_usuario); ?>">
                 <div class="field-group">
                     <label class="field-label" for="inputFecha">Fecha</label>
                     <input class="md3-input" type="date" name="fecha" id="inputFecha"

@@ -18,11 +18,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let todasLecherias = [];
     let claveActual    = '';
 
-    /* ════════════════════════════════════════════════════════
-       1. CARGAR LECHERÍAS
+/* ════════════════════════════════════════════════════════
+       1. CARGAR LECHERÍAS (MODO DEBUG)
     ════════════════════════════════════════════════════════ */
     fetch('mis_lecherias.php')
-        .then(r => r.json())
+        .then(async r => {
+            // Primero leemos la respuesta como TEXTO CRUDO
+            const texto = await r.text();
+            try {
+                // Intentamos convertirlo a JSON
+                return JSON.parse(texto);
+            } catch (e) {
+                // Si explota, imprimimos la basura que mandó PHP en la consola
+                console.error("❌ RESPUESTA SUCIA DE PHP:", texto);
+                throw new Error(texto); 
+            }
+        })
         .then(datos => {
             if (datos.error) {
                 grid.innerHTML = `<div class="empty-state">
@@ -41,13 +52,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
             renderGrid(todasLecherias);
         })
-        .catch(() => {
+        .catch(err => {
+            // Imprimimos el error rojo chillón directo en la pantalla
             grid.innerHTML = `<div class="empty-state">
-                <span class="material-symbols-outlined">wifi_off</span>
-                <p>No se pudo conectar con el servidor.</p>
+                <span class="material-symbols-outlined" style="color:#ff3860;">bug_report</span>
+                <p style="color:#ff3860; font-weight:bold;">¡Error en PHP!</p>
+                <div style="background:#222; color:#0f0; padding:10px; border-radius:5px; text-align:left; font-family:monospace; font-size:12px; width:100%; overflow-x:auto;">
+                    ${err.message}
+                </div>
             </div>`;
         });
-
     /* ════════════════════════════════════════════════════════
        2. FILTRO EN TIEMPO REAL
     ════════════════════════════════════════════════════════ */

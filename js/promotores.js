@@ -51,9 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const sobres = parseFloat(inputSobres.value) || 0;
         return (cajas * L_X_CAJA) + (sobres * L_X_SOBRE);
     }
-
-    // --- FUNCIONES EN CASCADA ---
-
     function calcularDiferencia() {
         const ventaL = parseFloat(ventaLitros.value) || 0;
         let regL = parseFloat(regLitros.value) || 0;
@@ -458,15 +455,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 alt_a: document.querySelector('input[name="alt_a"]').checked,
                 alt_b: document.querySelector('input[name="alt_b"]').checked,
                 alt_c: document.querySelector('input[name="alt_c"]').checked,
-                alt_d: document.querySelector('input[name="alt_d_texto"]').value
+                alt_d: document.querySelector('input[name="alt_d_texto"]').value,
+                usuario: document.getElementById('inputUsuarioOculto').value
             };
 
             btnGenerarPDF.classList.add('is-loading');
 
             try {
-                    console.log("DATOS QUE SE ENVÍAN:");
-    console.log(datosFormulario);
-                // 3. PRIMER PASO: Enviar a guardar a la Base de Datos
                 const respuestaGuardado = await fetch('guardar_inventario.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

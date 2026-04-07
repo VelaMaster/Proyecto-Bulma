@@ -1,5 +1,8 @@
 <?php
 session_start();
+// Apagamos los errores de PHP en pantalla para que NUNCA rompan el JSON
+ini_set('display_errors', 0);
+error_reporting(E_ALL);
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
@@ -14,81 +17,81 @@ if (!$datos || empty($datos['inventario_id'])) {
     exit();
 }
 
-$intVal  = fn($val) => (empty($val) && $val !== '0') ? 0 : (int)$val;
-$dateVal = fn($val) => empty($val) ? null : $val;
+// 1. Usamos nuestra conexión parcheada
+require_once __DIR__ . '/../Database.php';
 
-$nombreArchivo = 'Inventario_'
-    . ($datos['lecheria'] ?? 'X') . '_'
-    . ($datos['fecha']    ?? date('Ymd')) . '.pdf';
+// 2. Funciones ayudantes (Spoon-feeding para el SQL Crudo)
+$q = function ($val, $len = 255) {
+    if ($val === null || $val === "") return 'NULL';
+    $limpio = substr((string)$val, 0, $len);
+    return "'" . str_replace("'", "''", $limpio) . "'";
+};
+
+$n = function ($val) {
+    if ($val === null || $val === "") return 0;
+    return (int)$val;
+};
+
+$lecheria = $datos['lecheria'] ?? 'X';
+$time = strtotime($datos['fecha'] ?? date('Y-m-d'));
+$anio = date('Y', $time);
+$mes = date('m', $time);
+$nombreArchivo = "Inventario_{$lecheria}_{$anio}_{$mes}.pdf";
 
 try {
-    require_once('../conexion.php');
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $db = Database::getInstance();
+    
+    $id = (int)$datos['inventario_id'];
 
-    // ¡El bug estaba aquí: faltaba la coma antes de ESTADO = 'editado'!
+    // 3. ARMAMOS EL UPDATE GIGANTE EN TEXTO PLANO
     $sql = "UPDATE INVENTARIOS_MENSUALES SET
-        FECHA          = ?,
-        SURT_FECHA     = ?, SURT_CAJAS  = ?, SURT_LITROS   = ?,
-        SURT_FACTURA   = ?, SURT_CADUCIDAD = ?,
-        INV_INI_CAJA   = ?, INV_INI_SOBRES = ?, INV_INI_LITROS = ?,
-        ABASTO_CAJA    = ?, ABASTO_SOBRES  = ?, ABASTO_LITROS  = ?,
-        VENTA_CAJA     = ?, VENTA_SOBRES   = ?, VENTA_LITROS   = ?,
-        REG_CAJA       = ?, REG_SOBRES     = ?, REG_LITROS     = ?,
-        DIF_CAJA       = ?, DIF_SOBRES     = ?, DIF_LITROS     = ?,
-        FIN_CAJA       = ?, FIN_SOBRES     = ?, FIN_LITROS     = ?,
-        PDF_RUTA       = ?,
+        FECHA          = " . $q($datos['fecha'], 10) . ",
+        SURT_FECHA     = " . $q($datos['surt_fecha'], 10) . ",
+        SURT_CAJAS     = " . $n($datos['surt_cajas']) . ",
+        SURT_LITROS    = " . $n($datos['surt_litros']) . ",
+        SURT_FACTURA   = " . $q($datos['surt_factura'], 60) . ",
+        SURT_CADUCIDAD = " . $q($datos['surt_caducidad'], 10) . ",
+
+        INV_INI_CAJA   = " . $n($datos['inv_ini_caja']) . ",
+        INV_INI_SOBRES = " . $n($datos['inv_ini_sobres']) . ",
+        INV_INI_LITROS = " . $n($datos['inv_ini_litros']) . ",
+
+        ABASTO_CAJA    = " . $n($datos['abasto_caja']) . ",
+        ABASTO_SOBRES  = " . $n($datos['abasto_sobres']) . ",
+        ABASTO_LITROS  = " . $n($datos['abasto_litros']) . ",
+
+        VENTA_CAJA     = " . $n($datos['venta_caja']) . ",
+        VENTA_SOBRES   = " . $n($datos['venta_sobres']) . ",
+        VENTA_LITROS   = " . $n($datos['venta_litros']) . ",
+
+        REG_CAJA       = " . $n($datos['reg_caja']) . ",
+        REG_SOBRES     = " . $n($datos['reg_sobres']) . ",
+        REG_LITROS     = " . $n($datos['reg_litros']) . ",
+
+        DIF_CAJA       = " . $n($datos['dif_caja']) . ",
+        DIF_SOBRES     = " . $n($datos['dif_sobres']) . ",
+        DIF_LITROS     = " . $n($datos['dif_litros']) . ",
+
+        FIN_CAJA       = " . $n($datos['fin_caja']) . ",
+        FIN_SOBRES     = " . $n($datos['fin_sobres']) . ",
+        FIN_LITROS     = " . $n($datos['fin_litros']) . ",
+
+        PDF_RUTA       = " . $q($nombreArchivo, 255) . ",
         ESTADO         = 'editado'
-        WHERE ID = ?";
+        WHERE ID = $id";
 
-    if (!$pdo->inTransaction()) { $pdo->beginTransaction(); }
+    if (!$db->inTransaction()) { $db->beginTransaction(); }
 
-    $stmt = $pdo->prepare($sql);
-    $ok   = $stmt->execute([
-        $dateVal($datos['fecha']          ?? null),
+    // 4. EJECUTAMOS DIRECTO (Sin bind_params)
+    $db->exec($sql);
 
-        $dateVal($datos['surt_fecha']     ?? null),
-        $intVal ($datos['surt_cajas']     ?? 0),
-        $intVal ($datos['surt_litros']    ?? 0),
-        $datos  ['surt_factura']          ?? '',
-        $dateVal($datos['surt_caducidad'] ?? null),
+    $db->commit();
+    echo json_encode(["status" => "success", "mensaje" => "Inventario actualizado correctamente."]);
 
-        $intVal($datos['inv_ini_caja']    ?? 0),
-        $intVal($datos['inv_ini_sobres']  ?? 0),
-        $intVal($datos['inv_ini_litros']  ?? 0),
-
-        $intVal($datos['abasto_caja']     ?? 0),
-        $intVal($datos['abasto_sobres']   ?? 0),
-        $intVal($datos['abasto_litros']   ?? 0),
-
-        $intVal($datos['venta_caja']      ?? 0),
-        $intVal($datos['venta_sobres']    ?? 0),
-        $intVal($datos['venta_litros']    ?? 0),
-
-        $intVal($datos['reg_caja']        ?? 0),
-        $intVal($datos['reg_sobres']      ?? 0),
-        $intVal($datos['reg_litros']      ?? 0),
-
-        $intVal($datos['dif_caja']        ?? 0),
-        $intVal($datos['dif_sobres']      ?? 0),
-        $intVal($datos['dif_litros']      ?? 0),
-
-        $intVal($datos['fin_caja']        ?? 0),
-        $intVal($datos['fin_sobres']      ?? 0),
-        $intVal($datos['fin_litros']      ?? 0),
-
-        $nombreArchivo,
-        (int)$datos['inventario_id']
-    ]);
-
-    if ($ok) {
-        $pdo->commit();
-        echo json_encode(["status" => "success", "mensaje" => "Inventario actualizado correctamente."]);
-    } else {
-        $pdo->rollBack();
-        echo json_encode(["status" => "error", "mensaje" => "No se pudo actualizar el registro."]);
-    }
-
-} catch (PDOException $e) {
-    if (isset($pdo) && $pdo->inTransaction()) { $pdo->rollBack(); }
+} catch (Exception $e) {
+    if (isset($db) && $db->inTransaction()) { $db->rollBack(); }
+    
+    // Devolvemos el error en un JSON válido, no en HTML
+    http_response_code(500);
     echo json_encode(["status" => "error", "mensaje" => "Error BD: " . $e->getMessage()]);
 }

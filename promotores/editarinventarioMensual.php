@@ -27,8 +27,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <script type="module">import '@material/web/all.js';</script>
 </head>
 <body>
-
-<!-- ══ TOP BAR ══════════════════════════════════════════════════════════ -->
 <header class="md3-top-app-bar">
     <div class="app-bar-start">
         <md-icon-button class="mobile-menu-btn" onclick="toggleDrawer()">
@@ -83,8 +81,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left:8px;">Salir</md-filled-tonal-button>
     </div>
 </header>
-
-<!-- ══ DRAWER MÓVIL ══════════════════════════════════════════════════════ -->
 <div class="md3-drawer-scrim" id="drawer-scrim" onclick="toggleDrawer()"></div>
 <aside class="md3-drawer" id="mobile-drawer">
     <div style="padding-top:24px;"></div>
@@ -378,13 +374,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     </div><!-- /formularioPrincipal -->
 
 </main>
-
-<!-- 
-    ORDEN DE SCRIPTS IMPORTANTE:
-    1. temas_md3.js  — tema visual
-    2. promotores.js — lógica de cálculos (calcularDiferencia, calcularInventarioFinal, etc.)
-    3. editar_inventario.js — flujo de edición (depende de promotores.js)
--->
 <script src="../js/temas_md3.js"></script>
 <script src="../js/promotores.js"></script>
 <script src="../js/editar_inventario.js"></script>

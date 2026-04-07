@@ -8,7 +8,7 @@ require_once __DIR__ . '/../src/Repositorio/InventarioRepositorio.php';
 
 try {
     $datos = json_decode(file_get_contents('php://input'), true);
-    $usuario = $_SESSION['usuario'] ?? 'desconocido';
+    $usuario = $datos['usuario'] ?? 'Sistema';
 
     $repo = new InventarioRepositorio();
     $respuesta = $repo->guardar($datos, $usuario);

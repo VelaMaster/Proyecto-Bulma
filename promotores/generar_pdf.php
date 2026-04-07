@@ -254,10 +254,12 @@ $pdf->Cell(87, 5, d('Nombre y firma del Promotor(a) Social'),     0, 0, 'C');
 $pdf->Cell(11, 5, '',                                              0, 0, 'C');
 $pdf->Cell(87, 5, d('Nombre y firma del distribuidor mercantil'), 0, 1, 'C');
 
-// ── SALIDA ───────────────────────────────────────────────
-$nombreArchivo = 'Inventario_'
-    . ($datos['lecheria'] ?? 'X') . '_'
-    . ($datos['fecha']    ?? date('Ymd')) . '.pdf';
+$lecheria = $datos['lecheria'] ?? 'X';
+$time = strtotime($datos['fecha'] ?? date('Y-m-d'));
+$anio = date('Y', $time);
+$mes = date('m', $time);
+
+$nombreArchivo = "Inventario_{$lecheria}_{$anio}_{$mes}.pdf";
 
 $baseDir      = __DIR__ . '/../datos/promotores';
 $rutaCompleta = $baseDir . '/' . $nombreArchivo;
