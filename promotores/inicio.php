@@ -25,11 +25,13 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             position: relative;
             background-color: var(--md-sys-color-surface-container-low, #1e1e1e);
         }
+
         .md3-hero-card>*:not(canvas) {
             position: relative;
             z-index: 2;
             text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
         }
+
         .md3-hero-card canvas {
             will-change: transform, opacity;
             z-index: 1;
@@ -46,6 +48,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         import '@material/web/all.js';
     </script>
 </head>
+
 <body>
     <header class="md3-top-app-bar">
         <div class="app-bar-start">
@@ -128,18 +131,28 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
     </header>
 
-    <div class="md3-drawer-scrim" id="drawer-scrim" onclick="toggleDrawer()"></div>
     <aside class="md3-drawer" id="mobile-drawer">
 
-        <div style="padding-top: 24px;"></div>
-
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px 24px;">
+            <span style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface);">Menú</span>
+            <md-icon-button onclick="toggleDrawer()">
+                <md-icon>close</md-icon>
+            </md-icon-button>
+        </div>
         <div style="overflow-y: auto; flex-grow: 1;">
             <md-list style="background: transparent;">
+                <md-divider style="margin: 8px 0;"></md-divider>
                 <div class="drawer-section-title">Inventario mensual</div>
                 <md-list-item href="generarinventarioMensual.php" type="button">
                     <div slot="headline">Generar</div>
                     <md-icon slot="start">add_box</md-icon>
                 </md-list-item>
+
+                <md-list-item href="editarinventarioMensual.php" type="button">
+                    <div slot="headline">Editar</div>
+                    <md-icon slot="start">edit</md-icon>
+                </md-list-item>
+
                 <md-list-item href="consultarinventarioMensual.php" type="button">
                     <div slot="headline">Consultar</div>
                     <md-icon slot="start">search</md-icon>
@@ -200,32 +213,22 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 16px; margin-bottom: 0;">
             Accesos Rápidos</h3>
         <div class="md3-dashboard-grid">
-            <a href="consultarinventarioMensual.php" class="md3-action-card">
+            <a href="editarinventarioMensual.php" class="md3-action-card">
+                <div class="action-card-icon"
+                    style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
+                    <md-icon>edit</md-icon>
+                </div>
+                <h4 class="action-card-title">Editar reporte</h4>
+                <p class="action-card-desc">Edite diferentes campos del reporte o agregue su factura a su inventario mensual.</p>
+                </a>
+
+                <a href="consultarinventarioMensual.php" class="md3-action-card">
                 <div class="action-card-icon">
                     <md-icon>search</md-icon>
                 </div>
                 <h4 class="action-card-title">Consultar Inventarios</h4>
                 <p class="action-card-desc">Revisa y descarga los inventarios mensuales generados previamente.</p>
             </a>
-
-            <a href="#" class="md3-action-card">
-                <div class="action-card-icon"
-                    style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
-                    <md-icon>receipt_long</md-icon>
-                </div>
-                <h4 class="action-card-title">Reporte de Lecherías</h4>
-                <p class="action-card-desc">Genera el reporte mensual de operación de ventas.</p>
-            </a>
-
-            <a href="#" class="md3-action-card">
-                <div class="action-card-icon"
-                    style="background-color: var(--md-sys-color-error-container); color: var(--md-sys-color-on-error-container);">
-                    <md-icon>send</md-icon>
-                </div>
-                <h4 class="action-card-title">Requerimientos</h4>
-                <p class="action-card-desc">Calcula y envía los reportes de requerimiento a tu supervisor.</p>
-            </a>
-
         </div>
     </main>
     <script src="../js/temas_md3.js"></script>
@@ -238,6 +241,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             const menu = document.getElementById(id);
             menu.open = !menu.open;
         }
+
         function toggleDrawer() {
             const drawer = document.getElementById('mobile-drawer');
             const scrim = document.getElementById('drawer-scrim');
@@ -251,4 +255,5 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         });
     </script>
 </body>
+
 </html>

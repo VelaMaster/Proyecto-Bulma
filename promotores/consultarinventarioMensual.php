@@ -81,28 +81,70 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     </div>
 </header>
 
-<!-- ══ DRAWER MÓVIL ══════════════════════════════════════════════ -->
-<div class="md3-drawer-scrim" id="drawer-scrim" onclick="toggleDrawer()"></div>
 <aside class="md3-drawer" id="mobile-drawer">
-    <div style="padding-top:24px;"></div>
-    <md-list style="background:transparent;">
-        <div class="drawer-section-title">Inventario mensual</div>
-        <md-list-item href="generarinventarioMensual.php"><div slot="headline">Generar</div></md-list-item>
-        <md-list-item href="editarinventarioMensual.php"><div slot="headline">Editar</div></md-list-item>
-        <md-list-item href="consultarinventarioMensual.php"><div slot="headline">Consultar</div></md-list-item>
-        <md-divider style="margin:8px 0;"></md-divider>
-        <div class="drawer-section-title">Reporte lecherías</div>
-        <md-list-item href="#"><div slot="headline">Generar</div></md-list-item>
-        <md-list-item href="#"><div slot="headline">Consultar</div></md-list-item>
-        <md-divider style="margin:8px 0;"></md-divider>
-        <div class="drawer-section-title">Requerimiento</div>
-        <md-list-item href="#"><div slot="headline">Generar</div></md-list-item>
-        <md-list-item href="#"><div slot="headline">Consultar</div></md-list-item>
-        <md-list-item href="#"><div slot="headline">Enviar a supervisor</div></md-list-item>
-    </md-list>
-</aside>
 
-<!-- ══ MAIN ═════════════════════════════════════════════════════ -->
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px 24px;">
+            <span style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface);">Menú</span>
+            <md-icon-button onclick="toggleDrawer()">
+                <md-icon>close</md-icon>
+            </md-icon-button>
+        </div>
+
+        <div style="overflow-y: auto; flex-grow: 1;">
+            <md-list style="background: transparent;">
+                
+                <md-list-item href="inicio.php" type="button">
+                    <div slot="headline">Inicio</div>
+                    <md-icon slot="start">home</md-icon>
+                </md-list-item>
+
+                <md-divider style="margin: 8px 0;"></md-divider>
+                <div class="drawer-section-title">Inventario mensual</div>
+                <md-list-item href="generarinventarioMensual.php" type="button">
+                    <div slot="headline">Generar</div>
+                    <md-icon slot="start">add_box</md-icon>
+                </md-list-item>
+                
+                <md-list-item href="editarinventarioMensual.php" type="button">
+                    <div slot="headline">Editar</div>
+                    <md-icon slot="start">edit</md-icon>
+                </md-list-item>
+                
+                <md-list-item href="consultarinventarioMensual.php" type="button">
+                    <div slot="headline">Consultar</div>
+                    <md-icon slot="start">search</md-icon>
+                </md-list-item>
+
+                <md-divider style="margin: 8px 0;"></md-divider>
+
+                <div class="drawer-section-title">Reporte lecherías</div>
+                <md-list-item href="#" type="button">
+                    <div slot="headline">Generar</div>
+                    <md-icon slot="start">receipt_long</md-icon>
+                </md-list-item>
+                <md-list-item href="#" type="button">
+                    <div slot="headline">Consultar</div>
+                    <md-icon slot="start">find_in_page</md-icon>
+                </md-list-item>
+
+                <md-divider style="margin: 8px 0;"></md-divider>
+
+                <div class="drawer-section-title">Requerimiento</div>
+                <md-list-item href="#" type="button">
+                    <div slot="headline">Generar</div>
+                    <md-icon slot="start">inventory</md-icon>
+                </md-list-item>
+                <md-list-item href="#" type="button">
+                    <div slot="headline">Consultar</div>
+                    <md-icon slot="start">manage_search</md-icon>
+                </md-list-item>
+                <md-list-item href="#" type="button">
+                    <div slot="headline">Enviar a supervisor</div>
+                    <md-icon slot="start">send</md-icon>
+                </md-list-item>
+            </md-list>
+        </div>
+    </aside>
 <main class="panel-content">
 
     <!-- CABECERA -->
