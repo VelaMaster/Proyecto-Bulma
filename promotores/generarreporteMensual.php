@@ -13,7 +13,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inicio - Promotor</title>
+    <title>Generar reporte mensual - Promotor</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="../main_md3.css">
@@ -189,51 +189,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
     </aside>
 
-    <main class="panel-content">
-
-        <div class="md3-hero-card">
-            <h2 style="font-size: 2.25rem; font-weight: 500; margin: 0; letter-spacing: -0.5px;">¡Hola,
-                <?php echo htmlspecialchars($nombre_usuario); ?>!
-            </h2>
-            <p style="font-size: 1.1rem; margin: 0; max-width: 600px; line-height: 1.5; opacity: 0.9;">
-                Bienvenido al panel principal.
-                Aquí tienes acceso rápido a todas las herramientas proporcionadas por nuestra aplicación web Bulma, para
-                facilitar la operación de tus lecherías asignadas, buena suerte.
-            </p>
-            <div style="margin-top: 12px;">
-                <md-filled-button onclick="location.href='generarinventarioMensual.php'"
-                    style="--md-filled-button-container-shape: 16px; height: 48px;">
-                    <md-icon slot="icon">add_box</md-icon>
-                    Nuevo Inventario
-                </md-filled-button>
-            </div>
-        </div>
-
-        <h3
-            style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 16px; margin-bottom: 0;">
-            Accesos Rápidos</h3>
-        <div class="md3-dashboard-grid">
-            <a href="editarinventarioMensual.php" class="md3-action-card">
-                <div class="action-card-icon"
-                    style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
-                    <md-icon>edit</md-icon>
-                </div>
-                <h4 class="action-card-title">Editar reporte</h4>
-                <p class="action-card-desc">Edite diferentes campos del reporte o agregue su factura a su inventario mensual.</p>
-                </a>
-
-                <a href="consultarinventarioMensual.php" class="md3-action-card">
-                <div class="action-card-icon">
-                    <md-icon>search</md-icon>
-                </div>
-                <h4 class="action-card-title">Consultar Inventarios</h4>
-                <p class="action-card-desc">Revisa y descarga los inventarios mensuales generados previamente.</p>
-            </a>
-        </div>
-    </main>
-    <script src="../js/temas_md3.js"></script>
-    <script src="../js/hero_physics.js"></script>
-    <script>
+        <script>
         function abrirMenu(id) {
             document.querySelectorAll('md-menu').forEach(menu => {
                 if (menu.id !== id) menu.open = false;
@@ -254,6 +210,3 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             }
         });
     </script>
-</body>
-
-</html>
