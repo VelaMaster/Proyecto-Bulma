@@ -6,28 +6,8 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
 }
 $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
-// =========================================================
-// SIMULACIÓN DE EXTRACCIÓN DE FIREBIRD
-// =========================================================
-$precio_litro = "4.50"; // Variable para el precio (4.50 o 6.50)
-$nombre_almacen = "CHALCATONGO DE HIDALGO"; // Variable del almacén
-
-// Los 12 registros exactos del PDF
-$lecherias_db = [
-    ['punto' => '2012051000', 'clave' => '11'],
-    ['punto' => '2037710200', 'clave' => '18'],
-    ['punto' => '2037710500', 'clave' => '33'],
-    ['punto' => '2037710700', 'clave' => '26'],
-    ['punto' => '2037711200', 'clave' => '31'],
-    ['punto' => '2038210300', 'clave' => '42'],
-    ['punto' => '2039210100', 'clave' => '14'],
-    ['punto' => '2039210200', 'clave' => '24'],
-    ['punto' => '2039211000', 'clave' => '47'],
-    ['punto' => '2050010200', 'clave' => '27'],
-    ['punto' => '2050010300', 'clave' => '25'],
-    ['punto' => '2050010400', 'clave' => '41']
-];
-// =========================================================
+// Precio del litro (esto lo puedes traer de la BD después)
+$precio_litro = "4.50"; 
 ?>
 
 <!DOCTYPE html>
@@ -99,7 +79,10 @@ $lecherias_db = [
                 </h3>
 
                 <div class="form-header-grid">
-                    <md-outlined-text-field label="Almacén Alimentación" id="almacen" name="almacen" type="text" value="ALMACÉN: <?= htmlspecialchars($nombre_almacen) ?>" readonly style="width:100%;"></md-outlined-text-field>
+                    <md-outlined-select label="Almacén Alimentación" id="selectAlmacen" name="almacen" style="width:100%;">
+                        <md-select-option value="">Cargando almacenes...</md-select-option>
+                    </md-outlined-select>
+                    
                     <md-outlined-text-field label="Periodo — Fecha inicio" id="periodo_inicio" name="periodo_inicio" type="date" style="width:100%;"></md-outlined-text-field>
                     <md-outlined-text-field label="Periodo — Fecha fin" id="periodo_fin" name="periodo_fin" type="date" style="width:100%;"></md-outlined-text-field>
                     <md-outlined-text-field label="Fecha de elaboración" id="fecha_elaboracion" name="fecha_elaboracion" type="date" style="width:100%;"></md-outlined-text-field>
@@ -137,37 +120,31 @@ $lecherias_db = [
                         </thead>
                         <tbody id="tablaBody">
                             <?php 
-                            // Generamos exactamente 17 filas
+                            // Imprimimos las 17 filas vacías y bloqueadas por defecto
                             for ($i = 0; $i < 17; $i++): 
-                                $punto_venta = isset($lecherias_db[$i]) ? $lecherias_db[$i]['punto'] : '';
-                                $clave_tienda = isset($lecherias_db[$i]) ? $lecherias_db[$i]['clave'] : '';
-                                
-                                // Si hay datos, los campos identificadores son de solo lectura. Si no, deshabilitamos la fila.
-                                $readonly_attr = ($punto_venta !== '') ? 'readonly' : 'disabled';
-                                $input_status = ($punto_venta !== '') ? '' : 'disabled';
                             ?>
                             <tr>
-                                <td><input type="text" class="cell-input" name="punto_venta[]" value="<?= htmlspecialchars($punto_venta) ?>" <?= $readonly_attr ?>></td>
-                                <td><input type="text" class="cell-input" name="clave_tienda[]" value="<?= htmlspecialchars($clave_tienda) ?>" <?= $readonly_attr ?>></td>
+                                <td><input type="text" class="cell-input" name="punto_venta[]" disabled></td>
+                                <td><input type="text" class="cell-input" name="clave_tienda[]" disabled></td>
                                 
-                                <td><input type="number" class="cell-input" name="inv_ini_cajas[]" <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="inv_ini_sobres[]" <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="dot_recibida_cajas[]" <?= $input_status ?>></td>
-                                <td class="td-total"><input type="number" class="cell-input" name="total_cajas[]" readonly <?= $input_status ?>></td>
-                                <td class="td-total"><input type="number" class="cell-input" name="total_sobres[]" readonly <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="dot_vend_cajas[]" <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="dot_vend_sobres[]" <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="inv_fin_cajas[]" <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="inv_fin_sobres[]" <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="retiro_cajas[]" <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="retiro_sobres[]" <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="familias_no_acud[]" <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="sobres_rotos[]" <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="sobres_falt[]" <?= $input_status ?>></td>
-                                <td><input type="number" class="cell-input" name="dias_venta[]" <?= $input_status ?>></td>
+                                <td><input type="number" class="cell-input" name="inv_ini_cajas[]" disabled></td>
+                                <td><input type="number" class="cell-input" name="inv_ini_sobres[]" disabled></td>
+                                <td><input type="number" class="cell-input" name="dot_recibida_cajas[]" disabled></td>
+                                <td class="td-total"><input type="number" class="cell-input" name="total_cajas[]" readonly disabled></td>
+                                <td class="td-total"><input type="number" class="cell-input" name="total_sobres[]" readonly disabled></td>
+                                <td><input type="number" class="cell-input" name="dot_vend_cajas[]" disabled></td>
+                                <td><input type="number" class="cell-input" name="dot_vend_sobres[]" disabled></td>
+                                <td><input type="number" class="cell-input" name="inv_fin_cajas[]" disabled></td>
+                                <td><input type="number" class="cell-input" name="inv_fin_sobres[]" disabled></td>
+                                <td><input type="number" class="cell-input" name="retiro_cajas[]" disabled></td>
+                                <td><input type="number" class="cell-input" name="retiro_sobres[]" disabled></td>
+                                <td><input type="number" class="cell-input" name="familias_no_acud[]" disabled></td>
+                                <td><input type="number" class="cell-input" name="sobres_rotos[]" disabled></td>
+                                <td><input type="number" class="cell-input" name="sobres_falt[]" disabled></td>
+                                <td><input type="number" class="cell-input" name="dias_venta[]" disabled></td>
                                 
                                 <td>
-                                    <select class="cell-select" name="mes_corresp[]" <?= $input_status ?>>
+                                    <select class="cell-select" name="mes_corresp[]" disabled>
                                         <option value=""></option>
                                         <option value="ENERO">Ene</option>
                                         <option value="FEBRERO">Feb</option>
@@ -183,9 +160,9 @@ $lecherias_db = [
                                         <option value="DICIEMBRE">Dic</option>
                                     </select>
                                 </td>
-                                <td><input type="date" class="cell-input" name="fecha_entrada[]" <?= $input_status ?>></td>
-                                <td><input type="date" class="cell-input" name="caducidad[]" <?= $input_status ?>></td>
-                                <td><input type="text" class="cell-input" name="observaciones[]" <?= $input_status ?>></td>
+                                <td><input type="date" class="cell-input" name="fecha_entrada[]" disabled></td>
+                                <td><input type="date" class="cell-input" name="caducidad[]" disabled></td>
+                                <td><input type="text" class="cell-input" name="observaciones[]" disabled></td>
                             </tr>
                             <?php endfor; ?>
                         </tbody>
@@ -223,6 +200,8 @@ $lecherias_db = [
             </form>
         </div>
     </main>
-<script src="../js/temas_md3.js"></script>
+
+    <script src="../js/temas_md3.js"></script>
+    <script src="../js/reporteMensual.js"></script>
 </body>
 </html>

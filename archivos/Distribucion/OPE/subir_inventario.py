@@ -10,7 +10,7 @@ DB_PATH = 'C:/SisDLL20/BD/DB_SIDIST.FDB'
 DB_USER = 'SYSDBA'
 DB_PASS = '290990'
 
-ARCHIVO_EXCEL = 'OPE012026DICONSA.xls'
+ARCHIVO_EXCEL = 'OPE032026DIST.xls'
 
 def subir_datos():
     print(f"Leyendo archivo Excel: {ARCHIVO_EXCEL}...")

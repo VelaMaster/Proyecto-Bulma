@@ -6,35 +6,29 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     echo json_encode([]); 
     exit();
 }
-
 require_once __DIR__ . '/../Database.php';
 $pdo = Database::getInstance();
 
 $clavePromotor = $_SESSION['clave_promotor'] ?? null;
-if (!$clavePromotor) {
-    echo json_encode(['error' => true, 'mensaje' => 'Sin clave de promotor en sesión.']);
+$almacen = $_GET['almacen'] ?? '';
+
+if (!$clavePromotor || empty($almacen)) {
+    echo json_encode(['error' => true, 'mensaje' => 'Datos insuficientes.']); 
     exit();
 }
-
 try {
-    $sql = "SELECT DISTINCT TRIM(ALMACEN_RURAL) AS ALMACEN_RURAL
+    $sql = "SELECT TRIM(LECHER) AS LECHER, TRIM(NUM_TIENDA) AS NUM_TIENDA
             FROM LECHERIA
             WHERE EFD_NUMERO = 20
               AND PROMOTOR = ?
-              AND ALMACEN_RURAL IS NOT NULL
-              AND TRIM(ALMACEN_RURAL) <> ''
-            ORDER BY 1";
-
+              AND TRIM(ALMACEN_RURAL) = ?
+            ORDER BY TRIM(LECHER) ASC";
+            
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([$clavePromotor]);
+    $stmt->execute([$clavePromotor, trim($almacen)]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    array_walk_recursive($rows, function (&$v) {
-        if (is_string($v)) {
-            $v = mb_convert_encoding($v, 'UTF-8', 'UTF-8');
-        }
-    });
-    echo json_encode($rows, JSON_UNESCAPED_UNICODE);
 
+    echo json_encode($rows, JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
     echo json_encode(['error' => true, 'mensaje' => $e->getMessage()]);
 }
