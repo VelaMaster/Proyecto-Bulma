@@ -6,7 +6,6 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
 }
 $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 ?>
-
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">
 
@@ -17,6 +16,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="../main_md3.css">
+    <link rel="stylesheet" href="../estilos/iniciocards.css">
+
 
     <style>
         .md3-hero-card {
@@ -230,9 +231,60 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <p class="action-card-desc">Revisa y descarga los inventarios mensuales generados previamente.</p>
             </a>
         </div>
+
+        <h3 style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 24px; margin-bottom: 16px;">
+            Mis lecherias
+        </h3>
+        <div class="lecherias-grid" id="lecherasGrid">
+            <div class="lech-card is-skeleton">
+                <div class="lech-card-top"></div>
+                <div class="lech-card-body">
+                    <div class="sk-line skeleton" style="width:60%"></div>
+                    <div class="sk-line skeleton" style="width:80%"></div>
+                    <div class="sk-line skeleton" style="width:40%"></div>
+                </div>
+            </div>
+            <div class="lech-card is-skeleton">
+                <div class="lech-card-top"></div>
+                <div class="lech-card-body">
+                    <div class="sk-line skeleton" style="width:70%"></div>
+                    <div class="sk-line skeleton" style="width:50%"></div>
+                </div>
+            </div>
+        </div>
     </main>
+
+<div class="md3-dialog-backdrop" id="modalOpcionesLecheria">
+        <div class="md3-dialog-surface">
+            <div class="md3-dialog-header">
+                <div>
+                    <h3 class="md3-dialog-title" id="modalOpcionesTitulo">Lechería</h3>
+                    <p class="md3-dialog-subtitle">¿Qué deseas hacer?</p>
+                </div>
+                <md-icon-button id="btnCerrarModalOpciones">
+                    <md-icon>close</md-icon>
+                </md-icon-button>
+            </div>
+            
+            <div class="md3-dialog-actions">
+                <md-filled-button id="btnIrGenerar">
+                    <md-icon slot="icon">add_box</md-icon> Generar Inventario
+                </md-filled-button>
+                
+                <md-filled-tonal-button id="btnIrEditar">
+                    <md-icon slot="icon">edit</md-icon> Editar Inventario
+                </md-filled-tonal-button>
+                
+                <md-outlined-button id="btnIrConsultar">
+                    <md-icon slot="icon">search</md-icon> Consultar Inventario
+                </md-outlined-button>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/temas_md3.js"></script>
     <script src="../js/hero_physics.js"></script>
+    <script src="../js/inicio_lecherias.js"></script>
     <script>
         function abrirMenu(id) {
             document.querySelectorAll('md-menu').forEach(menu => {
@@ -255,5 +307,4 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         });
     </script>
 </body>
-
 </html>

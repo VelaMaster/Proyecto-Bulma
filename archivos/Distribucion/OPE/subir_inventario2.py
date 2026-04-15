@@ -10,12 +10,11 @@ DB_PATH = 'C:/SisDLL20/BD/DB_SIDIST.FDB'
 DB_USER = 'SYSDBA'
 DB_PASS = '290990'
 
-ARCHIVO_EXCEL = 'OPE032026DICONSA.xls'
+ARCHIVO_EXCEL = 'OPE032026DIST.xls'
 
 def subir_datos():
     print(f"Leyendo archivo Excel: {ARCHIVO_EXCEL}...")
     try:
-        # Saltamos las primeras 4 filas
         df = pd.read_excel(ARCHIVO_EXCEL, skiprows=4)
         df.columns = df.columns.astype(str).str.strip()
     except Exception as e:
@@ -32,6 +31,7 @@ def subir_datos():
 
     exitosos = []
     fallidos = []
+    ignorados = 0 # Nuevo contador para filas de totales/subtítulos
     fecha_actual = datetime.now().date()
 
     insert_query = """
@@ -45,14 +45,12 @@ def subir_datos():
     print("Procesando e insertando lecherías en la base de datos...")
     for index, row in df.iterrows():
         
-        # --- 1. FUNCIÓN INTELIGENTE PARA LIMPIAR NÚMEROS (Evita el error del guion '-') ---
         def get_num(posibles_nombres):
             for nombre in posibles_nombres:
                 if nombre in df.columns:
                     val = row.get(nombre)
                     if pd.notna(val):
                         val_str = str(val).strip()
-                        # Si es un guion o vacío, lo enviamos como NULL a la base de datos
                         if val_str in ['', '-', 'nan', 'NaN']:
                             return None
                         try:
@@ -61,7 +59,7 @@ def subir_datos():
                             return None
             return None
 
-        # --- 2. OBTENER Y VALIDAR LA LECHERÍA ---
+        # --- VALIDACIÓN ESTRICTA ---
         lecheria_raw = None
         for col in ['NUMERO LECHERÍA', 'NUMERO LECHERÍA EXT.', 'Lecheria', 'LECHERÍA']:
             if col in df.columns:
@@ -70,7 +68,6 @@ def subir_datos():
                     lecheria_raw = val
                     break
         
-        # Si la fila está vacía o es un guion, la ignoramos
         if lecheria_raw is None:
             continue
             
@@ -78,15 +75,23 @@ def subir_datos():
         if lecheria_str in ['', '-', 'nan', 'NaN']:
             continue
             
+        # EXTRAEMOS EL MES Y EL AÑO PRIMERO PARA VALIDAR
+        mes = get_num(['PERIODO MES', 'PERIOD', 'Periodo'])
+        anio = get_num(['AÑO', 'ANIO'])
+
         try:
             lecheria_limpia = int(float(lecheria_raw))
         except ValueError:
-            fallidos.append({'lecheria': lecheria_str, 'error': 'No es un número válido en el Excel'})
+            # Si no es un número (ej. "CHALCATONGO"), es un subtítulo. Lo ignoramos.
+            ignorados += 1
             continue
 
-        # --- 3. EXTRACCIÓN DE LOS DATOS ---
-        mes = get_num(['PERIODO MES', 'PERIOD', 'Periodo'])
-        anio = get_num(['AÑO', 'ANIO'])
+        # Si la lechería es un número (ej. "20") PERO no tiene MES o AÑO, es una fila de "Subtotales". La ignoramos.
+        if mes is None or anio is None:
+            ignorados += 1
+            continue
+
+        # Si pasó todas las pruebas, es una lechería real. Extraemos el resto.
         inv_inicial = get_num(['INV. INICIAL', 'INV.INICIAL'])
         inv_final = get_num(['INVENTARIO FIN', 'INVENTARIO FINAL'])
         venta_real = get_num(['VENTA REAL MES', 'VENTA REAL'])
@@ -94,7 +99,6 @@ def subir_datos():
         venta_libro = get_num(['VTA.SEG. LIS.RET.', 'VTA.SEG. LIS.'])
         dotacion_prog = get_num(['CAJAS', 'cajas'])
 
-        # Extracción de texto para observaciones
         observacion = ""
         for col in ['OBSERVA', 'OBSERVACIONES']:
             if col in df.columns:
@@ -105,21 +109,18 @@ def subir_datos():
                         observacion = val_str
                     break
 
-        # --- 4. INSERTAR EN LA BASE DE DATOS FILA POR FILA ---
+        # --- INSERTAR ---
         try:
             cur.execute(insert_query, (
                 lecheria_limpia, mes, anio, fecha_actual, 
                 inv_inicial, inv_final, venta_real, surtimiento, 
                 venta_libro, observacion, dotacion_prog
             ))
-            # ¡IMPORTANTE! Hacemos commit fila por fila para que las exitosas no se borren si hay error después
             con.commit() 
             exitosos.append(lecheria_limpia)
 
         except Exception as e:
-            # Si hay error (ej. primary key duplicada), solo revertimos esa fila específica
             con.rollback() 
-            # Guardamos el error cortado para que no sature la pantalla
             error_msg = str(e).split('\n')[0] 
             fallidos.append({'lecheria': lecheria_limpia, 'error': error_msg})
 
@@ -127,18 +128,20 @@ def subir_datos():
     con.close()
 
     # ==========================================
-    # REPORTE FINAL DETALLADO
+    # REPORTE FINAL LIMPIO
     # ==========================================
     print("\n==========================================")
     print("        REPORTE DE IMPORTACIÓN            ")
     print("==========================================")
     print(f"✅ Se insertaron {len(exitosos)} lecherías en la base de datos.")
-    print(f"❌ Fallaron {len(fallidos)} lecherías.")
+    print(f"👻 Se ignoraron {ignorados} filas (Subtítulos o Totales).")
     
     if fallidos:
-        print("\n--- DETALLE DE LECHERÍAS QUE FALLARON ---")
+        print(f"\n❌ Fallaron {len(fallidos)} lecherías:")
         for f in fallidos:
             print(f"-> Lechería No. {f['lecheria']} | Motivo: {f['error']}")
+    else:
+        print("\n🎉 ¡Cero errores! Todas las lecherías válidas fueron importadas.")
 
 if __name__ == '__main__':
     subir_datos()

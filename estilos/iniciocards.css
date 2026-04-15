@@ -1,0 +1,262 @@
+
+/* ══ GRID DE CARDS (Contenedor principal) ═══════════════════════ */
+.lecherias-grid {
+    display: grid;
+    /* Esto crea columnas automáticas que no bajan de 300px de ancho */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+/* Responsividad para móviles (una sola columna) */
+@media (max-width: 600px) {
+    .lecherias-grid { 
+        grid-template-columns: 1fr; 
+    }
+}/* ══ CARD DE LECHERÍA (TEMA MD3 INTEGRADO) ═══════════════════════ */
+.lech-card {
+    background: var(--md-sys-color-surface); 
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: 20px;
+    padding: 0;
+    overflow: hidden;
+    cursor: pointer;
+    /* Sombra base suave */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.lech-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.15), 0 10px 10px rgba(0, 0, 0, 0.1);
+    /* Borde en color terciario al pasar el mouse para resaltar */
+    border-color: var(--md-sys-color-tertiary);
+}
+
+.lech-card:active { 
+    transform: translateY(-2px); 
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+
+/* Franja superior con degradado MD3 (Primario y Terciario Contenedor) */
+.lech-card-top {
+    background: linear-gradient(135deg, var(--md-sys-color-primary-container) 75%, var(--md-sys-color-tertiary-container) 150%);
+    padding: 16px 18px 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+.lech-card-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px; 
+    /* Icono principal fuerte */
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.lech-card-header { 
+    flex: 1; 
+    min-width: 0; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: center; 
+}
+
+.lech-card-num {
+    font-size: .75rem;
+    font-weight: 800;
+    /* ID en color primario para leerse fácil */
+    color: var(--md-sys-color-primary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 3px;
+}
+
+.lech-card-nombre {
+    font-size: 1.05rem;
+    font-weight: 700;
+    /* Nombre principal en On-Surface */
+    color: var(--md-sys-color-on-surface);
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* cuerpo de la card */
+.lech-card-body {
+    background: var(--md-sys-color-surface);
+    padding: 16px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+}
+
+.lech-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .85rem;
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.lech-card-meta .material-symbols-outlined {
+    font-size: 18px;
+    /* Iconitos de ubicación y personas en terciario */
+    color: var(--md-sys-color-tertiary); 
+    opacity: 0.9;
+}
+
+.lech-card-chips {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+}
+
+.lech-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border-radius: 24px;
+    padding: 4px 12px;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+
+.lech-chip .material-symbols-outlined { font-size: 14px; }
+
+/* Chip cuando SÍ hay inventarios (Color Primario) */
+.lech-chip.chip-inv {
+    background: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
+    border: none;
+}
+
+/* Chip cuando NO hay inventarios (Fondo variante / Apagado) */
+.lech-chip.chip-sin {
+    background: var(--md-sys-color-surface-variant);
+    color: var(--md-sys-color-on-surface-variant);
+    border: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* pie de la card */
+.lech-card-footer {
+    padding: 12px 18px;
+    /* Fondo del footer diferente (surface-container) para separar el pie */
+    background: var(--md-sys-color-surface-container); 
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.lech-card-footer-txt {
+    font-size: .75rem;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.lech-card-footer .material-symbols-outlined {
+    /* Icono final apuntando, color primario */
+    color: var(--md-sys-color-primary);
+    font-size: 20px;
+    transition: transform 0.2s ease;
+}
+
+.lech-card:hover .lech-card-footer .material-symbols-outlined {
+    transform: translateX(3px) scale(1.1);
+}
+
+
+
+
+/* ══ MODAL MD3 (DIALOGO) ════════════════════════════════════════ */
+.md3-dialog-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5); /* Sombra estándar MD3 */
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Configuración para la animación */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s cubic-bezier(0.2, 0, 0, 1), visibility 0.3s;
+}
+
+.md3-dialog-backdrop.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.md3-dialog-surface {
+    /* Superficie con elevación 3 en Material You */
+    background: var(--md-sys-color-surface-container-highest);
+    border-radius: 28px;
+    width: 90%;
+    max-width: 400px;
+    padding: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    
+    /* Efecto de "saltito" o zoom suave al abrir */
+    transform: scale(0.9) translateY(10px);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.2, 0, 0, 1), opacity 0.3s cubic-bezier(0.2, 0, 0, 1);
+    
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Cuando el backdrop tiene la clase 'open', el modal se expande */
+.md3-dialog-backdrop.open .md3-dialog-surface {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+}
+
+.md3-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.md3-dialog-title {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--md-sys-color-on-surface);
+    font-weight: 400;
+}
+
+.md3-dialog-subtitle {
+    margin: 4px 0 0 0;
+    font-size: 0.875rem;
+    color: var(--md-sys-color-on-surface-variant);
+}
+
+.md3-dialog-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+/* Para que los web components ocupen el 100% del ancho */
+.md3-dialog-actions > * {
+    width: 100%;
+}

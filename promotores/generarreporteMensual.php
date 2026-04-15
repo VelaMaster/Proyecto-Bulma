@@ -5,8 +5,6 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     exit();
 }
 $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
-
-// Precio del litro (esto lo puedes traer de la BD después)
 $precio_litro = "4.50"; 
 ?>
 
