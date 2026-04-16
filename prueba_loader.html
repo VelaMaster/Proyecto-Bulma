@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Loader MD3 Real - Físicas</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+
+    <script type="importmap">
+        {
+          "imports": {
+            "@material/web/": "https://esm.run/@material/web/"
+          }
+        }
+    </script>
+    <script type="module">
+        import '@material/web/all.js';
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+
+    <style>
+        /* Variables de color de tu tema oscuro violeta */
+        :root {
+            --md-sys-color-surface: #1C1B1F;
+            --md-sys-color-on-surface: #E6E1E5;
+            --md-sys-color-primary: #D0BCFF;
+            --md-sys-color-secondary-container: #4A4458; 
+        }
+
+        body {
+            background-color: var(--md-sys-color-surface);
+            color: var(--md-sys-color-on-surface);
+            font-family: 'Roboto', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* --- ESTILOS DEL LOADER --- */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: var(--md-sys-color-surface);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0.95;
+        }
+
+        .md3-loader-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 90px;
+            height: 90px;
+            background-color: var(--md-sys-color-secondary-container); 
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        /* Solo aplicamos la rotación en CSS, el cambio de forma lo hará Anime.js */
+        .md3-wavy-shape {
+            width: 70px;
+            height: 70px;
+            transform-origin: center center;
+            animation: spin 3.5s linear infinite;
+        }
+
+        @keyframes spin {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h2 style="margin-bottom: 24px;">Prueba de Animación de Carga (Físicas Reales)</h2>
+    
+    <md-filled-button id="btn-probar">
+        Simular Carga a la BD
+        <md-icon slot="icon">database</md-icon>
+    </md-filled-button>
+
+    <div id="pantalla-carga" class="loader-overlay" style="display: none;">
+        <div class="md3-loader-container">
+            <svg viewBox="0 0 120 120" class="md3-wavy-shape">
+                <path id="morphing-path" fill="var(--md-sys-color-primary)" 
+                      d="M60 4.5 C64.1 4.5 67.6 6.6 69.8 9.8 C71.3 12 73.8 13.5 76.7 13.5 C81.3 13.5 85.2 16.9 86.1 21.4 C86.6 24 88.4 26.2 90.8 27.2 C95 28.9 97.7 33 97.5 37.6 C97.4 40.3 98.6 42.8 100.7 44.5 C104.3 47.4 105.5 52.3 103.6 56.5 C102.5 58.9 102.5 61.6 103.6 64 C105.5 68.2 104.3 73.1 100.7 76 C98.6 77.7 97.4 80.2 97.5 82.9 C97.7 87.5 95 91.6 90.8 93.3 C88.4 94.3 86.6 96.5 86.1 99.1 C85.2 103.6 81.3 107 76.7 107 C73.8 107 71.3 108.5 69.8 110.7 C67.6 113.9 64.1 116 60 116 C55.9 116 52.4 113.9 50.2 110.7 C48.7 108.5 46.2 107 43.3 107 C38.7 107 34.8 103.6 33.9 99.1 C33.4 96.5 31.6 94.3 29.2 93.3 C25 91.6 22.3 87.5 22.5 82.9 C22.6 80.2 21.4 77.7 19.3 76 C15.7 73.1 14.5 68.2 16.4 64 C17.5 61.6 17.5 58.9 16.4 56.5 C14.5 52.3 15.7 47.4 19.3 44.5 C21.4 42.8 22.6 40.3 22.5 37.6 C22.3 33 25 28.9 29.2 27.2 C31.6 26.2 33.4 24 33.9 21.4 C34.8 16.9 38.7 13.5 43.3 13.5 C46.2 13.5 48.7 12 50.2 9.8 C52.4 6.6 55.9 4.5 60 4.5Z" />
+            </svg>
+        </div>
+        <p style="margin-top: 16px; font-weight: 500;">Sincronizando datos...</p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnProbar = document.getElementById('btn-probar');
+            const pantallaCarga = document.getElementById('pantalla-carga');
+
+            // 1. Vectores calibrados (Tienen exactamente el mismo número de puntos para no parecer limones)
+            const md3Star = "M60 4.5 C64.1 4.5 67.6 6.6 69.8 9.8 C71.3 12 73.8 13.5 76.7 13.5 C81.3 13.5 85.2 16.9 86.1 21.4 C86.6 24 88.4 26.2 90.8 27.2 C95 28.9 97.7 33 97.5 37.6 C97.4 40.3 98.6 42.8 100.7 44.5 C104.3 47.4 105.5 52.3 103.6 56.5 C102.5 58.9 102.5 61.6 103.6 64 C105.5 68.2 104.3 73.1 100.7 76 C98.6 77.7 97.4 80.2 97.5 82.9 C97.7 87.5 95 91.6 90.8 93.3 C88.4 94.3 86.6 96.5 86.1 99.1 C85.2 103.6 81.3 107 76.7 107 C73.8 107 71.3 108.5 69.8 110.7 C67.6 113.9 64.1 116 60 116 C55.9 116 52.4 113.9 50.2 110.7 C48.7 108.5 46.2 107 43.3 107 C38.7 107 34.8 103.6 33.9 99.1 C33.4 96.5 31.6 94.3 29.2 93.3 C25 91.6 22.3 87.5 22.5 82.9 C22.6 80.2 21.4 77.7 19.3 76 C15.7 73.1 14.5 68.2 16.4 64 C17.5 61.6 17.5 58.9 16.4 56.5 C14.5 52.3 15.7 47.4 19.3 44.5 C21.4 42.8 22.6 40.3 22.5 37.6 C22.3 33 25 28.9 29.2 27.2 C31.6 26.2 33.4 24 33.9 21.4 C34.8 16.9 38.7 13.5 43.3 13.5 C46.2 13.5 48.7 12 50.2 9.8 C52.4 6.6 55.9 4.5 60 4.5Z";
+            
+            // Un círculo inflado pero con 10 curvas bezier (para que el morphing sea perfecto)
+            const md3Circle = "M60 10 C 76 10 89 16 98 29 C 103 36 108 45 109 56 C 110 66 108 77 101 86 C 94 95 84 103 72 107 C 62 110 51 110 41 106 C 29 101 19 92 12 82 C 6 72 4 60 6 50 C 9 39 16 29 25 21 C 34 14 46 9 60 10 Z";
+
+            // Un cuadrado redondeado con 10 curvas bezier
+            const md3Squircle = "M60 15 C 80 15 95 20 100 35 C 103 45 105 55 105 60 C 105 75 100 90 85 100 C 75 105 65 105 60 105 C 40 105 25 100 20 85 C 17 75 15 65 15 60 C 15 45 20 30 35 20 C 45 15 55 15 60 15 Z";
+
+            // 2. Iniciamos las físicas de morphing con Anime.js
+            const morphingAnimation = anime({
+                targets: '#morphing-path',
+                d: [
+                    { value: md3Circle },
+                    { value: md3Squircle },
+                    { value: md3Star }
+                ],
+                easing: 'easeInOutQuad', // Curva de aceleración/desaceleración suave
+                duration: 2500, // Tiempo de un ciclo completo
+                loop: true,
+                direction: 'alternate',
+                autoplay: false // Solo lo reproducimos cuando se vea
+            });
+
+            // 3. Controlamos el botón
+            btnProbar.addEventListener('click', () => {
+                pantallaCarga.style.display = 'flex';
+                morphingAnimation.play();
+                
+                setTimeout(() => {
+                    pantallaCarga.style.display = 'none';
+                    morphingAnimation.pause();
+                }, 5000); // 5 segundos para que aprecies bien la animación xd
+            });
+        });
+    </script>
+</body>
+
+</html>
