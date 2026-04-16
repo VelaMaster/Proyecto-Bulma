@@ -53,7 +53,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <md-icon>menu</md-icon>
             </md-icon-button>
             <div class="app-brand">
-                <span>Leche del bienestar</span>
+                <span>Leche para el bienestar - Promotor</span>
             </div>
         </div>
 
