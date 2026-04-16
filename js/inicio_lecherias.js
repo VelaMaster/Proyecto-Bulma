@@ -1,21 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
-
-    /* ── Referencias DOM ── */
     const grid = document.getElementById('lecherasGrid');
-    
-    // Modal de Opciones
+
     const modalOpciones = document.getElementById('modalOpcionesLecheria');
     const modalTitulo = document.getElementById('modalOpcionesTitulo');
     const btnCerrar = document.getElementById('btnCerrarModalOpciones');
     
-    // Botones del Modal
     const btnGenerar = document.getElementById('btnIrGenerar');
     const btnEditar = document.getElementById('btnIrEditar');
     const btnConsultar = document.getElementById('btnIrConsultar');
-
+    
     let todasLecherias = [];
-    let lecheriaSeleccionada = '';
-
+    let lecheriaSeleccionada = ''; // Esta es la variable buena
     /* ════════════════════════════════════════════════════════
        1. CARGAR LECHERÍAS
     ════════════════════════════════════════════════════════ */
@@ -140,45 +135,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return card;
     }
-
 /* ════════════════════════════════════════════════════════
        4. MODAL DE OPCIONES
     ════════════════════════════════════════════════════════ */
     function abrirModalOpciones(clave, nombre) {
         lecheriaSeleccionada = clave;
         modalTitulo.textContent = `#${clave} - ${nombre}`;
-        
-        // En lugar de cambiar el display, agregamos la clase 'open' para disparar la animación CSS
         modalOpciones.classList.add('open');
     }
-
     function cerrarModalOpciones() {
-        // Quitamos la clase 'open' para que haga la animación de salida
         modalOpciones.classList.remove('open');
-        
-        // Esperamos un poquito a que termine la animación para borrar la selección
         setTimeout(() => {
             lecheriaSeleccionada = '';
         }, 300);
     }
-
-    // Eventos para cerrar el modal
     btnCerrar.addEventListener('click', cerrarModalOpciones);
     modalOpciones.addEventListener('click', (e) => {
         if (e.target === modalOpciones) cerrarModalOpciones();
     });
-
-    // Eventos de los botones de acción para redirigir pasando el parámetro ?lecheria=XXX
     btnGenerar.addEventListener('click', () => {
-        window.location.href = `generarinventarioMensual.php?lecheria=${lecheriaSeleccionada}`;
+        window.location.href = `generarinventarioMensual.php?lecher=${lecheriaSeleccionada}`;
     });
-
     btnEditar.addEventListener('click', () => {
-        window.location.href = `editarinventarioMensual.php?lecheria=${lecheriaSeleccionada}`;
+        window.location.href = `editarinventarioMensual.php?lecher=${lecheriaSeleccionada}`;
     });
-
     btnConsultar.addEventListener('click', () => {
-        window.location.href = `consultarinventarioMensual.php?lecheria=${lecheriaSeleccionada}`;
+        window.location.href = `consultarinventarioMensual.php?lecher=${lecheriaSeleccionada}`;
     });
-
 });

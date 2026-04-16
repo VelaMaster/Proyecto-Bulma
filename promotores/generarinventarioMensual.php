@@ -7,6 +7,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
 }
 $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 $origen_conexion = Database::getEnvName();
+$lecher_get = $_GET['lecher'] ?? '';
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">
@@ -15,13 +16,11 @@ $origen_conexion = Database::getEnvName();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generar Inventario Mensual - Promotor</title>
-
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="../main_md3.css">
     <link rel="stylesheet" href="../estilos/generarInventarioMensual.css">
-
     <script type="importmap">
         {
         "imports": {
@@ -112,7 +111,7 @@ $origen_conexion = Database::getEnvName();
         </div>
     </header>
 
-<aside class="md3-drawer" id="mobile-drawer">
+    <aside class="md3-drawer" id="mobile-drawer">
 
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px 24px;">
             <span style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface);">Menú</span>
@@ -123,7 +122,7 @@ $origen_conexion = Database::getEnvName();
 
         <div style="overflow-y: auto; flex-grow: 1;">
             <md-list style="background: transparent;">
-                
+
                 <md-list-item href="inicio.php" type="button">
                     <div slot="headline">Inicio</div>
                     <md-icon slot="start">home</md-icon>
@@ -135,12 +134,12 @@ $origen_conexion = Database::getEnvName();
                     <div slot="headline">Generar</div>
                     <md-icon slot="start">add_box</md-icon>
                 </md-list-item>
-                
+
                 <md-list-item href="editarinventarioMensual.php" type="button">
                     <div slot="headline">Editar</div>
                     <md-icon slot="start">edit</md-icon>
                 </md-list-item>
-                
+
                 <md-list-item href="consultarinventarioMensual.php" type="button">
                     <div slot="headline">Consultar</div>
                     <md-icon slot="start">search</md-icon>
@@ -201,8 +200,8 @@ $origen_conexion = Database::getEnvName();
                             <div class="input-with-icon">
                                 <span class="material-symbols-outlined input-icon">search</span>
                                 <input class="md3-input" type="text" id="inputLecheria"
-                                    name="clave_punto_venta" autocomplete="off"
-                                    placeholder="Escribe clave o nombre..." required>
+                                    placeholder="Escribe clave o nombre..."
+                                    value="<?php echo htmlspecialchars($lecher_get); ?>" required>
                             </div>
                             <div id="dropdown-menu" style="display:none;">
                                 <div id="lista-sugerencias"></div>
@@ -550,7 +549,6 @@ $origen_conexion = Database::getEnvName();
     <script src="../js/temas_md3.js"></script>
     <script src="../js/promotores.js"></script>
     <script>
-        /* ── Menú y drawer ── */
         function abrirMenu(id) {
             document.querySelectorAll('md-menu').forEach(m => {
                 if (m.id !== id) m.open = false;
@@ -569,91 +567,123 @@ $origen_conexion = Database::getEnvName();
             }
         });
 
-        /* ── Buscador de lechería ── */
+        /* ── Combobox Inteligente de Lecherías ── */
         document.addEventListener('DOMContentLoaded', () => {
             const inputLecheria = document.getElementById('inputLecheria');
             const dropdown = document.getElementById('dropdown-menu');
             const listaSugerencias = document.getElementById('lista-sugerencias');
-            let timeout;
-            let ignorarBlur = false; // FLAG: evita cerrar el dropdown cuando el click viene de una opción
 
-            /* ─ Escuchar escritura ─ */
-            inputLecheria.addEventListener('input', function() {
-                const texto = this.value.trim();
-                clearTimeout(timeout);
+            let lecheriasDelPromotor = [];
+            let ignorarBlur = false;
+            let estaCargando = true; // <-- Añadimos este candado
 
-                if (texto.length < 1) {
-                    dropdown.style.display = 'none';
+            // 1. Cargar TODAS las lecherías del promotor al iniciar la página
+            fetch('buscarLecheria.php?q=')
+                .then(r => r.json())
+                .then(datos => {
+                    lecheriasDelPromotor = Array.isArray(datos) ? datos : [];
+                    estaCargando = false;
+
+                    // Si viene redirigido desde el inicio.php con una lechería
+                    const lecherInicial = "<?php echo $lecher_get; ?>";
+                    if (lecherInicial !== '') {
+                        const encontrada = lecheriasDelPromotor.find(l => l.LECHER == lecherInicial);
+                        if (encontrada) {
+                            seleccionarLecheria(encontrada);
+                        }
+                    } else if (document.activeElement === inputLecheria) {
+                        // <-- AQUÍ: Si el input ya tiene el foco, mostramos la lista recién llegada
+                        mostrarOpciones(inputLecheria.value.trim());
+                    }
+                })
+                .catch(err => {
+                    console.error('Error cargando lecherías:', err);
+                    estaCargando = false;
+                });
+
+            // 2. Función para mostrar opciones (todas o filtradas)
+            function mostrarOpciones(filtro = '') {
+                listaSugerencias.innerHTML = '';
+
+                // Si el usuario hace clic muy rápido, mostramos que estamos descargando
+                if (estaCargando) {
+                    listaSugerencias.innerHTML = '<div style="padding:16px; color:var(--md-sys-color-primary); text-align:center; font-weight:500;">Cargando tus lecherías...</div>';
+                    dropdown.style.display = 'block';
                     return;
                 }
 
-                timeout = setTimeout(() => {
-                    fetch('buscarLecheria.php?q=' + encodeURIComponent(texto))
-                        .then(r => r.json())
-                        .then(datos => {
-                            listaSugerencias.innerHTML = '';
+                const txt = filtro.toUpperCase();
 
-                            if (!Array.isArray(datos) || datos.length === 0) {
-                                dropdown.style.display = 'none';
-                                return;
-                            }
+                // Filtramos localmente
+                const filtradas = lecheriasDelPromotor.filter(item =>
+                    item.LECHER.toString().includes(txt) ||
+                    (item.NOMBRELECH && item.NOMBRELECH.toUpperCase().includes(txt))
+                );
 
-                            datos.forEach(item => {
-                                const opt = document.createElement('a');
-                                opt.className = 'dropdown-item';
-                                opt.href = '#'; // necesario para que el cursor cambie a pointer
-                                opt.innerHTML = `
-                                <strong>${item.LECHER}</strong> &ndash; ${item.NOMBRELECH}<br>
-                                <small>${item.MUNICIPIO_NOMBRE ?? ''} &ndash; ${item.LOCALIDAD_DESC ?? ''}</small>
-                            `;
-                                opt.addEventListener('mousedown', (e) => {
-                                    e.preventDefault(); // impide blur en el input
-                                    ignorarBlur = true;
+                if (filtradas.length === 0) {
+                    listaSugerencias.innerHTML = '<div style="padding:16px; color:var(--md-sys-color-on-surface-variant); text-align:center;">No se encontraron coincidencias</div>';
+                } else {
+                    filtradas.forEach(item => {
+                        const opt = document.createElement('a');
+                        opt.className = 'dropdown-item';
+                        opt.href = '#';
+                        opt.innerHTML = `
+                            <strong>${item.LECHER}</strong> &ndash; ${item.NOMBRELECH}<br>
+                            <small>${item.MUNICIPIO_NOMBRE ?? ''} &ndash; ${item.LOCALIDAD_DESC ?? ''}</small>
+                        `;
+                        opt.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            ignorarBlur = true;
+                            seleccionarLecheria(item);
+                            dropdown.style.display = 'none';
+                            ignorarBlur = false;
+                        });
+                        listaSugerencias.appendChild(opt);
+                    });
+                }
+                dropdown.style.display = 'block';
+            }
 
-                                    inputLecheria.value = item.LECHER;
+            // 3. Función centralizada para llenar los datos
+            function seleccionarLecheria(item) {
+                inputLecheria.value = item.LECHER;
+                document.getElementById('campoTienda').value = item.NUM_TIENDA ?? '';
+                document.getElementById('campoAlmacen').value = item.ALMACEN_RURAL ?? '';
+                document.getElementById('campoMunicipio').value = item.MUNICIPIO_NOMBRE ?? '';
+                document.getElementById('campoComunidad').value = item.LOCALIDAD_DESC ?? '';
 
-                                    document.getElementById('campoTienda').value = item.NUM_TIENDA ?? '';
-                                    document.getElementById('campoAlmacen').value = item.ALMACEN_RURAL ?? '';
-                                    document.getElementById('campoMunicipio').value = item.MUNICIPIO_NOMBRE ?? '';
-                                    document.getElementById('campoComunidad').value = item.LOCALIDAD_DESC ?? '';
+                const hogares = item.TOTAL_HOGARES ?? 0;
+                const menores = item.TOTAL_INFANTILES ?? 0;
+                const mayores = item.TOTAL_RESTO ?? 0;
 
-                                    const hogares = item.TOTAL_HOGARES ?? 0;
-                                    const menores = item.TOTAL_INFANTILES ?? 0;
-                                    const mayores = item.TOTAL_RESTO ?? 0;
+                document.getElementById('campoHogares').value = hogares;
+                document.getElementById('campoMenores').value = menores;
+                document.getElementById('campoMayores').value = mayores;
 
-                                    document.getElementById('campoHogares').value = hogares;
-                                    document.getElementById('campoMenores').value = menores;
-                                    document.getElementById('campoMayores').value = mayores;
+                const totalBen = parseInt(menores) + parseInt(mayores);
+                document.getElementById('campoDotacion').value = ((totalBen * 8) / 36 * 72).toFixed(0);
 
-                                    const totalBen = parseInt(menores) + parseInt(mayores);
-                                    document.getElementById('campoDotacion').value =
-                                        ((totalBen * 8) / 36 * 72).toFixed(0);
+                // Disparar evento para promotores.js
+                document.dispatchEvent(new Event('lecheriaSeleccionada'));
+            }
 
-                                    dropdown.style.display = 'none';
-                                    ignorarBlur = false;
+            // 4. Mostrar el Combobox al hacer click o enfocar el input
+            inputLecheria.addEventListener('focus', () => mostrarOpciones(inputLecheria.value.trim()));
+            inputLecheria.addEventListener('click', () => mostrarOpciones(inputLecheria.value.trim()));
 
-                                    // Dispara el evento para que promotores.js calcule el surtimiento
-                                    document.dispatchEvent(new Event('lecheriaSeleccionada'));
-                                });
-
-                                listaSugerencias.appendChild(opt);
-                            });
-
-                            dropdown.style.display = 'block';
-                        })
-                        .catch(err => console.error('Error búsqueda lechería:', err));
-                }, 300);
+            // 5. Filtrar mientras escribe
+            inputLecheria.addEventListener('input', function() {
+                mostrarOpciones(this.value.trim());
             });
 
-            /* ─ Cerrar al hacer click fuera ─ */
+            // 6. Cerrar el dropdown al hacer clic fuera
             document.addEventListener('click', (e) => {
-                if (ignorarBlur) return; // el mousedown del item ya manejó esto
+                if (ignorarBlur) return;
                 if (!inputLecheria.contains(e.target) && !dropdown.contains(e.target)) {
                     dropdown.style.display = 'none';
                 }
             });
 
-            /* ─ Cerrar con Escape ─ */
             inputLecheria.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') dropdown.style.display = 'none';
             });

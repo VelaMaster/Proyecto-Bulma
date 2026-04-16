@@ -17,8 +17,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="../main_md3.css">
     <link rel="stylesheet" href="../estilos/iniciocards.css">
-
-
     <style>
         .md3-hero-card {
             overflow: hidden;
@@ -26,13 +24,11 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             position: relative;
             background-color: var(--md-sys-color-surface-container-low, #1e1e1e);
         }
-
         .md3-hero-card>*:not(canvas) {
             position: relative;
             z-index: 2;
             text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
         }
-
         .md3-hero-card canvas {
             will-change: transform, opacity;
             z-index: 1;

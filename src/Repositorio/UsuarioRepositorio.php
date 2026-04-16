@@ -10,25 +10,30 @@ class UsuarioRepositorio {
         $this->db = Database::getInstance();
     }
 
-    public function buscarPorCredenciales($usuario, $pass, $rol) {
-        $sql = "SELECT U.USUARIO, U.ROL, U.CLAVE_ROL, P.PMT_NOMBRE 
-                FROM USUARIOS_INVENTARIOS U
-                LEFT JOIN PROMOTOR P ON U.CLAVE_ROL = P.PMT_NUMERO
-                WHERE U.USUARIO = :usuario 
-                AND U.CONTRASENA = :pass 
-                AND U.ROL = :rol";
+// src/Repositorio/UsuarioRepositorio.php
 
-        try {
-            $stmt = $this->db->prepare($sql);
-            $stmt->execute([
-                ':usuario' => $usuario,
-                ':pass'    => $pass,
-                ':rol'     => $rol
-            ]);
-            return $stmt->fetch();
-        } catch (PDOException $e) {
-            error_log("Error en UsuarioRepositorio: " . $e->getMessage());
-            return false;
-        }
+public function buscarPorCredenciales($usuario, $pass, $rol) {
+    // Usamos COALESCE para traer el nombre de la tabla que tenga datos
+    $sql = "SELECT U.USUARIO, U.ROL, U.CLAVE_ROL, 
+                   COALESCE(P.PMT_NOMBRE, S.NOMBRE_SUPERVISOR) AS NOMBRE_MOSTRAR 
+            FROM USUARIOS_INVENTARIOS U
+            LEFT JOIN PROMOTOR P ON (U.CLAVE_ROL = P.PMT_NUMERO AND U.ROL = '0')
+            LEFT JOIN SUPERVISOR S ON (U.CLAVE_ROL = S.ID_SUPERVISOR AND U.ROL = '1')
+            WHERE U.USUARIO = :usuario 
+            AND U.CONTRASENA = :pass 
+            AND U.ROL = :rol";
+
+    try {
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            ':usuario' => $usuario,
+            ':pass'    => $pass,
+            ':rol'     => $rol
+        ]);
+        return $stmt->fetch();
+    } catch (PDOException $e) {
+        error_log("Error en UsuarioRepositorio: " . $e->getMessage());
+        return false;
     }
+}
 }

@@ -15,8 +15,13 @@ class AutenticacionControlador {
             session_regenerate_id(true);
             
             $_SESSION['usuario'] = $user['USUARIO'];
-            $_SESSION['clave_promotor'] = $user['CLAVE_ROL'];
-            $_SESSION['nombre'] = $user['PMT_NOMBRE'];
+            
+            // --- AQUÍ ESTÁ LA MAGIA ---
+            $_SESSION['clave_rol'] = $user['CLAVE_ROL']; // Genérica para el sistema
+            $_SESSION['clave_promotor'] = $user['CLAVE_ROL']; // Para que tus lecherías sigan funcionando
+            // --------------------------
+
+            $_SESSION['nombre'] = $user['NOMBRE_MOSTRAR'];
         
             $rol = trim($user['ROL']);
             // Mapeo de rutas según el rol de la base de datos

@@ -1,5 +1,7 @@
 <?php
-require_once 'conexion.php';
+session_start();
+require_once 'Database.php';
+$origen_conexion = Database::getEnvName();
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">
@@ -7,7 +9,7 @@ require_once 'conexion.php';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MD3 - Distribución</title>
+    <title>Inicio sesion Distribucion</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">

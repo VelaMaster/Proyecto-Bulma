@@ -24,7 +24,7 @@ class Database {
                 fclose($socket);
             } else {
                 $host = $host_local; 
-                $db_path = '/firebird/data/inventario.fdb';
+                $db_path = '/firebird/data/DB_SIDISTLOCAL.FDB';
                 $user = 'SYSDBA';
                 $pass = 'masterkey';
                 self::$envName = "DOCKER LOCAL (PRUEBAS)";

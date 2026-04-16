@@ -1,5 +1,4 @@
 services:
-  # Servidor Web (PHP + Apache)
   web:
     build: .
     ports:
@@ -9,11 +8,9 @@ services:
       - ./dev-php.ini:/usr/local/etc/php/conf.d/dev-php.ini
     environment:
       - DB_HOST=db
-      - DB_PATH=/firebird/data/inventario.fdb
-
-  # Servidor de Base de Datos (Firebird)
+      - DB_PATH=/firebird/data/DB_SIDISTLOCAL.FDB
   db:
-    image: jacobalberty/firebird:latest
+    image: jacobalberty/firebird:2.5-sc
     ports:
       - "3050:3050"
     environment:

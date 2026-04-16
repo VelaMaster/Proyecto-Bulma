@@ -491,7 +491,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(error);
                 mostrarNotificacion(error.message || 'Ocurrió un error en el proceso.', 'error');
             } finally {
-                // Quitar estado de carga sea cual sea el resultado
                 btnGenerarPDF.classList.remove('is-loading');
             }
         }); 
