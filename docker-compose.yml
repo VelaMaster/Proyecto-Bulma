@@ -10,6 +10,7 @@ services:
       - DB_HOST=db
       - DB_PATH=/firebird/data/DB_SIDISTLOCAL.FDB
   db:
+    platform: linux/amd64
     image: jacobalberty/firebird:2.5-sc
     ports:
       - "3050:3050"

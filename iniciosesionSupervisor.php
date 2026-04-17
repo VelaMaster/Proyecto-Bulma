@@ -15,6 +15,7 @@ $origen_conexion = Database::getEnvName();
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
 
     <link rel="stylesheet" href="main_md3.css">
+    <link rel="stylesheet" href="loader_md3.css">
 
     <script type="importmap">
         {
@@ -49,13 +50,15 @@ $origen_conexion = Database::getEnvName();
             <h1 class="md3-title">Inventarios de Leche</h1>
 
             <div class="role-selector">
-                <md-text-button onclick="location.href='iniciosesionPromotor.php';">Promotor</md-text-button>
-                <md-filled-button onclick="location.href='iniciosesionSupervisor.php';">Supervisor</md-filled-button>
-                <md-text-button onclick="location.href='iniciosesionDistribucion.php';">Distribución</md-text-button>
+                <md-text-button onclick="cambiarPagina('iniciosesionPromotor.php');">Promotor</md-text-button>
+                <md-filled-button onclick="cambiarPagina('iniciosesionSupervisor.php');">Supervisor</md-filled-button>
+                <md-text-button onclick="cambiarPagina('iniciosesionDistribucion.php');">Distribución</md-text-button>
             </div>
 
-            <form action="login_proceso.php" method="POST" class="md3-form">
-                <input type="hidden" name="rol_id" value="1"> <md-outlined-text-field
+            <form action="login_proceso.php" method="POST" class="md3-form" onsubmit="mostrarLoader()">
+                <input type="hidden" name="rol_id" value="1"> 
+                
+                <md-outlined-text-field
                     label="Usuario (Supervisor)"
                     name="usuario"
                     required
@@ -91,6 +94,18 @@ $origen_conexion = Database::getEnvName();
             </p>
         </div>
     </div>
+
+<div id="pantalla-carga" class="loader-overlay">
+        <div class="md3-loader-container">
+            <canvas id="loader-canvas"></canvas>
+        </div>
+        
+        <div class="texto-carga-container">
+            <md-icon style="font-size: 20px;">hourglass_top</md-icon>
+            Cargando, espere...
+        </div>
+    </div>
+
     <md-dialog id="dialogo-error">
         <div slot="headline" style="display: flex; align-items: center; gap: 8px; color: var(--md-sys-color-error, #B3261E);">
             <md-icon>error</md-icon>
@@ -112,6 +127,9 @@ $origen_conexion = Database::getEnvName();
         <?php endif; ?>
     </script>
     <script src="js/temas_md3.js"></script>
+    
+    <script src="js/loader_md3.js"></script>
+
     <script>
         function togglePassword() {
             const passField = document.getElementById('password-field');

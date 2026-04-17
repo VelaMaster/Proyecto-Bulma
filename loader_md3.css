@@ -1,0 +1,98 @@
+/* --- ESTILOS DEL LOADER MD3 - REBOTE CENTRADO --- */
+.loader-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    
+    /* Fondo sutil: no estorba, solo le da foco al centro */
+    background-color: rgba(0, 0, 0, 0.3); 
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    
+    z-index: 9999;
+    display: flex;
+    flex-direction: column; /* Para apilar el círculo y el texto */
+    justify-content: center;
+    align-items: center;
+    
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.loader-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.md3-loader-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px; 
+    height: 100px;
+    background-color: var(--md-sys-color-secondary-container); 
+    border-radius: 50%;
+    box-shadow: 0px 6px 16px rgba(0,0,0,0.2);
+    
+    /* Inicia invisible para la animación */
+    opacity: 0; 
+}
+
+#loader-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0; 
+}
+
+/* El nuevo texto de carga */
+.texto-carga-container {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--md-sys-color-on-surface);
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    font-size: 1.1rem;
+    opacity: 0;
+}
+
+/* =========================================
+   ANIMACIONES DE ENTRADA (EL "PUM" xd)
+   ========================================= */
+
+.loader-overlay.active .md3-loader-container {
+    animation: reboteArriba 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.loader-overlay.active #loader-canvas {
+    animation: reboteAbajo 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    animation-delay: 0.05s; /* Entra un instante después para dar efecto de choque */
+}
+
+.loader-overlay.active .texto-carga-container {
+    animation: fadeArriba 0.3s ease forwards;
+    animation-delay: 0.15s; /* El texto aparece al final suavemente */
+}
+
+@keyframes reboteArriba {
+    0% { opacity: 0; transform: translateY(60px) scale(0.7); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes reboteAbajo {
+    0% { opacity: 0; transform: translateY(-80px) scale(0.6); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes fadeArriba {
+    0% { opacity: 0; transform: translateY(15px); }
+    100% { opacity: 1; transform: translateY(0); }
+}

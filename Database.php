@@ -4,9 +4,7 @@ class Database {
     private static $envName = "Desconocido";
 
     private function __construct() {
-        // Evitamos instanciación externa
     }
-
     public static function getInstance() {
         if (self::$instance === null) {
             $host_remote = '172.24.10.251';
@@ -29,7 +27,6 @@ class Database {
                 $pass = 'masterkey';
                 self::$envName = "DOCKER LOCAL (PRUEBAS)";
             }
-
             try {
 $dsn = "firebird:dbname=$host/$puerto:$db_path;charset=NONE";
                 self::$instance = new PDO($dsn, $user, $pass, [
@@ -42,7 +39,6 @@ $dsn = "firebird:dbname=$host/$puerto:$db_path;charset=NONE";
         }
         return self::$instance;
     }
-
     public static function getEnvName() {
         if (self::$instance === null) {
             self::getInstance();
