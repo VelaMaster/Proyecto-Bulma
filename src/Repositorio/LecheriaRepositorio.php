@@ -16,6 +16,7 @@ class LecheriaRepositorio {
                     TRIM(M.MUN_DESCRIPCION) as MUNICIPIO_NOMBRE,
                     TRIM(LOC.LOC_DESCRIPCION) as LOCALIDAD_DESC,
                     L.NUM_TIENDA,
+                    L.TIPO_PUNTO_VENTA, -- AQUÍ AGREGAMOS EL CAMPO FALTANTE
                     TRIM(L.ALMACEN_RURAL) as ALMACEN_RURAL,
                     L.CC_FAM as TOTAL_HOGARES,
                     (L.CC_BT1 + L.CC_BT2) as TOTAL_INFANTILES,

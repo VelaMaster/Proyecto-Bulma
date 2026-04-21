@@ -11,6 +11,7 @@ class InventarioRepositorio
         $this->db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
+
     public function obtenerHistorialLecheria($lecher)
     {
         $sql = "SELECT VENTA_REAL, INVENTARIO_FINAL 
@@ -21,46 +22,70 @@ class InventarioRepositorio
         $stmt->execute([':lecher' => $lecher]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
-    private function existeInventarioMes($lecheria, $fecha)
-    {
-        if (empty($lecheria) || empty($fecha)) return false;
 
-        $time = strtotime($fecha);
-        $mes = date('m', $time);
-        $anio = date('Y', $time);
+    // ACTUALIZADO: Ahora recibe mes y año directamente
+    private function existeInventarioMes($lecheria, $mes, $anio)
+    {
+        if (empty($lecheria)) return false;
         $lecheria_limpia = str_replace("'", "''", $lecheria);
 
         $sql = "SELECT ID FROM INVENTARIOS_MENSUALES 
                 WHERE CLAVE_LECHERIA = '$lecheria_limpia' 
-                AND EXTRACT(YEAR FROM FECHA) = $anio 
-                AND EXTRACT(MONTH FROM FECHA) = $mes";
+                AND ANIO_PERIODO = $anio 
+                AND MES_PERIODO = $mes";
 
         $stmt = $this->db->query($sql);
         return $stmt->fetch() !== false;
     }
-    public function guardar($datos, $usuario)
+
+public function guardar($datos, $usuario)
     {
-        if ($this->existeInventarioMes($datos['lecheria'], $datos['fecha'])) {
-            $mensaje = "Ya existe un inventario para esta lechería en este mes. " .
+        $lecheria_limpia = $datos['lecheria'] ?? 'SIN_CLAVE';
+        
+        // CORRECCIÓN: Si por alguna razón no llega el dato del combo, lo saca de la fecha
+        $anio_actual = !empty($datos['anio_periodo']) ? (int)$datos['anio_periodo'] : (int)date('Y', strtotime($datos['fecha']));
+        $mes_actual = !empty($datos['mes_periodo']) ? (int)$datos['mes_periodo'] : (int)date('m', strtotime($datos['fecha']));
+
+        // 1. Verificamos si ya existe el inventario para este periodo (esto bloquea duplicados)
+        if ($this->existeInventarioMes($lecheria_limpia, $mes_actual, $anio_actual)) {
+            $mensaje = "Ya existe un inventario para esta lechería en este periodo. " .
                 "<a href='editarinventarioMensual.php' style='color: #fff; text-decoration: underline; font-weight: bold;'>Haz clic aquí para ir a editarlo.</a>";
             throw new Exception($mensaje);
         }
+
+        // 2. Lógica para verificar el mes anterior
+        $mes_anterior = $mes_actual - 1;
+        $anio_anterior = $anio_actual;
+        
+        if ($mes_anterior <= 0) { // Si es enero, brinca a diciembre del año pasado
+            $mes_anterior = 12;
+            $anio_anterior = $anio_actual - 1;
+        }
+
+        // 3. Aviso de que falta el mes anterior (SI LE DA ACEPTAR, SÍ LO DEJA GUARDAR)
+        if (!$this->existeInventarioMes($lecheria_limpia, $mes_anterior, $anio_anterior) && empty($datos['confirmado_periodo'])) {
+            $nombres_meses = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            $nombre_mes_ant = $nombres_meses[$mes_anterior] ?? '';
+            
+            return [
+                'status' => 'requiere_confirmacion',
+                'mensaje' => "Oye, te falta registrar el inventario de $nombre_mes_ant del $anio_anterior.\n\n¿Estás seguro de que quieres guardar este mes aunque falte el anterior?"
+            ];
+        }
+
         $q = function ($val, $len = 255) {
             if ($val === null || $val === "") return 'NULL';
             $limpio = substr((string)$val, 0, $len);
             return "'" . str_replace("'", "''", $limpio) . "'";
         };
-        // 2. Ayudante para limpiar Números
         $n = function ($val) {
             if ($val === null || $val === "") return 0;
             return (int)$val;
         };
-        $lecheria_limpia = $datos['lecheria'] ?? 'SIN_CLAVE';
-        $time = strtotime($datos['fecha']);
-        $anio = date('Y', $time);
-        $mes = date('m', $time);
-        $pdf_nombre = "Inventario_{$lecheria_limpia}_{$anio}_{$mes}.pdf";
 
+        $pdf_nombre = "Inventario_{$lecheria_limpia}_{$anio_actual}_{$mes_actual}.pdf";
+
+        // 3. Añadimos MES_PERIODO y ANIO_PERIODO al insert
         $sql = "INSERT INTO INVENTARIOS_MENSUALES (
             FECHA, CLAVE_LECHERIA, CLAVE_TIENDA, ALMACEN, MUNICIPIO, COMUNIDAD,
             SURT_FECHA, SURT_CAJAS, SURT_LITROS, SURT_FACTURA, SURT_CADUCIDAD,
@@ -71,7 +96,7 @@ class InventarioRepositorio
             DIF_CAJA, DIF_SOBRES, DIF_LITROS,
             FIN_CAJA, FIN_SOBRES, FIN_LITROS,
             HOGARES, MENORES, MAYORES, DOTACION,
-            PDF_RUTA, USUARIO, ESTADO, ID
+            PDF_RUTA, USUARIO, ESTADO, MES_PERIODO, ANIO_PERIODO, ID
         ) VALUES (
             " . $q($datos['fecha'], 10) . ", 
             " . $q($datos['lecheria'], 20) . ", 
@@ -96,6 +121,8 @@ class InventarioRepositorio
             " . $q($pdf_nombre, 255) . ", 
             " . $q($usuario, 100) . ", 
             'guardado', 
+            $mes_actual, 
+            $anio_actual,
             GEN_ID(seq_inventarios_mens_id, 1)
         )";
 
@@ -113,23 +140,22 @@ class InventarioRepositorio
             throw new Exception("Error Firebird: " . $e->getMessage());
         }
     }
-    // NUEVA FUNCIÓN: Busca inventarios por lechería y opcionalmente por mes
-    // BÚSQUEDA MATA-DINOSAURIOS (Sin parámetros PDO)
-    public function buscarPorLecheria($clave, $fecha = '')
+
+    // ACTUALIZADO: Ya busca por MES y ANIO directamente
+    public function buscarPorLecheria($clave, $mes = '', $anio = '')
     {
         $clave_limpia = str_replace("'", "''", $clave);
 
         $sql = "SELECT ID, FECHA, MUNICIPIO, COMUNIDAD, FIN_CAJA, FIN_LITROS, ESTADO 
                 FROM INVENTARIOS_MENSUALES 
                 WHERE CLAVE_LECHERIA = '$clave_limpia'";
-        if (!empty($fecha)) {
-            $time = strtotime($fecha);
-            $mes = (int) date('m', $time);
-            $anio = (int) date('Y', $time);
-            $sql .= " AND EXTRACT(YEAR FROM FECHA) = $anio AND EXTRACT(MONTH FROM FECHA) = $mes";
+                
+        if (!empty($mes) && !empty($anio)) {
+            $sql .= " AND ANIO_PERIODO = " . (int)$anio . " AND MES_PERIODO = " . (int)$mes;
         }
 
-        $sql .= " ORDER BY FECHA DESC";
+        $sql .= " ORDER BY ANIO_PERIODO DESC, MES_PERIODO DESC";
+        
         try {
             $stmt = $this->db->query($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -137,7 +163,7 @@ class InventarioRepositorio
             throw new Exception("Error al buscar inventarios: " . $e->getMessage());
         }
     }
-    // NUEVA FUNCIÓN: Obtener un solo inventario por su ID
+
     public function obtenerPorId($id)
     {
         $id_limpio = (int)$id;

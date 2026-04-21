@@ -414,6 +414,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const datosFormulario = {
                 fecha: document.querySelector('input[name="fecha"]').value,
+                mes_periodo: document.getElementById('mes_periodo').value,
+                anio_periodo: document.getElementById('anio_periodo').value,
                 lecheria: document.getElementById('inputLecheria').value,
                 tienda: document.getElementById('campoTienda').value,
                 almacen: document.getElementById('campoAlmacen').value,
@@ -456,24 +458,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 alt_b: document.querySelector('input[name="alt_b"]').checked,
                 alt_c: document.querySelector('input[name="alt_c"]').checked,
                 alt_d: document.querySelector('input[name="alt_d_texto"]').value,
-                usuario: document.getElementById('inputUsuarioOculto').value
+                usuario: document.getElementById('inputUsuarioOculto').value,
+                confirmado_periodo: false
             };
 
             btnGenerarPDF.classList.add('is-loading');
 
-            try {
+            // Envolvemos el fetch en una función para poder reintentar si el usuario confirma
+            const intentarGuardar = async (datos) => {
                 const respuestaGuardado = await fetch('guardar_inventario.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datosFormulario)
+                    body: JSON.stringify(datos)
                 });
 
                 const resultado = await respuestaGuardado.json();
-
-                if (resultado.status !== 'success') {
-                    throw new Error(resultado.mensaje || 'Error desconocido al guardar en base de datos');
+                if (resultado.status === 'requiere_confirmacion') {
+                    const seguro = confirm(resultado.mensaje);
+                    if (seguro) {
+                        datos.confirmado_periodo = true;
+                        return await intentarGuardar(datos);
+                    } else {
+                        throw new Error('Operación cancelada. Registra primero el mes anterior.');
+                    }
                 }
+                if (resultado.status !== 'success') {
+                    throw new Error(resultado.mensaje || 'Error al guardar en base de datos');
+                }
+                return true;
+            };
+            try {
+                // Lanzamos la función de guardado
+                await intentarGuardar(datosFormulario);
                 mostrarNotificacion('Datos guardados en la base de datos.', 'info');
+                
                 const respuestaPDF = await fetch('generar_pdf.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

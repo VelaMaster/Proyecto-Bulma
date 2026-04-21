@@ -177,6 +177,35 @@ $lecher_get = $_GET['lecher'] ?? '';
     </aside>
 
     <main class="panel-content">
+        <div style="display: flex; justify-content: left; margin-bottom: 24px; margin-top: 8px;">
+            <div class="md3-card" style="width: auto; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; flex-direction: row; justify-content: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="material-symbols-outlined" style="color: var(--md-sys-color-primary);">calendar_month</span>
+                    <span style="font-weight: 500; color: var(--md-sys-color-on-surface);">Periodo a Reportar:</span>
+                </div>
+                
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <select class="md3-input" name="mes_periodo" id="mes_periodo" style="min-width: 140px; cursor: pointer; margin: 0;">
+                        <option value="1" <?php echo date('n') == 1 ? 'selected' : ''; ?>>Enero</option>
+                        <option value="2" <?php echo date('n') == 2 ? 'selected' : ''; ?>>Febrero</option>
+                        <option value="3" <?php echo date('n') == 3 ? 'selected' : ''; ?>>Marzo</option>
+                        <option value="4" <?php echo date('n') == 4 ? 'selected' : ''; ?>>Abril</option>
+                        <option value="5" <?php echo date('n') == 5 ? 'selected' : ''; ?>>Mayo</option>
+                        <option value="6" <?php echo date('n') == 6 ? 'selected' : ''; ?>>Junio</option>
+                        <option value="7" <?php echo date('n') == 7 ? 'selected' : ''; ?>>Julio</option>
+                        <option value="8" <?php echo date('n') == 8 ? 'selected' : ''; ?>>Agosto</option>
+                        <option value="9" <?php echo date('n') == 9 ? 'selected' : ''; ?>>Septiembre</option>
+                        <option value="10" <?php echo date('n') == 10 ? 'selected' : ''; ?>>Octubre</option>
+                        <option value="11" <?php echo date('n') == 11 ? 'selected' : ''; ?>>Noviembre</option>
+                        <option value="12" <?php echo date('n') == 12 ? 'selected' : ''; ?>>Diciembre</option>
+                    </select>
+
+                    <input class="md3-input" type="number" name="anio_periodo" id="anio_periodo" 
+                        value="<?php echo date('Y'); ?>" readonly 
+                        style="max-width: 80px; margin: 0; background-color: var(--md-sys-color-surface-variant); text-align: center; pointer-events: none;">
+                </div>
+            </div>
+        </div>
         <div class="form-section">
             <div class="section-header">
                 <div class="section-badge">
@@ -643,11 +672,14 @@ $lecher_get = $_GET['lecher'] ?? '';
                 }
                 dropdown.style.display = 'block';
             }
-
-            // 3. Función centralizada para llenar los datos
             function seleccionarLecheria(item) {
                 inputLecheria.value = item.LECHER;
-                document.getElementById('campoTienda').value = item.NUM_TIENDA ?? '';
+                // --- NUEVA LÓGICA PARA DISTRIBUCIÓN MERCANTIL ---
+                if (item.TIPO_PUNTO_VENTA == 2) {
+                    document.getElementById('campoTienda').value = 'DM';
+                } else {
+                    document.getElementById('campoTienda').value = item.NUM_TIENDA ?? '';
+                }
                 document.getElementById('campoAlmacen').value = item.ALMACEN_RURAL ?? '';
                 document.getElementById('campoMunicipio').value = item.MUNICIPIO_NOMBRE ?? '';
                 document.getElementById('campoComunidad').value = item.LOCALIDAD_DESC ?? '';
@@ -655,22 +687,17 @@ $lecher_get = $_GET['lecher'] ?? '';
                 const hogares = item.TOTAL_HOGARES ?? 0;
                 const menores = item.TOTAL_INFANTILES ?? 0;
                 const mayores = item.TOTAL_RESTO ?? 0;
-
                 document.getElementById('campoHogares').value = hogares;
                 document.getElementById('campoMenores').value = menores;
                 document.getElementById('campoMayores').value = mayores;
 
                 const totalBen = parseInt(menores) + parseInt(mayores);
                 document.getElementById('campoDotacion').value = ((totalBen * 8) / 36 * 72).toFixed(0);
-
-                // Disparar evento para promotores.js
                 document.dispatchEvent(new Event('lecheriaSeleccionada'));
             }
-
             // 4. Mostrar el Combobox al hacer click o enfocar el input
             inputLecheria.addEventListener('focus', () => mostrarOpciones(inputLecheria.value.trim()));
             inputLecheria.addEventListener('click', () => mostrarOpciones(inputLecheria.value.trim()));
-
             // 5. Filtrar mientras escribe
             inputLecheria.addEventListener('input', function() {
                 mostrarOpciones(this.value.trim());
