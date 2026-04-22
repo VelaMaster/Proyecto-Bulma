@@ -14,7 +14,6 @@ $usuario = $_SESSION['usuario'] ?? null;
 $almacen = $_GET['almacen'] ?? '';
 $tipo_venta = $_GET['tipo_venta'] ?? '0'; 
 
-// Recibimos los nuevos parámetros
 $mes_reporte = isset($_GET['mes_reporte']) ? (int)$_GET['mes_reporte'] : 0;
 $anio_reporte = isset($_GET['anio_reporte']) ? (int)$_GET['anio_reporte'] : 0;
 
@@ -30,7 +29,6 @@ try {
         $condicion_tipo = "AND L.TIPO_PUNTO_VENTA = 0";
     }
 
-    // 1. Buscamos las lecherías
     $sql = "SELECT TRIM(L.LECHER) AS LECHER, TRIM(L.NUM_TIENDA) AS NUM_TIENDA
             FROM LECHERIA L
             INNER JOIN USUARIOS_INVENTARIOS U ON L.PROMOTOR = U.CLAVE_ROL
@@ -46,19 +44,16 @@ try {
     $stmt->execute();
     $lecherias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // ========================================================
-    // 2. MATEMÁTICA DEL MES ANTERIOR
-    // ========================================================
     $mes_anterior = $mes_reporte - 1;
     $anio_anterior = $anio_reporte;
     
-    if ($mes_anterior == 0) { // Si están haciendo el de Enero, buscamos Diciembre del año pasado
+    if ($mes_anterior == 0) { 
         $mes_anterior = 12;
         $anio_anterior--;
     }
 
-    // 3. Buscamos el inventario EXACTO de ese mes y ese año
-    $sql_inv = "SELECT INVENTARIO_FINAL 
+    // AÑADIMOS "VENTA_REAL" A LA BÚSQUEDA
+    $sql_inv = "SELECT INVENTARIO_FINAL, SURTIMIENTO, VENTA_REAL 
                 FROM INVENTARIO_LEP_SUBSIDIADA 
                 WHERE LECHER = ? AND MES_PERIODO = ? AND ANIO_PERIODO = ?";
     $stmt_inv = $pdo->prepare($sql_inv);
@@ -70,11 +65,15 @@ try {
         if ($inv) {
             $lech['encontrado'] = true;
             $lech['inventario_inicial'] = $inv['INVENTARIO_FINAL'];
-            $lech['mes_anterior'] = $mes_anterior; // Devolvemos el mes exacto que encontramos
+            $lech['surtimiento'] = $inv['SURTIMIENTO']; 
+            $lech['venta_real'] = $inv['VENTA_REAL']; // AQUÍ GUARDAMOS LA VENTA EN LITROS
+            $lech['mes_anterior'] = $mes_anterior; 
             $lech['anio_anterior'] = $anio_anterior;
         } else {
             $lech['encontrado'] = false;
             $lech['inventario_inicial'] = 0;
+            $lech['surtimiento'] = 0;
+            $lech['venta_real'] = 0;
             $lech['mes_anterior'] = $mes_anterior;
             $lech['anio_anterior'] = $anio_anterior;
         }
