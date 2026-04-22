@@ -197,7 +197,6 @@ $precio_litro = "4.50";
             </form>
         </div>
     </main>
-
     <script src="../js/temas_md3.js"></script>
     <script src="../js/reporteMensual.js"></script>
 </body>

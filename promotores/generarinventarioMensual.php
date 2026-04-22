@@ -576,7 +576,8 @@ $lecher_get = $_GET['lecher'] ?? '';
     </main>
 
     <script src="../js/temas_md3.js"></script>
-    <script src="../js/promotores.js"></script>
+    <script src="../js/notificaciones.js"></script>
+        <script src="../js/promotores.js"></script>
     <script>
         function abrirMenu(id) {
             document.querySelectorAll('md-menu').forEach(m => {

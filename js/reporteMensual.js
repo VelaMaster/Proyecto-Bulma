@@ -2,10 +2,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectAlmacen = document.getElementById('selectAlmacen');
     const filasTabla = document.querySelectorAll('#tablaBody tr');
 
-    // Constantes de medida (Misma lógica que tu inventario)
     const L_X_CAJA = 72;
     const L_X_SOBRE = 2;
-
     // --- FUNCIONES MATEMÁTICAS ---
     function formatearA_CajasYSobres(litrosTotales) {
         if (isNaN(litrosTotales) || litrosTotales < 0) return { cajas: 0, sobres: 0 };
@@ -13,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const sobres = Math.floor((litrosTotales % L_X_CAJA) / L_X_SOBRE);
         return { cajas, sobres };
     }
-
     // Calcula los totales y el inventario final de una fila específica
     function calcularFila(fila) {
         // Entradas

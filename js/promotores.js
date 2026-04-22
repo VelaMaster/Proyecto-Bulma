@@ -32,17 +32,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const L_X_CAJA = 72;
     const L_X_SOBRE = 2;
 
-    // --- FUNCIONES MATEMÁTICAS CENTRALIZADAS ---
+    // ─── FUNCIONES MATEMÁTICAS ────────────────────────────────────────────────
 
     function formatearCantidades(litrosTotales) {
         if (isNaN(litrosTotales) || litrosTotales === '') return { cajas: '', sobres: '', litros: '' };
-
         const signo = litrosTotales < 0 ? -1 : 1;
         const absLitros = Math.abs(litrosTotales);
-
         const cajas = Math.floor(absLitros / L_X_CAJA) * signo;
         const sobres = Math.floor((absLitros % L_X_CAJA) / L_X_SOBRE) * signo;
-
         return { cajas, sobres, litros: litrosTotales };
     }
 
@@ -51,13 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const sobres = parseFloat(inputSobres.value) || 0;
         return (cajas * L_X_CAJA) + (sobres * L_X_SOBRE);
     }
+
     function calcularDiferencia() {
         const ventaL = parseFloat(ventaLitros.value) || 0;
-        let regL = parseFloat(regLitros.value) || 0;
+        const regL   = parseFloat(regLitros.value)   || 0;
 
-        const radioSi = document.querySelector('input[name="venta_igual"][value="Si"]');
-        const radioNo = document.querySelector('input[name="venta_igual"][value="No"]');
+        const radioSi  = document.querySelector('input[name="venta_igual"][value="Si"]');
+        const radioNo  = document.querySelector('input[name="venta_igual"][value="No"]');
         const causasDiv = document.getElementById('causas_diferencia');
+
         if (ventaLitros.value === '' && regLitros.value === '') {
             difCaja.value = ''; difSobres.value = ''; difLitros.value = '';
             if (radioSi) radioSi.checked = false;
@@ -65,20 +64,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (causasDiv) causasDiv.style.display = 'none';
             return;
         }
+
         const difL = Math.abs(ventaL - regL);
-        const fmt = formatearCantidades(difL);
-        difCaja.value = fmt.cajas;
+        const fmt  = formatearCantidades(difL);
+        difCaja.value   = fmt.cajas;
         difSobres.value = fmt.sobres;
         difLitros.value = fmt.litros;
 
         if (regLitros.value !== '' && ventaLitros.value !== '') {
             if (regL === ventaL) {
-                if (radioSi) radioSi.checked = true;
-                if (radioNo) radioNo.checked = false;
+                if (radioSi)  radioSi.checked  = true;
+                if (radioNo)  radioNo.checked  = false;
                 if (causasDiv) causasDiv.style.display = 'none';
             } else {
-                if (radioNo) radioNo.checked = true;
-                if (radioSi) radioSi.checked = false;
+                if (radioNo)  radioNo.checked  = true;
+                if (radioSi)  radioSi.checked  = false;
                 if (causasDiv) causasDiv.style.display = 'block';
             }
         }
@@ -86,7 +86,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function calcularInventarioFinal(silencioso = true) {
         const abastoL = parseFloat(abastoLitros.value) || 0;
-        const ventaL = parseFloat(ventaLitros.value) || 0;
+        const ventaL  = parseFloat(ventaLitros.value)  || 0;
 
         if (abastoLitros.value === '' && ventaLitros.value === '') {
             finCaja.value = ''; finSobres.value = ''; finLitros.value = '';
@@ -98,12 +98,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (invFinalL < 0) {
             finCaja.value = 0; finSobres.value = 0; finLitros.value = 0;
-            if (!silencioso) {
-                mostrarNotificacion("La venta real excede el abasto total del mes.", "error");
-            }
+            if (!silencioso) mostrarNotificacion('La venta real excede el abasto total del mes.', 'error');
         } else {
             const fmt = formatearCantidades(invFinalL);
-            finCaja.value = fmt.cajas;
+            finCaja.value   = fmt.cajas;
             finSobres.value = fmt.sobres;
             finLitros.value = fmt.litros;
         }
@@ -112,16 +110,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function actualizarAbastoTotal() {
-        const invTotalL = parseFloat(invLitros.value) || 0;
+        const invTotalL  = parseFloat(invLitros.value)  || 0;
         const surtTotalL = parseFloat(surtLitros.value) || 0;
-
-        const abastoL = invTotalL + surtTotalL;
+        const abastoL    = invTotalL + surtTotalL;
 
         if (invLitros.value === '' && surtLitros.value === '') {
             abastoCaja.value = ''; abastoSobres.value = ''; abastoLitros.value = '';
         } else {
             const fmt = formatearCantidades(abastoL);
-            abastoCaja.value = fmt.cajas;
+            abastoCaja.value   = fmt.cajas;
             abastoSobres.value = fmt.sobres;
             abastoLitros.value = fmt.litros;
         }
@@ -129,28 +126,30 @@ document.addEventListener('DOMContentLoaded', () => {
         calcularInventarioFinal(true);
     }
 
-    // --- FUNCIÓN: VALIDAR LITROS PARES (AVISA Y MARCA EN ROJO) ---
+    // ─── VALIDACIÓN ───────────────────────────────────────────────────────────
+
     function validarLitrosPares(inputElement, origen) {
         if (inputElement.value.trim() === '') {
-            inputElement.style.borderColor = "";
+            inputElement.style.borderColor = '';
             return;
         }
-        let litros = parseFloat(inputElement.value);
+        const litros = parseFloat(inputElement.value);
         if (!isNaN(litros) && litros % L_X_SOBRE !== 0) {
-            inputElement.style.borderColor = "#ff3860";
-            mostrarNotificacion(`Error en ${origen}: Has ingresado ${litros}L. Recuerda que 1 sobre equivale a 2L, corrige a una cantidad par.`, 'error');
+            inputElement.style.borderColor = '#ff3860';
+            mostrarNotificacion(
+                `Error en ${origen}: Has ingresado ${litros}L. Recuerda que 1 sobre equivale a 2L, corrige a una cantidad par.`,
+                'error'
+            );
         } else {
-            inputElement.style.borderColor = ""; // Quita el rojo si ya está bien
+            inputElement.style.borderColor = '';
         }
     }
 
-    // --- EVENTOS: INVENTARIO INICIAL ---
+    // ─── EVENTOS: INVENTARIO INICIAL ─────────────────────────────────────────
+
     function actualizarInvDesdeCajasSobres() {
-        if (invCaja.value === '' && invSobres.value === '') {
-            invLitros.value = '';
-        } else {
-            invLitros.value = obtenerLitrosDeFila(invCaja, invSobres);
-        }
+        invLitros.value = (invCaja.value === '' && invSobres.value === '')
+            ? '' : obtenerLitrosDeFila(invCaja, invSobres);
         actualizarAbastoTotal();
     }
 
@@ -160,251 +159,219 @@ document.addEventListener('DOMContentLoaded', () => {
     invLitros.addEventListener('input', () => {
         if (invLitros.value === '') {
             invCaja.value = ''; invSobres.value = '';
-            invLitros.style.borderColor = "";
+            invLitros.style.borderColor = '';
             actualizarAbastoTotal();
             return;
         }
         const fmt = formatearCantidades(parseFloat(invLitros.value));
-        invCaja.value = fmt.cajas;
+        invCaja.value   = fmt.cajas;
         invSobres.value = fmt.sobres;
         actualizarAbastoTotal();
     });
 
     invLitros.addEventListener('blur', () => validarLitrosPares(invLitros, 'inventario inicial'));
 
-    // --- EVENTOS: VENTA REAL ---
+    // ─── EVENTOS: VENTA REAL ─────────────────────────────────────────────────
+
     function actualizarVentaDesdeCajasSobres() {
-        if (ventaCaja.value === '' && ventaSobres.value === '') {
-            ventaLitros.value = '';
-        } else {
-            ventaLitros.value = obtenerLitrosDeFila(ventaCaja, ventaSobres);
-        }
+        ventaLitros.value = (ventaCaja.value === '' && ventaSobres.value === '')
+            ? '' : obtenerLitrosDeFila(ventaCaja, ventaSobres);
         calcularInventarioFinal(true);
     }
+
     ventaCaja.addEventListener('input', actualizarVentaDesdeCajasSobres);
     ventaSobres.addEventListener('input', actualizarVentaDesdeCajasSobres);
 
     ventaLitros.addEventListener('input', () => {
         if (ventaLitros.value === '') {
             ventaCaja.value = ''; ventaSobres.value = '';
-            ventaLitros.style.borderColor = "";
+            ventaLitros.style.borderColor = '';
             calcularInventarioFinal(true);
             return;
         }
         const fmt = formatearCantidades(parseFloat(ventaLitros.value));
-        ventaCaja.value = fmt.cajas;
+        ventaCaja.value   = fmt.cajas;
         ventaSobres.value = fmt.sobres;
         calcularInventarioFinal(true);
     });
 
     ventaLitros.addEventListener('blur', () => validarLitrosPares(ventaLitros, 'venta real'));
-    // --- EVENTOS: LITROS REGISTRADOS ---
+
+    // ─── EVENTOS: LITROS REGISTRADOS ─────────────────────────────────────────
+
     function actualizarRegDesdeCajasSobres() {
-        if (regCaja.value === '' && regSobres.value === '') {
-            regLitros.value = '';
-        } else {
-            regLitros.value = obtenerLitrosDeFila(regCaja, regSobres);
-        }
+        regLitros.value = (regCaja.value === '' && regSobres.value === '')
+            ? '' : obtenerLitrosDeFila(regCaja, regSobres);
         calcularDiferencia();
     }
+
     regCaja.addEventListener('input', actualizarRegDesdeCajasSobres);
     regSobres.addEventListener('input', actualizarRegDesdeCajasSobres);
 
     regLitros.addEventListener('input', () => {
         if (regLitros.value === '') {
             regCaja.value = ''; regSobres.value = '';
-            regLitros.style.borderColor = "";
+            regLitros.style.borderColor = '';
             calcularDiferencia();
             return;
         }
         const fmt = formatearCantidades(parseFloat(regLitros.value));
-        regCaja.value = fmt.cajas;
+        regCaja.value   = fmt.cajas;
         regSobres.value = fmt.sobres;
         calcularDiferencia();
     });
 
     regLitros.addEventListener('blur', () => validarLitrosPares(regLitros, 'litros registrados'));
-    // --- EVENTOS: SURTIMIENTOS MANUALES (TABLA II) ---
+
+    // ─── EVENTOS: SURTIMIENTOS ────────────────────────────────────────────────
+
     surtCajas.addEventListener('input', () => {
         if (surtCajas.value === '') {
             surtLitros.value = '';
-            surtCajas.style.borderColor = "";
-            surtLitros.style.borderColor = "";
+            surtCajas.style.borderColor = '';
+            surtLitros.style.borderColor = '';
             actualizarAbastoTotal();
             return;
         }
         surtLitros.value = parseFloat(surtCajas.value) * L_X_CAJA;
-        surtCajas.style.borderColor = "";
-        surtLitros.style.borderColor = "";
+        surtCajas.style.borderColor = '';
+        surtLitros.style.borderColor = '';
         actualizarAbastoTotal();
     });
 
     surtLitros.addEventListener('input', () => {
         if (surtLitros.value === '') {
             surtCajas.value = '';
-            surtCajas.style.borderColor = "";
-            surtLitros.style.borderColor = "";
+            surtCajas.style.borderColor = '';
+            surtLitros.style.borderColor = '';
             actualizarAbastoTotal();
             return;
         }
-
-        let litros = parseFloat(surtLitros.value);
-        // Si no es un entero, mostramos los decimales en caja para que note el error visualmente
-        surtCajas.value = Number.isInteger(litros / L_X_CAJA) ? (litros / L_X_CAJA) : (litros / L_X_CAJA).toFixed(2);
-
+        const litros = parseFloat(surtLitros.value);
+        surtCajas.value = Number.isInteger(litros / L_X_CAJA)
+            ? (litros / L_X_CAJA)
+            : (litros / L_X_CAJA).toFixed(2);
         if (litros % L_X_CAJA === 0) {
-            surtCajas.style.borderColor = "";
-            surtLitros.style.borderColor = "";
+            surtCajas.style.borderColor = '';
+            surtLitros.style.borderColor = '';
         }
         actualizarAbastoTotal();
     });
 
     surtLitros.addEventListener('blur', () => {
         if (surtLitros.value.trim() === '') return;
-        let litros = parseFloat(surtLitros.value);
-
+        const litros = parseFloat(surtLitros.value);
         if (!isNaN(litros) && litros % L_X_CAJA !== 0) {
-            surtCajas.style.borderColor = "#ff3860";
-            surtLitros.style.borderColor = "#ff3860";
-
-            // Calculamos las opciones correctas más cercanas
-            let cajaInferior = Math.floor(litros / L_X_CAJA);
-            let cajaSuperior = Math.ceil(litros / L_X_CAJA);
-            let sugerencia1 = cajaInferior * L_X_CAJA;
-            let sugerencia2 = cajaSuperior * L_X_CAJA;
-
-            mostrarNotificacion(`Aviso en Surtimiento: Ingresaste ${litros}L. Recuerda que se surte en múltiplos de 72L.<br>Sugerencia más próxima: <strong>${sugerencia1}L</strong> (${cajaInferior} cajas) o <strong>${sugerencia2}L</strong> (${cajaSuperior} cajas).`, 'error');
+            surtCajas.style.borderColor  = '#ff3860';
+            surtLitros.style.borderColor = '#ff3860';
+            const cajaInferior = Math.floor(litros / L_X_CAJA);
+            const cajaSuperior = Math.ceil(litros / L_X_CAJA);
+            mostrarNotificacion(
+                `Aviso en Surtimiento: Ingresaste ${litros}L. Recuerda que se surte en múltiplos de 72L.<br>
+                 Sugerencia más próxima: <strong>${cajaInferior * L_X_CAJA}L</strong> (${cajaInferior} cajas) o
+                 <strong>${cajaSuperior * L_X_CAJA}L</strong> (${cajaSuperior} cajas).`,
+                'error'
+            );
         }
     });
-    document.querySelectorAll('input[name="venta_no_incluida"]').forEach(r => r.addEventListener('change', (e) => {
-        document.getElementById('motivo_no_incluida').style.display = e.target.value === 'Si' ? 'block' : 'none';
-        if (e.target.value === 'No') document.querySelector('input[name="motivo_venta_no_incluida"]').value = '';
-    }));
 
-    document.querySelectorAll('input[name="falta_surtimiento"]').forEach(r => r.addEventListener('change', (e) => {
-        document.getElementById('causas_falta_surtimiento').style.display = e.target.value === 'Si' ? 'block' : 'none';
-        if (e.target.value === 'No') {
-            document.querySelector('input[name="causa_falta_descripcion"]').value = '';
-            document.querySelector('input[name="causa_falta_a"]').checked = false;
-            document.querySelector('input[name="causa_falta_b"]').checked = false;
-            document.querySelector('input[name="causa_falta_c_texto"]').value = '';
-        }
-    }));
+    // ─── EVENTOS: RADIOS Y CHECKBOXES ────────────────────────────────────────
 
-    document.querySelectorAll('input[name="continuar_venta"]').forEach(r => r.addEventListener('change', (e) => {
-        document.getElementById('alternativas_solucion').style.display = e.target.value === 'No' ? 'block' : 'none';
-        if (e.target.value === 'Si') {
-            document.querySelector('input[name="alternativa_general"]').value = '';
-            document.querySelector('input[name="alt_a"]').checked = false;
-            document.querySelector('input[name="alt_b"]').checked = false;
-            document.querySelector('input[name="alt_c"]').checked = false;
-            document.querySelector('input[name="alt_d_texto"]').value = '';
-        }
-    }));
-    function mostrarNotificacion(mensaje, tipo = 'info') {
-        let contenedor = document.getElementById('toast-container');
-        if (!contenedor) {
-            contenedor = document.createElement('div');
-            contenedor.id = 'toast-container';
-            document.body.appendChild(contenedor);
-        }
+    document.querySelectorAll('input[name="venta_no_incluida"]').forEach(r =>
+        r.addEventListener('change', (e) => {
+            document.getElementById('motivo_no_incluida').style.display = e.target.value === 'Si' ? 'block' : 'none';
+            if (e.target.value === 'No') document.querySelector('input[name="motivo_venta_no_incluida"]').value = '';
+        })
+    );
 
-        const toast = document.createElement('div');
-        toast.className = 'notificacion-glass';
-        const colorIcono = tipo === 'error' ? '#ff3860' : 'var(--bulma-link)';
-        const claseIcono = tipo === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+    document.querySelectorAll('input[name="falta_surtimiento"]').forEach(r =>
+        r.addEventListener('change', (e) => {
+            document.getElementById('causas_falta_surtimiento').style.display = e.target.value === 'Si' ? 'block' : 'none';
+            if (e.target.value === 'No') {
+                document.querySelector('input[name="causa_falta_descripcion"]').value = '';
+                document.querySelector('input[name="causa_falta_a"]').checked = false;
+                document.querySelector('input[name="causa_falta_b"]').checked = false;
+                document.querySelector('input[name="causa_falta_c_texto"]').value = '';
+            }
+        })
+    );
 
-        toast.innerHTML = `
-            <i class="fas ${claseIcono} is-size-5" style="color: ${colorIcono};"></i> 
-            <span style="flex-grow: 1; padding-right: 15px; line-height: 1.4;">${mensaje}</span>
-            <i class="fas fa-times btn-cerrar-toast" style="cursor: pointer; opacity: 0.6; font-size: 1.1rem; transition: opacity 0.2s;"></i>
-        `;
+    document.querySelectorAll('input[name="continuar_venta"]').forEach(r =>
+        r.addEventListener('change', (e) => {
+            document.getElementById('alternativas_solucion').style.display = e.target.value === 'No' ? 'block' : 'none';
+            if (e.target.value === 'Si') {
+                document.querySelector('input[name="alternativa_general"]').value = '';
+                document.querySelector('input[name="alt_a"]').checked = false;
+                document.querySelector('input[name="alt_b"]').checked = false;
+                document.querySelector('input[name="alt_c"]').checked = false;
+                document.querySelector('input[name="alt_d_texto"]').value = '';
+            }
+        })
+    );
 
-        contenedor.appendChild(toast);
-        let timeoutId;
+    // ─── EVENTO: LECHERÍA SELECCIONADA ───────────────────────────────────────
 
-        const iniciarCierre = () => {
-            timeoutId = setTimeout(() => {
-                if (document.body.contains(toast)) {
-                    toast.style.transform = 'translateX(120%)';
-                    toast.style.opacity = '0';
-                    setTimeout(() => toast.remove(), 400);
-                }
-            }, 10000);
-        };
-
-        toast.addEventListener('mouseenter', () => clearTimeout(timeoutId));
-        toast.addEventListener('mouseleave', iniciarCierre);
-
-        toast.querySelector('.btn-cerrar-toast').addEventListener('click', () => {
-            toast.style.transform = 'translateX(120%)';
-            toast.style.opacity = '0';
-            setTimeout(() => toast.remove(), 400);
-        });
-
-        setTimeout(() => toast.classList.add('mostrar'), 10);
-        iniciarCierre();
-    }
     document.addEventListener('lecheriaSeleccionada', () => {
         const lecheria = document.getElementById('inputLecheria').value.trim();
-        const menores = parseInt(document.getElementById('campoMenores').value) || 0;
-        const mayores = parseInt(document.getElementById('campoMayores').value) || 0;
+        const menores  = parseInt(document.getElementById('campoMenores').value) || 0;
+        const mayores  = parseInt(document.getElementById('campoMayores').value) || 0;
 
         if (!lecheria) return;
 
-        surtCajas.placeholder = "IA...";
-        surtLitros.placeholder = "IA...";
+        surtCajas.placeholder = 'IA...';
+        surtLitros.placeholder = 'IA...';
 
         fetch('calcularSurtimiento.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lecher: lecheria, menores: menores, mayores: mayores })
+            body: JSON.stringify({ lecher: lecheria, menores, mayores })
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.exito) {
-
-                    let litrosInicialesBDD = 0;
-
-                    if (data.litros_iniciales !== undefined) {
-                        litrosInicialesBDD = Math.round(parseFloat(data.litros_iniciales));
-                    } else if (data.cajas_iniciales !== undefined) {
-                        litrosInicialesBDD = Math.round(parseFloat(data.cajas_iniciales) * L_X_CAJA);
-                    }
-
-                    const invFmt = formatearCantidades(litrosInicialesBDD);
-                    invCaja.value = invFmt.cajas;
-                    invSobres.value = invFmt.sobres;
-                    invLitros.value = invFmt.litros;
-
-                    const surtL = parseFloat(data.litros_surtir) || 0;
-                    surtLitros.value = surtL;
-                    surtCajas.value = surtL / L_X_CAJA;
-
-                    actualizarAbastoTotal();
-                    mostrarNotificacion(data.mensaje, 'info');
-                } else {
-                    mostrarNotificacion(data.mensaje, 'error');
+        .then(r => r.json())
+        .then(data => {
+            if (data.exito) {
+                let litrosInicialesBDD = 0;
+                if (data.litros_iniciales !== undefined) {
+                    litrosInicialesBDD = Math.round(parseFloat(data.litros_iniciales));
+                } else if (data.cajas_iniciales !== undefined) {
+                    litrosInicialesBDD = Math.round(parseFloat(data.cajas_iniciales) * L_X_CAJA);
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                mostrarNotificacion('Error de conexión con el servidor.', 'error');
-            });
+
+                const invFmt = formatearCantidades(litrosInicialesBDD);
+                invCaja.value   = invFmt.cajas;
+                invSobres.value = invFmt.sobres;
+                invLitros.value = invFmt.litros;
+
+                const surtL = parseFloat(data.litros_surtir) || 0;
+                surtLitros.value = surtL;
+                surtCajas.value  = surtL / L_X_CAJA;
+
+                actualizarAbastoTotal();
+                mostrarNotificacion(data.mensaje, 'info');
+            } else {
+                mostrarNotificacion(data.mensaje, 'error');
+            }
+        })
+        .catch(() => mostrarNotificacion('Error de conexión con el servidor.', 'error'));
     });
+
+    // ─── BLOQUEO DE TECLADO ───────────────────────────────────────────────────
+
     function bloquearCaracteresInvalidos(e) {
-        if (['Backspace', 'Tab', 'Enter', 'ArrowLeft', 'ArrowRight', 'Delete', '-'].includes(e.key)) return;
+        if (['Backspace','Tab','Enter','ArrowLeft','ArrowRight','Delete','-'].includes(e.key)) return;
         if (!/^[0-9]$/.test(e.key)) e.preventDefault();
     }
 
-    [invCaja, invSobres, invLitros, ventaCaja, ventaSobres, ventaLitros, regCaja, regSobres, regLitros, surtCajas, surtLitros].forEach(input => {
-        if (input) {
-            input.addEventListener('keydown', bloquearCaracteresInvalidos);
-            input.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
-            });
-        }
+    [invCaja, invSobres, invLitros, ventaCaja, ventaSobres, ventaLitros,
+     regCaja, regSobres, regLitros, surtCajas, surtLitros].forEach(input => {
+        if (!input) return;
+        input.addEventListener('keydown', bloquearCaracteresInvalidos);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+        });
     });
+
+    // ─── GUARDAR / GENERAR PDF ────────────────────────────────────────────────
+
     const btnGenerarPDF = document.getElementById('btnGenerarPDF');
     if (btnGenerarPDF) {
         btnGenerarPDF.addEventListener('click', async () => {
@@ -412,69 +379,78 @@ document.addEventListener('DOMContentLoaded', () => {
                 mostrarNotificacion('Debe seleccionar un punto de venta primero.', 'error');
                 return;
             }
+
             const datosFormulario = {
-                fecha: document.querySelector('input[name="fecha"]').value,
-                mes_periodo: document.getElementById('mes_periodo').value,
+                fecha:        document.querySelector('input[name="fecha"]').value,
+                mes_periodo:  document.getElementById('mes_periodo').value,
                 anio_periodo: document.getElementById('anio_periodo').value,
-                lecheria: document.getElementById('inputLecheria').value,
-                tienda: document.getElementById('campoTienda').value,
-                almacen: document.getElementById('campoAlmacen').value,
-                municipio: document.getElementById('campoMunicipio').value,
-                comunidad: document.getElementById('campoComunidad').value,
-                inv_ini_caja: invCaja.value, inv_ini_sobres: invSobres.value, inv_ini_litros: invLitros.value,
-                abasto_caja: abastoCaja.value, abasto_sobres: abastoSobres.value, abasto_litros: abastoLitros.value,
-                venta_caja: ventaCaja.value, venta_sobres: ventaSobres.value, venta_litros: ventaLitros.value,
-                reg_caja: regCaja.value, reg_sobres: regSobres.value, reg_litros: regLitros.value,
-                dif_caja: difCaja.value, dif_sobres: difSobres.value, dif_litros: difLitros.value,
-                fin_caja: finCaja.value, fin_sobres: finSobres.value, fin_litros: finLitros.value,
-                venta_igual: document.querySelector('input[name="venta_igual"]:checked')?.value || 'Si',
-                causa_desc: document.querySelector('input[name="causa_descripcion"]').value,
-                causa_a: document.querySelector('input[name="causa_a"]').checked,
-                causa_b: document.querySelector('input[name="causa_b"]').checked,
-                causa_c: document.querySelector('input[name="causa_c"]').checked,
-                causa_d: document.querySelector('input[name="causa_d_texto"]').value,
+                lecheria:     document.getElementById('inputLecheria').value,
+                tienda:       document.getElementById('campoTienda').value,
+                almacen:      document.getElementById('campoAlmacen').value,
+                municipio:    document.getElementById('campoMunicipio').value,
+                comunidad:    document.getElementById('campoComunidad').value,
+
+                inv_ini_caja:   invCaja.value,   inv_ini_sobres:  invSobres.value,  inv_ini_litros:  invLitros.value,
+                abasto_caja:    abastoCaja.value, abasto_sobres:   abastoSobres.value, abasto_litros: abastoLitros.value,
+                venta_caja:     ventaCaja.value,  venta_sobres:    ventaSobres.value,  venta_litros:  ventaLitros.value,
+                reg_caja:       regCaja.value,    reg_sobres:      regSobres.value,    reg_litros:    regLitros.value,
+                dif_caja:       difCaja.value,    dif_sobres:      difSobres.value,    dif_litros:    difLitros.value,
+                fin_caja:       finCaja.value,    fin_sobres:      finSobres.value,    fin_litros:    finLitros.value,
+
+                venta_igual:       document.querySelector('input[name="venta_igual"]:checked')?.value || 'Si',
+                causa_desc:        document.querySelector('input[name="causa_descripcion"]').value,
+                causa_a:           document.querySelector('input[name="causa_a"]').checked,
+                causa_b:           document.querySelector('input[name="causa_b"]').checked,
+                causa_c:           document.querySelector('input[name="causa_c"]').checked,
+                causa_d:           document.querySelector('input[name="causa_d_texto"]').value,
                 venta_no_incluida: document.querySelector('input[name="venta_no_incluida"]:checked')?.value || 'No',
-                motivo_no_incluida: document.querySelector('input[name="motivo_venta_no_incluida"]').value,
-                surt_fecha: document.getElementById('surt_fecha').value,
-                surt_cajas: surtCajas.value, surt_litros: surtLitros.value,
-                surt_factura: document.getElementById('surt_factura').value,
-                surt_caducidad: document.getElementById('surt_caducidad').value,
-                falta_surt: document.querySelector('input[name="falta_surtimiento"]:checked')?.value || 'No',
+                motivo_no_incluida:document.querySelector('input[name="motivo_venta_no_incluida"]').value,
+
+                surt_fecha:    document.getElementById('surt_fecha').value,
+                surt_cajas:    surtCajas.value,
+                surt_litros:   surtLitros.value,
+                surt_factura:  document.getElementById('surt_factura').value,
+                surt_caducidad:document.getElementById('surt_caducidad').value,
+
+                falta_surt:       document.querySelector('input[name="falta_surtimiento"]:checked')?.value || 'No',
                 causa_falta_desc: document.querySelector('input[name="causa_falta_descripcion"]').value,
-                causa_falta_a: document.querySelector('input[name="causa_falta_a"]').checked,
-                causa_falta_b: document.querySelector('input[name="causa_falta_b"]').checked,
-                causa_falta_c: document.querySelector('input[name="causa_falta_c_texto"]').value,
-                hogares: document.getElementById('campoHogares').value,
-                menores: document.getElementById('campoMenores').value,
-                mayores: document.getElementById('campoMayores').value,
+                causa_falta_a:    document.querySelector('input[name="causa_falta_a"]').checked,
+                causa_falta_b:    document.querySelector('input[name="causa_falta_b"]').checked,
+                causa_falta_c:    document.querySelector('input[name="causa_falta_c_texto"]').value,
+
+                hogares:  document.getElementById('campoHogares').value,
+                menores:  document.getElementById('campoMenores').value,
+                mayores:  document.getElementById('campoMayores').value,
                 dotacion: document.getElementById('campoDotacion').value,
+
                 prob_a: document.querySelector('input[name="prob_a"]').checked,
                 prob_b: document.querySelector('input[name="prob_b"]').checked,
                 prob_c: document.querySelector('input[name="prob_c"]').checked,
                 prob_d: document.querySelector('input[name="prob_d_texto"]').value,
-                continuar: document.querySelector('input[name="continuar_venta"]:checked')?.value || 'Si',
+
+                continuar:   document.querySelector('input[name="continuar_venta"]:checked')?.value || 'Si',
                 alt_general: document.querySelector('input[name="alternativa_general"]').value,
-                alt_a: document.querySelector('input[name="alt_a"]').checked,
-                alt_b: document.querySelector('input[name="alt_b"]').checked,
-                alt_c: document.querySelector('input[name="alt_c"]').checked,
-                alt_d: document.querySelector('input[name="alt_d_texto"]').value,
-                usuario: document.getElementById('inputUsuarioOculto').value,
+                alt_a:       document.querySelector('input[name="alt_a"]').checked,
+                alt_b:       document.querySelector('input[name="alt_b"]').checked,
+                alt_c:       document.querySelector('input[name="alt_c"]').checked,
+                alt_d:       document.querySelector('input[name="alt_d_texto"]').value,
+
+                usuario:            document.getElementById('inputUsuarioOculto').value,
                 confirmado_periodo: false
             };
 
             btnGenerarPDF.classList.add('is-loading');
 
-            // Envolvemos el fetch en una función para poder reintentar si el usuario confirma
             const intentarGuardar = async (datos) => {
-                const respuestaGuardado = await fetch('guardar_inventario.php', {
+                const res     = await fetch('guardar_inventario.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datos)
                 });
+                const resultado = await res.json();
 
-                const resultado = await respuestaGuardado.json();
                 if (resultado.status === 'requiere_confirmacion') {
-                    const seguro = confirm(resultado.mensaje);
+                    const seguro = await mostrarConfirmacionMD3(resultado.mensaje);
                     if (seguro) {
                         datos.confirmado_periodo = true;
                         return await intentarGuardar(datos);
@@ -482,26 +458,28 @@ document.addEventListener('DOMContentLoaded', () => {
                         throw new Error('Operación cancelada. Registra primero el mes anterior.');
                     }
                 }
+
                 if (resultado.status !== 'success') {
                     throw new Error(resultado.mensaje || 'Error al guardar en base de datos');
                 }
                 return true;
             };
+
             try {
-                // Lanzamos la función de guardado
                 await intentarGuardar(datosFormulario);
                 mostrarNotificacion('Datos guardados en la base de datos.', 'info');
-                
-                const respuestaPDF = await fetch('generar_pdf.php', {
+
+                const resPDF = await fetch('generar_pdf.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(datosFormulario)
                 });
 
-                if (!respuestaPDF.ok) throw new Error('Error en el servidor al generar el PDF');             
-                const blob = await respuestaPDF.blob();
-                const url = window.URL.createObjectURL(blob);
-                window.open(url, '_blank'); 
+                if (!resPDF.ok) throw new Error('Error en el servidor al generar el PDF');
+
+                const blob = await resPDF.blob();
+                const url  = window.URL.createObjectURL(blob);
+                window.open(url, '_blank');
                 mostrarNotificacion('¡PDF generado exitosamente!', 'info');
                 setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 
@@ -511,6 +489,6 @@ document.addEventListener('DOMContentLoaded', () => {
             } finally {
                 btnGenerarPDF.classList.remove('is-loading');
             }
-        }); 
+        });
     }
 });

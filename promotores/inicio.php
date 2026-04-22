@@ -158,7 +158,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <md-divider style="margin: 8px 0;"></md-divider>
 
                 <div class="drawer-section-title">Reporte lecherías</div>
-                <md-list-item href="#" type="button">
+                <md-list-item href="generarreporteMensual.php" type="button">
                     <div slot="headline">Generar</div>
                     <md-icon slot="start">receipt_long</md-icon>
                 </md-list-item>

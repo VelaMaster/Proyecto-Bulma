@@ -12,7 +12,6 @@
     transition: border-color 0.2s ease, border-width 0.1s ease;
 }
 
-/* Mantenemos el focus del input en el color primario para no sobrecargar el diseño */
 .md3-input:focus {
     border-color: var(--md-sys-color-primary);
     border-width: 2px;
@@ -106,7 +105,7 @@
 }
 
 /* =============================================
-   INYECCIÓN TERCIARIA: BADGES
+   BADGES
 ============================================= */
 .section-badge {
     min-width: 36px;
@@ -121,7 +120,7 @@
     font-weight: 700;
     flex-shrink: 0;
     letter-spacing: -0.5px;
-    box-shadow: 0px 2px 4px rgba(0,0,0,0.1); /* Ligera elevación */
+    box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
 }
 
 .section-title {
@@ -133,7 +132,7 @@
 }
 
 /* =============================================
-   INYECCIÓN TERCIARIA: SUBTÍTULOS
+   SUBTÍTULOS
 ============================================= */
 .subsection-title {
     font-size: 0.75rem;
@@ -160,7 +159,7 @@
 }
 
 /* =============================================
-   INYECCIÓN TERCIARIA: ENCABEZADOS DE TABLA
+   TABLA
 ============================================= */
 .md3-table thead th {
     background: var(--md-sys-color-surface-container-highest);
@@ -200,7 +199,7 @@
 }
 
 /* =============================================
-   INYECCIÓN TERCIARIA: CHECKBOXES Y RADIOS
+   CHECKBOXES Y RADIOS
 ============================================= */
 input[type="radio"],
 input[type="checkbox"] {
@@ -279,6 +278,9 @@ input[type="checkbox"] {
     margin-top: 8px;
 }
 
+/* =============================================
+   AUTOCOMPLETE DROPDOWN
+============================================= */
 #dropdown-menu {
     position: absolute;
     top: calc(100% + 4px);
@@ -309,7 +311,7 @@ input[type="checkbox"] {
 .dropdown-item small { color: var(--md-sys-color-outline); font-size: 0.75rem; }
 
 /* =============================================
-   INYECCIÓN TERCIARIA: BOTÓN PRINCIPAL
+   BOTÓN PRINCIPAL
 ============================================= */
 .md3-filled-btn {
     display: inline-flex;
@@ -363,40 +365,9 @@ input[type="checkbox"] {
 
 @keyframes btn-spin { to { transform: rotate(360deg); } }
 
-#toast-container {
-    position: fixed;
-    bottom: 28px;
-    right: 28px;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    max-width: 460px;
-}
-
 /* =============================================
-   INYECCIÓN TERCIARIA: NOTIFICACIONES (TOAST)
+   LAYOUT GENERAL
 ============================================= */
-.notificacion-glass {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    background: var(--md-sys-color-surface-container);
-    color: var(--md-sys-color-on-surface);
-    padding: 14px 16px;
-    border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.32);
-    min-width: 300px;
-    border-left: 4px solid var(--md-sys-color-tertiary);
-    transform: translateX(calc(100% + 40px));
-    opacity: 0;
-    transition: transform 0.35s cubic-bezier(0.2, 0, 0, 1), opacity 0.35s ease;
-}
-
-.notificacion-glass.mostrar { transform: translateX(0); opacity: 1; }
-.notificacion-glass .fas { margin-top: 2px; font-size: 1rem; flex-shrink: 0; }
-.btn-cerrar-toast:hover { opacity: 1 !important; }
-
 .save-actions {
     display: flex;
     justify-content: flex-end;
@@ -412,3 +383,11 @@ input[type="checkbox"] {
     border-radius: 0 0 16px 16px;
     border-bottom: 1px solid var(--md-sys-color-outline);
 }
+
+/* =============================================
+   NOTA: Los estilos de notificaciones toast y
+   modal de confirmación se inyectan dinámicamente
+   desde generarInventarioMensual.js mediante la
+   función inyectarEstilos() — no deben definirse
+   aquí para evitar conflictos de posición.
+============================================= */
