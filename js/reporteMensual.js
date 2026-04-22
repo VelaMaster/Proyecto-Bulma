@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectTipoVenta = document.getElementById('selectTipoVenta');
     const precioDisplay = document.getElementById('precioDisplay');
     const filasTabla = document.querySelectorAll('#tablaBody tr');
-
     // Contenedores de la nueva tarjeta
     const cardEstadoInventarios = document.getElementById('cardEstadoInventarios');
     const listaEstadoInventarios = document.getElementById('listaEstadoInventarios');
@@ -123,24 +122,36 @@ document.addEventListener('DOMContentLoaded', () => {
                 selectAlmacen.appendChild(option);
             });
         });
+// (Asegúrate de declarar estas variables arriba junto a selectAlmacen)
+    const selectMesReporte = document.getElementById('selectMesReporte');
+    const inputAnioReporte = document.getElementById('inputAnioReporte');
+
+    // --- FUNCIÓN CENTRAL PARA CARGAR TABLA ---
     function cargarLecherias() {
-        const almacenEscogido = selectAlmacen.value;
+        const almacenEscogido = selectAlmacen ? selectAlmacen.value : '';
         const tipoVenta = selectTipoVenta ? selectTipoVenta.value : '0'; 
+        const mesReporte = selectMesReporte ? selectMesReporte.value : '';
+        const anioReporte = inputAnioReporte ? inputAnioReporte.value : '';
         
         if (precioDisplay) {
             precioDisplay.textContent = tipoVenta === '0' ? '$4.50/LITRO' : '$6.50/LITRO';
         }
 
-        if(almacenEscogido === "") {
+        // Si falta ALMACÉN o falta el MES, no cargamos nada
+        if(almacenEscogido === "" || mesReporte === "" || anioReporte === "") {
             filasTabla.forEach(fila => {
                 fila.querySelectorAll('input, select').forEach(input => {
-                    input.value = ''; input.disabled = true; input.style.borderColor = "";
+                    input.value = ''; input.disabled = true; input.style.borderColor = ""; input.placeholder = "";
                 });
             });
             cardEstadoInventarios.style.display = 'none';
             return;
         }
-        fetch(`obtenerLecheriasPorAlmacen.php?almacen=${encodeURIComponent(almacenEscogido)}&tipo_venta=${tipoVenta}`)
+
+        // ¡Le agregamos el mes y año a la URL!
+        const url = `obtenerLecheriasPorAlmacen.php?almacen=${encodeURIComponent(almacenEscogido)}&tipo_venta=${tipoVenta}&mes_reporte=${mesReporte}&anio_reporte=${anioReporte}`;
+
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 if (data.error) return mostrarNotificacion(data.mensaje, 'error');
@@ -150,13 +161,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     cardEstadoInventarios.style.display = 'none';
                     return;
                 }
+
                 let htmlTarjetas = '';
                 let cantidadDesfasadas = 0;
-                // Llenamos las 17 filas de golpe
+
                 for(let i = 0; i < 17; i++) {
                     const fila = filasTabla[i];
                     const inputs = fila.querySelectorAll('input, select');
                     inputs.forEach(input => { input.value = ''; input.disabled = true; input.style.borderColor = ""; input.placeholder = "";});
+
                     if (data[i]) {
                         const inputPunto = fila.querySelector('input[name="punto_venta[]"]');
                         const inputClave = fila.querySelector('input[name="clave_tienda[]"]');
@@ -170,6 +183,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         inputPunto.readOnly = true; inputClave.readOnly = true;
                         fila.querySelector('input[name="total_cajas[]"]').readOnly = true;
                         fila.querySelector('input[name="total_sobres[]"]').readOnly = true;
+
                         if (data[i].encontrado) {
                             const litrosBDD = parseFloat(data[i].inventario_inicial) || 0; 
                             const fmt = formatearA_CajasYSobres(litrosBDD);
@@ -179,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             htmlTarjetas += `
                                 <div style="padding: 10px; border-left: 4px solid var(--md-sys-color-primary); background: var(--md-sys-color-surface-container-highest); border-radius: 6px;">
                                     <strong style="color: var(--md-sys-color-on-surface); font-size: 0.95rem;">${data[i].LECHER}</strong><br>
-                                    <span style="font-size: 0.8rem; color: var(--md-sys-color-on-surface-variant);">Último reg: ${nombresMeses[data[i].mes_anterior]} ${data[i].anio_anterior}</span>
+                                    <span style="font-size: 0.8rem; color: var(--md-sys-color-on-surface-variant);">Inventario list: ${nombresMeses[data[i].mes_anterior]} ${data[i].anio_anterior}</span>
                                 </div>
                             `;
                         } else {
@@ -188,26 +202,33 @@ document.addEventListener('DOMContentLoaded', () => {
                             inputCajas.placeholder = "FALTA";
                             inputSobres.placeholder = "FALTA";
                             cantidadDesfasadas++;
+
                             htmlTarjetas += `
                                 <div style="padding: 10px; border-left: 4px solid var(--md-sys-color-error); background: var(--md-sys-color-error-container); border-radius: 6px;">
                                     <strong style="color: var(--md-sys-color-on-error-container); font-size: 0.95rem;">${data[i].LECHER}</strong><br>
-                                    <span style="font-size: 0.8rem; color: var(--md-sys-color-error); font-weight: 500;">Falta inventario</span>
+                                    <span style="font-size: 0.8rem; color: var(--md-sys-color-error); font-weight: 500;">Falta ${nombresMeses[data[i].mes_anterior]} ${data[i].anio_anterior}</span>
                                 </div>
                             `;
                         }
                         calcularFila(fila);
                     }
                 }
+
                 listaEstadoInventarios.innerHTML = htmlTarjetas;
                 cardEstadoInventarios.style.display = 'block';
+
                 if (cantidadDesfasadas > 0) {
-                    mostrarNotificacion(`Tiene ${cantidadDesfasadas} lecherías desfasadas. Revisa la tabla de abajo para corregirlas.`, 'error');
+                    mostrarNotificacion(`Faltan los inventarios anteriores de ${cantidadDesfasadas} lecherías. Están marcadas en rojo.`, 'error');
                 } else {
-                    mostrarNotificacion(`Se cargaron ${data.length} lecherías correctamente.`, 'info');
+                    mostrarNotificacion(`Se cargaron ${data.length} lecherías listas para trabajar.`, 'info');
                 }
             })
-            .catch(error => mostrarNotificacion('Error cargando la base de datos.', 'error'));
+            .catch(error => mostrarNotificacion('Error conectando al servidor.', 'error'));
     }
+
+    // Escuchamos a los 4 botones ahora
     if (selectAlmacen) selectAlmacen.addEventListener('change', cargarLecherias);
     if (selectTipoVenta) selectTipoVenta.addEventListener('change', cargarLecherias);
+    if (selectMesReporte) selectMesReporte.addEventListener('change', cargarLecherias);
+    if (inputAnioReporte) inputAnioReporte.addEventListener('change', cargarLecherias);
 });

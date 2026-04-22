@@ -1,6 +1,6 @@
 <?php
 session_start();
-session_write_close(); // Liberamos sesión para máxima velocidad
+session_write_close(); 
 header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
@@ -14,8 +14,12 @@ $usuario = $_SESSION['usuario'] ?? null;
 $almacen = $_GET['almacen'] ?? '';
 $tipo_venta = $_GET['tipo_venta'] ?? '0'; 
 
-if (!$usuario || empty($almacen)) {
-    echo json_encode(['error' => true, 'mensaje' => 'Datos insuficientes.']); 
+// Recibimos los nuevos parámetros
+$mes_reporte = isset($_GET['mes_reporte']) ? (int)$_GET['mes_reporte'] : 0;
+$anio_reporte = isset($_GET['anio_reporte']) ? (int)$_GET['anio_reporte'] : 0;
+
+if (!$usuario || empty($almacen) || $mes_reporte === 0 || $anio_reporte === 0) {
+    echo json_encode(['error' => true, 'mensaje' => 'Selecciona el Mes y el Año del reporte.']); 
     exit();
 }
 
@@ -42,31 +46,40 @@ try {
     $stmt->execute();
     $lecherias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 2. MAGIA: Buscamos el inventario de cada una desde PHP (Mucho más rápido que JS)
-    $sql_inv = "SELECT FIRST 1 INVENTARIO_FINAL, MES_PERIODO, ANIO_PERIODO 
+    // ========================================================
+    // 2. MATEMÁTICA DEL MES ANTERIOR
+    // ========================================================
+    $mes_anterior = $mes_reporte - 1;
+    $anio_anterior = $anio_reporte;
+    
+    if ($mes_anterior == 0) { // Si están haciendo el de Enero, buscamos Diciembre del año pasado
+        $mes_anterior = 12;
+        $anio_anterior--;
+    }
+
+    // 3. Buscamos el inventario EXACTO de ese mes y ese año
+    $sql_inv = "SELECT INVENTARIO_FINAL 
                 FROM INVENTARIO_LEP_SUBSIDIADA 
-                WHERE LECHER = ? 
-                ORDER BY ANIO_PERIODO DESC, MES_PERIODO DESC";
+                WHERE LECHER = ? AND MES_PERIODO = ? AND ANIO_PERIODO = ?";
     $stmt_inv = $pdo->prepare($sql_inv);
 
     foreach ($lecherias as &$lech) {
-        $stmt_inv->execute([$lech['LECHER']]);
+        $stmt_inv->execute([$lech['LECHER'], $mes_anterior, $anio_anterior]);
         $inv = $stmt_inv->fetch(PDO::FETCH_ASSOC);
         
         if ($inv) {
             $lech['encontrado'] = true;
             $lech['inventario_inicial'] = $inv['INVENTARIO_FINAL'];
-            $lech['mes_anterior'] = $inv['MES_PERIODO'];
-            $lech['anio_anterior'] = $inv['ANIO_PERIODO'];
+            $lech['mes_anterior'] = $mes_anterior; // Devolvemos el mes exacto que encontramos
+            $lech['anio_anterior'] = $anio_anterior;
         } else {
             $lech['encontrado'] = false;
             $lech['inventario_inicial'] = 0;
-            $lech['mes_anterior'] = null;
-            $lech['anio_anterior'] = null;
+            $lech['mes_anterior'] = $mes_anterior;
+            $lech['anio_anterior'] = $anio_anterior;
         }
     }
 
-    // Mandamos todo el paquete en un solo milisegundo
     echo json_encode($lecherias, JSON_UNESCAPED_UNICODE);
 } catch (Exception $e) {
     echo json_encode(['error' => true, 'mensaje' => $e->getMessage()]);

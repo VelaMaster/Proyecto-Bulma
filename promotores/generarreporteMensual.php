@@ -97,30 +97,35 @@ foreach ($conteo as $fila) {
                     Datos generales del reporte
                 </h3>
 
-                <div class="form-header-grid">
-                    <md-outlined-select label="Tipo de Venta (Precio)" id="selectTipoVenta" name="tipo_venta"
-                        style="width:100%;">
-                        <md-select-option value="0" selected>
-                            <div slot="headline">$4.50 / Litro</div>
-                        </md-select-option>
-                        <md-select-option value="1">
-                            <div slot="headline">$6.50 / Litro</div>
-                        </md-select-option>
+<div class="form-header-grid">
+                    <md-outlined-select label="Mes del Reporte" id="selectMesReporte" name="mes_reporte" style="width:100%;">
+                        <md-select-option value=""><div slot="headline">Selecciona...</div></md-select-option>
+                        <md-select-option value="1"><div slot="headline">Enero</div></md-select-option>
+                        <md-select-option value="2"><div slot="headline">Febrero</div></md-select-option>
+                        <md-select-option value="3"><div slot="headline">Marzo</div></md-select-option>
+                        <md-select-option value="4"><div slot="headline">Abril</div></md-select-option>
+                        <md-select-option value="5"><div slot="headline">Mayo</div></md-select-option>
+                        <md-select-option value="6"><div slot="headline">Junio</div></md-select-option>
+                        <md-select-option value="7"><div slot="headline">Julio</div></md-select-option>
+                        <md-select-option value="8"><div slot="headline">Agosto</div></md-select-option>
+                        <md-select-option value="9"><div slot="headline">Septiembre</div></md-select-option>
+                        <md-select-option value="10"><div slot="headline">Octubre</div></md-select-option>
+                        <md-select-option value="11"><div slot="headline">Noviembre</div></md-select-option>
+                        <md-select-option value="12"><div slot="headline">Diciembre</div></md-select-option>
                     </md-outlined-select>
 
-                    <md-outlined-select label="Almacén Alimentación" id="selectAlmacen" name="almacen"
-                        style="width:100%;">
+                    <md-outlined-text-field label="Año del Reporte" id="inputAnioReporte" name="anio_reporte" type="number" value="<?= date('Y') ?>" style="width:100%;"></md-outlined-text-field>
+                    <md-outlined-select label="Tipo de Venta (Precio)" id="selectTipoVenta" name="tipo_venta" style="width:100%;">
+                        <md-select-option value="0" selected><div slot="headline">$4.50 / Litro</div></md-select-option>
+                        <md-select-option value="1"><div slot="headline">$6.50 / Litro</div></md-select-option>
+                    </md-outlined-select>
+
+                    <md-outlined-select label="Almacén Alimentación" id="selectAlmacen" name="almacen" style="width:100%;">
                         <md-select-option value="">Cargando almacenes...</md-select-option>
                     </md-outlined-select>
-
-                    <md-outlined-text-field label="Periodo — Fecha inicio" id="periodo_inicio" name="periodo_inicio"
-                        type="date" style="width:100%;"></md-outlined-text-field>
-                    <md-outlined-text-field label="Periodo — Fecha fin" id="periodo_fin" name="periodo_fin" type="date"
-                        style="width:100%;"></md-outlined-text-field>
-                    <md-outlined-text-field label="Fecha de elaboración" id="fecha_elaboracion" name="fecha_elaboracion"
-                        type="date" style="width:100%;"></md-outlined-text-field>
-                    <md-outlined-text-field label="Fecha de recepción" id="fecha_recepcion" name="fecha_recepcion"
-                        type="date" style="width:100%;"></md-outlined-text-field>
+                    
+                    <md-outlined-text-field label="Periodo — Fecha inicio" id="periodo_inicio" name="periodo_inicio" type="date" style="width:100%;"></md-outlined-text-field>
+                    <md-outlined-text-field label="Periodo — Fecha fin" id="periodo_fin" name="periodo_fin" type="date" style="width:100%;"></md-outlined-text-field>
                 </div>
 
                 <div class="reporte-wrapper">
