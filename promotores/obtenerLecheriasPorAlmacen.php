@@ -52,8 +52,8 @@ try {
         $anio_anterior--;
     }
 
-    // AÑADIMOS "VENTA_REAL" A LA BÚSQUEDA
-    $sql_inv = "SELECT INVENTARIO_FINAL, SURTIMIENTO, VENTA_REAL 
+    // AÑADIMOS "VENTA_LIBRO_RETIRO" A LA BÚSQUEDA
+    $sql_inv = "SELECT INVENTARIO_FINAL, SURTIMIENTO, VENTA_REAL, VENTA_LIBRO_RETIRO 
                 FROM INVENTARIO_LEP_SUBSIDIADA 
                 WHERE LECHER = ? AND MES_PERIODO = ? AND ANIO_PERIODO = ?";
     $stmt_inv = $pdo->prepare($sql_inv);
@@ -66,7 +66,8 @@ try {
             $lech['encontrado'] = true;
             $lech['inventario_inicial'] = $inv['INVENTARIO_FINAL'];
             $lech['surtimiento'] = $inv['SURTIMIENTO']; 
-            $lech['venta_real'] = $inv['VENTA_REAL']; // AQUÍ GUARDAMOS LA VENTA EN LITROS
+            $lech['venta_real'] = $inv['VENTA_REAL']; 
+            $lech['venta_libro_retiro'] = $inv['VENTA_LIBRO_RETIRO']; // <-- AQUÍ LO GUARDAMOS
             $lech['mes_anterior'] = $mes_anterior; 
             $lech['anio_anterior'] = $anio_anterior;
         } else {
@@ -74,6 +75,7 @@ try {
             $lech['inventario_inicial'] = 0;
             $lech['surtimiento'] = 0;
             $lech['venta_real'] = 0;
+            $lech['venta_libro_retiro'] = 0;
             $lech['mes_anterior'] = $mes_anterior;
             $lech['anio_anterior'] = $anio_anterior;
         }

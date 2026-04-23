@@ -182,9 +182,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         const inputSobres = fila.querySelector('input[name="inv_ini_sobres[]"]');
                         const inputDotCajas = fila.querySelector('input[name="dot_recibida_cajas[]"]');
                         
-                        // NUEVOS INPUTS PARA VENTA
                         const inputVendCajas = fila.querySelector('input[name="dot_vend_cajas[]"]');
                         const inputVendSobres = fila.querySelector('input[name="dot_vend_sobres[]"]');
+
+                        // NUEVOS INPUTS PARA RETIRO DE VENTAS
+                        const inputRetiroCajas = fila.querySelector('input[name="retiro_cajas[]"]');
+                        const inputRetiroSobres = fila.querySelector('input[name="retiro_sobres[]"]');
 
                         inputPunto.value = data[i].LECHER || '';
                         inputClave.value = data[i].NUM_TIENDA || '';
@@ -209,6 +212,12 @@ document.addEventListener('DOMContentLoaded', () => {
                             const fmtVenta = formatearA_CajasYSobres(litrosVenta);
                             inputVendCajas.value = fmtVenta.cajas;
                             inputVendSobres.value = fmtVenta.sobres;
+
+                            // 4. SEGÚN REG. DE RETIRO DE VENTAS (Viene en litros, convertimos a cajas y sobres)
+                            const litrosRetiro = parseFloat(data[i].venta_libro_retiro) || 0;
+                            const fmtRetiro = formatearA_CajasYSobres(litrosRetiro);
+                            inputRetiroCajas.value = fmtRetiro.cajas;
+                            inputRetiroSobres.value = fmtRetiro.sobres;
                             
                             htmlTarjetas += `
                                 <div style="padding: 10px; border-left: 4px solid var(--md-sys-color-primary); background: var(--md-sys-color-surface-container-highest); border-radius: 6px;">
@@ -222,12 +231,16 @@ document.addEventListener('DOMContentLoaded', () => {
                             inputDotCajas.style.borderColor = "var(--md-sys-color-error)";
                             inputVendCajas.style.borderColor = "var(--md-sys-color-error)";
                             inputVendSobres.style.borderColor = "var(--md-sys-color-error)";
+                            inputRetiroCajas.style.borderColor = "var(--md-sys-color-error)";
+                            inputRetiroSobres.style.borderColor = "var(--md-sys-color-error)";
                             
                             inputCajas.placeholder = "FALTA";
                             inputSobres.placeholder = "FALTA";
                             inputDotCajas.placeholder = "FALTA";
                             inputVendCajas.placeholder = "FALTA";
                             inputVendSobres.placeholder = "FALTA";
+                            inputRetiroCajas.placeholder = "FALTA";
+                            inputRetiroSobres.placeholder = "FALTA";
                             
                             cantidadDesfasadas++;
 
@@ -239,7 +252,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             `;
                         }
                         
-                        // Recalcula los totales una vez que inyectamos todo
                         calcularFila(fila);
                     }
                 }
