@@ -33,6 +33,7 @@ foreach ($conteo as $fila) {
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,6 +53,7 @@ foreach ($conteo as $fila) {
         import '@material/web/all.js';
     </script>
 </head>
+
 <body>
     <header class="md3-top-app-bar">
         <div class="app-bar-start">
@@ -59,14 +61,82 @@ foreach ($conteo as $fila) {
                 <md-icon>menu</md-icon>
             </md-icon-button>
             <div class="app-brand">
-                <span>Leche para el bienestar</span>
+                <span>Leche para el bienestar - Promotor</span>
             </div>
         </div>
+
         <div class="app-bar-end">
+            <div class="desktop-nav">
+                <md-text-button href="inicio.php">
+                    <md-icon slot="icon">home</md-icon>
+                    Inicio
+                </md-text-button>
+
+                <div style="position: relative;">
+                    <md-text-button id="btn-inv" onclick="abrirMenu('menu-inv')">
+                        Inventario mensual
+                        <md-icon slot="icon">arrow_drop_down</md-icon>
+                    </md-text-button>
+                    <md-menu id="menu-inv" anchor="btn-inv">
+                        <md-menu-item href="generarinventarioMensual.php">
+                            <div slot="headline">Generar</div>
+                            <md-icon slot="start">add_box</md-icon>
+                        </md-menu-item>
+                        <md-menu-item href="editarinventarioMensual.php">
+                            <div slot="headline">Editar</div>
+                            <md-icon slot="start">edit</md-icon>
+                        </md-menu-item>
+                        <md-menu-item href="consultarinventarioMensual.php">
+                            <div slot="headline">Consultar</div>
+                            <md-icon slot="start">search</md-icon>
+                        </md-menu-item>
+                    </md-menu>
+                </div>
+
+                <div style="position: relative;">
+                    <md-text-button id="btn-rep" onclick="abrirMenu('menu-rep')">
+                        Reporte lecherías
+                        <md-icon slot="icon">arrow_drop_down</md-icon>
+                    </md-text-button>
+                    <md-menu id="menu-rep" anchor="btn-rep">
+                        <md-menu-item href="generarreporteMensual.php">
+                            <div slot="headline">Generar</div>
+                            <md-icon slot="start">receipt_long</md-icon>
+                        </md-menu-item>
+                        <md-menu-item href="#">
+                            <div slot="headline">Consultar</div>
+                            <md-icon slot="start">find_in_page</md-icon>
+                        </md-menu-item>
+                    </md-menu>
+                </div>
+
+                <div style="position: relative;">
+                    <md-text-button id="btn-req" onclick="abrirMenu('menu-req')">
+                        Requerimiento
+                        <md-icon slot="icon">arrow_drop_down</md-icon>
+                    </md-text-button>
+                    <md-menu id="menu-req" anchor="btn-req">
+                        <md-menu-item href="requerimiento.php">
+                            <div slot="headline">Generar</div>
+                            <md-icon slot="start">inventory</md-icon>
+                        </md-menu-item>
+                        <md-menu-item href="#">
+                            <div slot="headline">Consultar</div>
+                            <md-icon slot="start">manage_search</md-icon>
+                        </md-menu-item>
+                        <md-menu-item href="#">
+                            <div slot="headline">Enviar reportes</div>
+                            <md-icon slot="start">send</md-icon>
+                        </md-menu-item>
+                    </md-menu>
+                </div>
+            </div>
+
             <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left: 16px;">
                 <md-icon slot="icon">logout</md-icon>
                 Salir
             </md-filled-tonal-button>
+
         </div>
     </header>
     <main class="panel-content">
@@ -97,35 +167,71 @@ foreach ($conteo as $fila) {
                     Datos generales del reporte
                 </h3>
 
-<div class="form-header-grid">
-                    <md-outlined-select label="Mes del Reporte" id="selectMesReporte" name="mes_reporte" style="width:100%;">
-                        <md-select-option value=""><div slot="headline">Selecciona...</div></md-select-option>
-                        <md-select-option value="1"><div slot="headline">Enero</div></md-select-option>
-                        <md-select-option value="2"><div slot="headline">Febrero</div></md-select-option>
-                        <md-select-option value="3"><div slot="headline">Marzo</div></md-select-option>
-                        <md-select-option value="4"><div slot="headline">Abril</div></md-select-option>
-                        <md-select-option value="5"><div slot="headline">Mayo</div></md-select-option>
-                        <md-select-option value="6"><div slot="headline">Junio</div></md-select-option>
-                        <md-select-option value="7"><div slot="headline">Julio</div></md-select-option>
-                        <md-select-option value="8"><div slot="headline">Agosto</div></md-select-option>
-                        <md-select-option value="9"><div slot="headline">Septiembre</div></md-select-option>
-                        <md-select-option value="10"><div slot="headline">Octubre</div></md-select-option>
-                        <md-select-option value="11"><div slot="headline">Noviembre</div></md-select-option>
-                        <md-select-option value="12"><div slot="headline">Diciembre</div></md-select-option>
+                <div class="form-header-grid">
+                    <md-outlined-select label="Mes del Reporte" id="selectMesReporte" name="mes_reporte"
+                        style="width:100%;">
+                        <md-select-option value="">
+                            <div slot="headline">Selecciona...</div>
+                        </md-select-option>
+                        <md-select-option value="1">
+                            <div slot="headline">Enero</div>
+                        </md-select-option>
+                        <md-select-option value="2">
+                            <div slot="headline">Febrero</div>
+                        </md-select-option>
+                        <md-select-option value="3">
+                            <div slot="headline">Marzo</div>
+                        </md-select-option>
+                        <md-select-option value="4">
+                            <div slot="headline">Abril</div>
+                        </md-select-option>
+                        <md-select-option value="5">
+                            <div slot="headline">Mayo</div>
+                        </md-select-option>
+                        <md-select-option value="6">
+                            <div slot="headline">Junio</div>
+                        </md-select-option>
+                        <md-select-option value="7">
+                            <div slot="headline">Julio</div>
+                        </md-select-option>
+                        <md-select-option value="8">
+                            <div slot="headline">Agosto</div>
+                        </md-select-option>
+                        <md-select-option value="9">
+                            <div slot="headline">Septiembre</div>
+                        </md-select-option>
+                        <md-select-option value="10">
+                            <div slot="headline">Octubre</div>
+                        </md-select-option>
+                        <md-select-option value="11">
+                            <div slot="headline">Noviembre</div>
+                        </md-select-option>
+                        <md-select-option value="12">
+                            <div slot="headline">Diciembre</div>
+                        </md-select-option>
                     </md-outlined-select>
 
-                    <md-outlined-text-field label="Año del Reporte" id="inputAnioReporte" name="anio_reporte" type="number" value="<?= date('Y') ?>" style="width:100%;"></md-outlined-text-field>
-                    <md-outlined-select label="Tipo de Venta (Precio)" id="selectTipoVenta" name="tipo_venta" style="width:100%;">
-                        <md-select-option value="0" selected><div slot="headline">$4.50 / Litro</div></md-select-option>
-                        <md-select-option value="1"><div slot="headline">$6.50 / Litro</div></md-select-option>
+                    <md-outlined-text-field label="Año del Reporte" id="inputAnioReporte" name="anio_reporte"
+                        type="number" value="<?= date('Y') ?>" style="width:100%;"></md-outlined-text-field>
+                    <md-outlined-select label="Tipo de Venta (Precio)" id="selectTipoVenta" name="tipo_venta"
+                        style="width:100%;">
+                        <md-select-option value="0" selected>
+                            <div slot="headline">$4.50 / Litro</div>
+                        </md-select-option>
+                        <md-select-option value="1">
+                            <div slot="headline">$6.50 / Litro</div>
+                        </md-select-option>
                     </md-outlined-select>
 
-                    <md-outlined-select label="Almacén Alimentación" id="selectAlmacen" name="almacen" style="width:100%;">
+                    <md-outlined-select label="Almacén Alimentación" id="selectAlmacen" name="almacen"
+                        style="width:100%;">
                         <md-select-option value="">Cargando almacenes...</md-select-option>
                     </md-outlined-select>
-                    
-                    <md-outlined-text-field label="Periodo — Fecha inicio" id="periodo_inicio" name="periodo_inicio" type="date" style="width:100%;"></md-outlined-text-field>
-                    <md-outlined-text-field label="Periodo — Fecha fin" id="periodo_fin" name="periodo_fin" type="date" style="width:100%;"></md-outlined-text-field>
+
+                    <md-outlined-text-field label="Periodo — Fecha inicio" id="periodo_inicio" name="periodo_inicio"
+                        type="date" style="width:100%;"></md-outlined-text-field>
+                    <md-outlined-text-field label="Periodo — Fecha fin" id="periodo_fin" name="periodo_fin" type="date"
+                        style="width:100%;"></md-outlined-text-field>
                 </div>
 
                 <div class="reporte-wrapper">
@@ -206,8 +312,9 @@ foreach ($conteo as $fila) {
                                             <option value="DICIEMBRE">Dic</option>
                                         </select>
                                     </td>
-                                    <td><input type="date" class="cell-input" name="fecha_entrada[]" disabled></td>
-                                    <td><input type="date" class="cell-input" name="caducidad[]" disabled></td>
+<td><input type="date" class="cell-input" name="fecha_entrada[]" disabled></td>
+                                    <td><input type="text" class="cell-input" name="caducidad[]" placeholder="YYYY-MM-DD"
+                                            disabled></td>
                                     <td><input type="text" class="cell-input" name="observaciones[]" disabled></td>
                                 </tr>
                             <?php endfor; ?>
@@ -272,5 +379,30 @@ foreach ($conteo as $fila) {
     </main>
     <script src="../js/temas_md3.js"></script>
     <script src="../js/reporteMensual.js"></script>
+    <script>
+        // Controla los menús desplegables superiores (desktop)
+        function abrirMenu(id) {
+            document.querySelectorAll('md-menu').forEach(m => {
+                if (m.id !== id) m.open = false;
+            });
+            const menu = document.getElementById(id);
+            menu.open = !menu.open;
+        }
+
+        // Controla el menú lateral (mobile)
+        function toggleDrawer() {
+            document.getElementById('mobile-drawer').classList.toggle('open');
+            // Nota: Asegúrate de tener un elemento con id 'drawer-scrim' en tu HTML si usas esta línea
+            document.getElementById('drawer-scrim').classList.toggle('open'); 
+        }
+
+        // Cierra los menús desplegables si haces clic afuera de ellos
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('md-menu') && !e.target.closest('md-text-button')) {
+                document.querySelectorAll('md-menu').forEach(m => m.open = false);
+            }
+        });
+    </script>
 </body>
+
 </html>

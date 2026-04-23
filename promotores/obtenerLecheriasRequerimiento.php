@@ -1,6 +1,6 @@
 <?php
 session_start();
-session_write_close(); 
+session_write_close(); // Libera la sesión para que vuele la consulta
 header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
@@ -9,26 +9,35 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
 }
 require_once __DIR__ . '/../Database.php';
 $pdo = Database::getInstance();
+
 $usuario = $_SESSION['usuario'] ?? null;
 $almacen = $_GET['almacen'] ?? '';
 $tipo_venta = $_GET['tipo_venta'] ?? '0'; 
 
+// Recibimos los parámetros del mes y año
 $mes_reporte = isset($_GET['mes_reporte']) ? (int)$_GET['mes_reporte'] : 0;
 $anio_reporte = isset($_GET['anio_reporte']) ? (int)$_GET['anio_reporte'] : 0;
 
 if (!$usuario || empty($almacen) || $mes_reporte === 0 || $anio_reporte === 0) {
-    echo json_encode(['error' => true, 'mensaje' => 'Selecciona el Mes y el Año del reporte.']); 
+    echo json_encode(['error' => true, 'mensaje' => 'Selecciona el Mes y el Año.']); 
     exit();
 }
 
 try {
+    // Lógica para agrupar $6.50 con Distribución Mercantil
     if ($tipo_venta == '1') {
         $condicion_tipo = "AND L.TIPO_PUNTO_VENTA IN (1, 2)";
     } else {
         $condicion_tipo = "AND L.TIPO_PUNTO_VENTA = 0";
     }
 
-    $sql = "SELECT TRIM(L.LECHER) AS LECHER, TRIM(L.NUM_TIENDA) AS NUM_TIENDA
+    // 1. EL FIX MÁGICO: Hacemos la suma real de CC_BT igual que en tu buscador
+    $sql = "SELECT 
+                TRIM(L.LECHER) AS LECHER, 
+                TRIM(L.NUM_TIENDA) AS NUM_TIENDA,
+                L.CC_FAM as TOTAL_HOGARES,
+                (L.CC_BT1 + L.CC_BT2) as TOTAL_INFANTILES,
+                (L.CC_BT3 + L.CC_BT4 + L.CC_BT5 + L.CC_BT6 + L.CC_BT7) as TOTAL_RESTO
             FROM LECHERIA L
             INNER JOIN USUARIOS_INVENTARIOS U ON L.PROMOTOR = U.CLAVE_ROL
             WHERE L.EFD_NUMERO = 20
@@ -43,6 +52,9 @@ try {
     $stmt->execute();
     $lecherias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // ========================================================
+    // 2. MATEMÁTICA PARA BUSCAR EL MES ANTERIOR
+    // ========================================================
     $mes_anterior = $mes_reporte - 1;
     $anio_anterior = $anio_reporte;
     
@@ -51,12 +63,13 @@ try {
         $anio_anterior--;
     }
 
-    // AÑADIMOS "VENTA_LIBRO_RETIRO" A LA BÚSQUEDA
-    $sql_inv = "SELECT INVENTARIO_FINAL, SURTIMIENTO, VENTA_REAL, VENTA_LIBRO_RETIRO 
+    // 3. Buscamos los datos del inventario del mes anterior
+    $sql_inv = "SELECT INVENTARIO_FINAL, SURTIMIENTO, VENTA_REAL 
                 FROM INVENTARIO_LEP_SUBSIDIADA 
                 WHERE LECHER = ? AND MES_PERIODO = ? AND ANIO_PERIODO = ?";
     $stmt_inv = $pdo->prepare($sql_inv);
 
+    // Integramos los resultados a nuestro arreglo principal
     foreach ($lecherias as &$lech) {
         $stmt_inv->execute([$lech['LECHER'], $mes_anterior, $anio_anterior]);
         $inv = $stmt_inv->fetch(PDO::FETCH_ASSOC);
@@ -66,15 +79,14 @@ try {
             $lech['inventario_inicial'] = $inv['INVENTARIO_FINAL'];
             $lech['surtimiento'] = $inv['SURTIMIENTO']; 
             $lech['venta_real'] = $inv['VENTA_REAL']; 
-            $lech['venta_libro_retiro'] = $inv['VENTA_LIBRO_RETIRO']; // <-- AQUÍ LO GUARDAMOS
             $lech['mes_anterior'] = $mes_anterior; 
             $lech['anio_anterior'] = $anio_anterior;
         } else {
+            // Si la lechería es nueva o no capturó el mes pasado
             $lech['encontrado'] = false;
             $lech['inventario_inicial'] = 0;
             $lech['surtimiento'] = 0;
             $lech['venta_real'] = 0;
-            $lech['venta_libro_retiro'] = 0;
             $lech['mes_anterior'] = $mes_anterior;
             $lech['anio_anterior'] = $anio_anterior;
         }

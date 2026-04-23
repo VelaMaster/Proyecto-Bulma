@@ -104,7 +104,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                         <md-icon slot="icon">arrow_drop_down</md-icon>
                     </md-text-button>
                     <md-menu id="menu-req" anchor="btn-req">
-                        <md-menu-item href="#">
+                        <md-menu-item href="requerimiento.php">
                             <div slot="headline">Generar</div>
                             <md-icon slot="start">inventory</md-icon>
                         </md-menu-item>
@@ -129,7 +129,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     </header>
 
     <aside class="md3-drawer" id="mobile-drawer">
-
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px 24px;">
             <span style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface);">Menú</span>
             <md-icon-button onclick="toggleDrawer()">

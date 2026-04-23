@@ -134,23 +134,26 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
+// --- FUNCIÓN CENTRAL PARA CARGAR TABLA ---
     function cargarLecherias() {
         const almacenEscogido = selectAlmacen ? selectAlmacen.value : '';
         const tipoVenta = selectTipoVenta ? selectTipoVenta.value : '0'; 
         const mesReporte = selectMesReporte ? selectMesReporte.value : '';
         const anioReporte = inputAnioReporte ? inputAnioReporte.value : '';
         
+        // Actualizamos el letrero visual del precio
         if (precioDisplay) {
             precioDisplay.textContent = tipoVenta === '0' ? '$4.50/LITRO' : '$6.50/LITRO';
         }
 
+        // Validamos que todos los combos tengan algo antes de buscar
         if(almacenEscogido === "" || mesReporte === "" || anioReporte === "") {
             filasTabla.forEach(fila => {
                 fila.querySelectorAll('input, select').forEach(input => {
                     input.value = ''; input.disabled = true; input.style.borderColor = ""; input.placeholder = "";
                 });
             });
-            cardEstadoInventarios.style.display = 'none';
+            if (cardEstadoInventarios) cardEstadoInventarios.style.display = 'none';
             return;
         }
 
@@ -163,17 +166,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 if (data.length === 0) {
                     mostrarNotificacion(`No hay lecherías de ese precio en este almacén.`, 'error');
-                    cardEstadoInventarios.style.display = 'none';
+                    if (cardEstadoInventarios) cardEstadoInventarios.style.display = 'none';
                     return;
                 }
 
                 let htmlTarjetas = '';
                 let cantidadDesfasadas = 0;
 
+                // Recorremos las 17 filas para limpiarlas e inyectar los datos nuevos
                 for(let i = 0; i < 17; i++) {
                     const fila = filasTabla[i];
                     const inputs = fila.querySelectorAll('input, select');
-                    inputs.forEach(input => { input.value = ''; input.disabled = true; input.style.borderColor = ""; input.placeholder = "";});
+                    
+                    // Limpieza total por cada vuelta
+                    inputs.forEach(input => { 
+                        input.value = ''; 
+                        input.disabled = true; 
+                        input.style.borderColor = ""; 
+                        input.placeholder = "";
+                    });
 
                     if (data[i]) {
                         const inputPunto = fila.querySelector('input[name="punto_venta[]"]');
@@ -184,36 +195,70 @@ document.addEventListener('DOMContentLoaded', () => {
                         
                         const inputVendCajas = fila.querySelector('input[name="dot_vend_cajas[]"]');
                         const inputVendSobres = fila.querySelector('input[name="dot_vend_sobres[]"]');
-
-                        // NUEVOS INPUTS PARA RETIRO DE VENTAS
                         const inputRetiroCajas = fila.querySelector('input[name="retiro_cajas[]"]');
                         const inputRetiroSobres = fila.querySelector('input[name="retiro_sobres[]"]');
 
+                        const selectMesCorresp = fila.querySelector('select[name="mes_corresp[]"]');
+                        const inputFechaEntrada = fila.querySelector('input[name="fecha_entrada[]"]');
+                        const inputCaducidad = fila.querySelector('input[name="caducidad[]"]');
+
+                        // Desbloqueamos toda la fila
+                        inputs.forEach(input => { input.disabled = false; });
+                        
                         inputPunto.value = data[i].LECHER || '';
                         inputClave.value = data[i].NUM_TIENDA || '';
-                        
-                        inputs.forEach(input => { input.disabled = false; });
-                        inputPunto.readOnly = true; inputClave.readOnly = true;
+                        inputPunto.readOnly = true; 
+                        inputClave.readOnly = true;
                         fila.querySelector('input[name="total_cajas[]"]').readOnly = true;
                         fila.querySelector('input[name="total_sobres[]"]').readOnly = true;
 
+                        // ==========================================
+                        // REGLAS DE AUTOCOMPLETADO (VALORES POR DEFECTO)
+                        // ==========================================
+                        
+                        // 1. Sobres y otros números en 0
+                        inputSobres.value = '0';
+                        inputVendSobres.value = '0';
+                        inputRetiroSobres.value = '0';
+                        fila.querySelector('input[name="sobres_rotos[]"]').value = '0';
+                        fila.querySelector('input[name="sobres_falt[]"]').value = '0';
+                        fila.querySelector('input[name="familias_no_acud[]"]').value = '0';
+                        fila.querySelector('input[name="dias_venta[]"]').value = '24'; // Días de venta promedio
+
+                        // 2. Mes correspondiente igual al que se eligió arriba
+                        if (mesReporte !== "") {
+                            // Toma el texto del mes y lo pone en mayúsculas (ej. "ABRIL")
+                            const mesTexto = nombresMeses[parseInt(mesReporte)].toUpperCase();
+                            selectMesCorresp.value = mesTexto;
+                        }
+
+                        // 3. Fechas de Entrada y Caducidad
+                        const anioActual = anioReporte || new Date().getFullYear();
+                        const mesFormateado = mesReporte.padStart(2, '0'); // Pone 0 si es del 1 al 9
+                        
+                        inputFechaEntrada.value = `${anioActual}-${mesFormateado}-15`; // Día 15 del mes actual
+                        inputCaducidad.value = `${anioActual}-12-31`; // Hasta fin del año en curso
+
+                        // ==========================================
+                        // INYECCIÓN DE DATOS DESDE LA BDD
+                        // ==========================================
                         if (data[i].encontrado) {
-                            // 1. INVENTARIO INICIAL
+                            // Inventario Inicial
                             const litrosBDD = parseFloat(data[i].inventario_inicial) || 0; 
                             const fmtInv = formatearA_CajasYSobres(litrosBDD);
                             inputCajas.value = fmtInv.cajas;
                             inputSobres.value = fmtInv.sobres;
 
-                            // 2. SURTIMIENTO (Viene directo en cajas)
+                            // Surtimiento (Directo en cajas)
                             inputDotCajas.value = parseFloat(data[i].surtimiento) || 0;
                             
-                            // 3. VENTA REAL (Viene en litros, convertimos a cajas y sobres)
+                            // Dotación Vendida
                             const litrosVenta = parseFloat(data[i].venta_real) || 0;
                             const fmtVenta = formatearA_CajasYSobres(litrosVenta);
                             inputVendCajas.value = fmtVenta.cajas;
                             inputVendSobres.value = fmtVenta.sobres;
 
-                            // 4. SEGÚN REG. DE RETIRO DE VENTAS (Viene en litros, convertimos a cajas y sobres)
+                            // Retiro de Ventas
                             const litrosRetiro = parseFloat(data[i].venta_libro_retiro) || 0;
                             const fmtRetiro = formatearA_CajasYSobres(litrosRetiro);
                             inputRetiroCajas.value = fmtRetiro.cajas;
@@ -226,6 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 </div>
                             `;
                         } else {
+                            // Si la lechería está desfasada o es nueva, la marcamos en rojo
                             inputCajas.style.borderColor = "var(--md-sys-color-error)";
                             inputSobres.style.borderColor = "var(--md-sys-color-error)";
                             inputDotCajas.style.borderColor = "var(--md-sys-color-error)";
@@ -234,6 +280,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             inputRetiroCajas.style.borderColor = "var(--md-sys-color-error)";
                             inputRetiroSobres.style.borderColor = "var(--md-sys-color-error)";
                             
+                            // Borramos los 0s que pusimos arriba para que el placeholder sea visible
+                            inputSobres.value = '';
+                            inputVendSobres.value = '';
+                            inputRetiroSobres.value = '';
+
                             inputCajas.placeholder = "FALTA";
                             inputSobres.placeholder = "FALTA";
                             inputDotCajas.placeholder = "FALTA";
@@ -252,12 +303,14 @@ document.addEventListener('DOMContentLoaded', () => {
                             `;
                         }
                         
+                        // Calculamos los totales de esta fila
                         calcularFila(fila);
                     }
                 }
 
-                listaEstadoInventarios.innerHTML = htmlTarjetas;
-                cardEstadoInventarios.style.display = 'block';
+                // Inyectamos la información a la tarjeta inferior
+                if (listaEstadoInventarios) listaEstadoInventarios.innerHTML = htmlTarjetas;
+                if (cardEstadoInventarios) cardEstadoInventarios.style.display = 'block';
 
                 if (cantidadDesfasadas > 0) {
                     mostrarNotificacion(`Faltan los inventarios anteriores de ${cantidadDesfasadas} lecherías. Están marcadas en rojo.`, 'error');

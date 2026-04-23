@@ -40,7 +40,7 @@ $lecher_get = $_GET['lecher'] ?? '';
                 <md-icon>menu</md-icon>
             </md-icon-button>
             <div class="app-brand">
-                <span>Inventario Mensual de Leche</span>
+                <span>Leche para el bienestar - Promotor</span>
             </div>
         </div>
 
@@ -78,11 +78,13 @@ $lecher_get = $_GET['lecher'] ?? '';
                         <md-icon slot="icon">arrow_drop_down</md-icon>
                     </md-text-button>
                     <md-menu id="menu-rep" anchor="btn-rep">
-                        <md-menu-item href="#">
+                        <md-menu-item href="generarreporteMensual.php">
                             <div slot="headline">Generar</div>
+                            <md-icon slot="start">receipt_long</md-icon>
                         </md-menu-item>
                         <md-menu-item href="#">
                             <div slot="headline">Consultar</div>
+                            <md-icon slot="start">find_in_page</md-icon>
                         </md-menu-item>
                     </md-menu>
                 </div>
@@ -93,21 +95,27 @@ $lecher_get = $_GET['lecher'] ?? '';
                         <md-icon slot="icon">arrow_drop_down</md-icon>
                     </md-text-button>
                     <md-menu id="menu-req" anchor="btn-req">
-                        <md-menu-item href="#">
+                        <md-menu-item href="requerimiento.php">
                             <div slot="headline">Generar</div>
+                            <md-icon slot="start">inventory</md-icon>
                         </md-menu-item>
                         <md-menu-item href="#">
                             <div slot="headline">Consultar</div>
+                            <md-icon slot="start">manage_search</md-icon>
                         </md-menu-item>
                         <md-menu-item href="#">
-                            <div slot="headline">Enviar reportes a supervisor</div>
+                            <div slot="headline">Enviar reportes</div>
                             <md-icon slot="start">send</md-icon>
                         </md-menu-item>
                     </md-menu>
                 </div>
             </div>
 
-            <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left: 8px;">Salir</md-filled-tonal-button>
+            <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left: 16px;">
+                <md-icon slot="icon">logout</md-icon>
+                Salir
+            </md-filled-tonal-button>
+
         </div>
     </header>
 
@@ -178,14 +186,17 @@ $lecher_get = $_GET['lecher'] ?? '';
 
     <main class="panel-content">
         <div style="display: flex; justify-content: left; margin-bottom: 24px; margin-top: 8px;">
-            <div class="md3-card" style="width: auto; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; flex-direction: row; justify-content: center;">
+            <div class="md3-card"
+                style="width: auto; padding: 12px 24px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px; flex-direction: row; justify-content: center;">
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span class="material-symbols-outlined" style="color: var(--md-sys-color-primary);">calendar_month</span>
+                    <span class="material-symbols-outlined"
+                        style="color: var(--md-sys-color-primary);">calendar_month</span>
                     <span style="font-weight: 500; color: var(--md-sys-color-on-surface);">Periodo a Reportar:</span>
                 </div>
-                
+
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <select class="md3-input" name="mes_periodo" id="mes_periodo" style="min-width: 140px; cursor: pointer; margin: 0;">
+                    <select class="md3-input" name="mes_periodo" id="mes_periodo"
+                        style="min-width: 140px; cursor: pointer; margin: 0;">
                         <option value="1" <?php echo date('n') == 1 ? 'selected' : ''; ?>>Enero</option>
                         <option value="2" <?php echo date('n') == 2 ? 'selected' : ''; ?>>Febrero</option>
                         <option value="3" <?php echo date('n') == 3 ? 'selected' : ''; ?>>Marzo</option>
@@ -200,8 +211,8 @@ $lecher_get = $_GET['lecher'] ?? '';
                         <option value="12" <?php echo date('n') == 12 ? 'selected' : ''; ?>>Diciembre</option>
                     </select>
 
-                    <input class="md3-input" type="number" name="anio_periodo" id="anio_periodo" 
-                        value="<?php echo date('Y'); ?>" readonly 
+                    <input class="md3-input" type="number" name="anio_periodo" id="anio_periodo"
+                        value="<?php echo date('Y'); ?>" readonly
                         style="max-width: 80px; margin: 0; background-color: var(--md-sys-color-surface-variant); text-align: center; pointer-events: none;">
                 </div>
             </div>
@@ -216,7 +227,8 @@ $lecher_get = $_GET['lecher'] ?? '';
 
             <div class="md3-card">
                 <div class="form-grid fg-3">
-                    <input type="hidden" id="inputUsuarioOculto" value="<?php echo htmlspecialchars($nombre_usuario); ?>">
+                    <input type="hidden" id="inputUsuarioOculto"
+                        value="<?php echo htmlspecialchars($nombre_usuario); ?>">
                     <div class="field-group">
                         <label class="field-label" for="inputFecha">Fecha</label>
                         <input class="md3-input" type="date" name="fecha" id="inputFecha"
@@ -284,30 +296,48 @@ $lecher_get = $_GET['lecher'] ?? '';
                         <tbody>
                             <tr>
                                 <td>Caja</td>
-                                <td><input type="number" id="inv_ini_caja" class="md3-input md3-input-sm" min="0" readonly placeholder="0"></td>
-                                <td><input type="number" id="abasto_caja" class="md3-input md3-input-sm" readonly placeholder="0"></td>
-                                <td><input type="number" id="venta_caja" class="md3-input md3-input-sm" placeholder="0"></td>
-                                <td><input type="number" id="litros_reg_caja" class="md3-input md3-input-sm" placeholder="0"></td>
-                                <td><input type="number" id="dif_caja" class="md3-input md3-input-sm" readonly placeholder="0"></td>
-                                <td><input type="number" id="inv_fin_caja" class="md3-input md3-input-sm" readonly placeholder="0"></td>
+                                <td><input type="number" id="inv_ini_caja" class="md3-input md3-input-sm" min="0"
+                                        readonly placeholder="0"></td>
+                                <td><input type="number" id="abasto_caja" class="md3-input md3-input-sm" readonly
+                                        placeholder="0"></td>
+                                <td><input type="number" id="venta_caja" class="md3-input md3-input-sm" placeholder="0">
+                                </td>
+                                <td><input type="number" id="litros_reg_caja" class="md3-input md3-input-sm"
+                                        placeholder="0"></td>
+                                <td><input type="number" id="dif_caja" class="md3-input md3-input-sm" readonly
+                                        placeholder="0"></td>
+                                <td><input type="number" id="inv_fin_caja" class="md3-input md3-input-sm" readonly
+                                        placeholder="0"></td>
                             </tr>
                             <tr>
                                 <td>Sobres</td>
-                                <td><input type="number" id="inv_ini_sobres" class="md3-input md3-input-sm" readonly placeholder="0"></td>
-                                <td><input type="number" id="abasto_sobres" class="md3-input md3-input-sm" readonly placeholder="0"></td>
-                                <td><input type="number" id="venta_sobres" class="md3-input md3-input-sm" placeholder="0"></td>
-                                <td><input type="number" id="litros_reg_sobres" class="md3-input md3-input-sm" placeholder="0"></td>
-                                <td><input type="number" id="dif_sobres" class="md3-input md3-input-sm" readonly placeholder="0"></td>
-                                <td><input type="number" id="inv_fin_sobres" class="md3-input md3-input-sm" readonly placeholder="0"></td>
+                                <td><input type="number" id="inv_ini_sobres" class="md3-input md3-input-sm" readonly
+                                        placeholder="0"></td>
+                                <td><input type="number" id="abasto_sobres" class="md3-input md3-input-sm" readonly
+                                        placeholder="0"></td>
+                                <td><input type="number" id="venta_sobres" class="md3-input md3-input-sm"
+                                        placeholder="0"></td>
+                                <td><input type="number" id="litros_reg_sobres" class="md3-input md3-input-sm"
+                                        placeholder="0"></td>
+                                <td><input type="number" id="dif_sobres" class="md3-input md3-input-sm" readonly
+                                        placeholder="0"></td>
+                                <td><input type="number" id="inv_fin_sobres" class="md3-input md3-input-sm" readonly
+                                        placeholder="0"></td>
                             </tr>
                             <tr>
                                 <td>Total en litros</td>
-                                <td><input type="number" id="inv_ini_litros" class="md3-input md3-input-sm" min="0" step="72" readonly placeholder="0"></td>
-                                <td><input type="number" id="abasto_litros" class="md3-input md3-input-sm" readonly placeholder="0"></td>
-                                <td><input type="number" id="venta_litros" class="md3-input md3-input-sm" placeholder="0"></td>
-                                <td><input type="number" id="litros_reg_litros" class="md3-input md3-input-sm" placeholder="0"></td>
-                                <td><input type="number" id="dif_litros" class="md3-input md3-input-sm" readonly placeholder="0"></td>
-                                <td><input type="number" id="inv_fin_litros" class="md3-input md3-input-sm" readonly placeholder="0"></td>
+                                <td><input type="number" id="inv_ini_litros" class="md3-input md3-input-sm" min="0"
+                                        step="72" readonly placeholder="0"></td>
+                                <td><input type="number" id="abasto_litros" class="md3-input md3-input-sm" readonly
+                                        placeholder="0"></td>
+                                <td><input type="number" id="venta_litros" class="md3-input md3-input-sm"
+                                        placeholder="0"></td>
+                                <td><input type="number" id="litros_reg_litros" class="md3-input md3-input-sm"
+                                        placeholder="0"></td>
+                                <td><input type="number" id="dif_litros" class="md3-input md3-input-sm" readonly
+                                        placeholder="0"></td>
+                                <td><input type="number" id="inv_fin_litros" class="md3-input md3-input-sm" readonly
+                                        placeholder="0"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -337,8 +367,7 @@ $lecher_get = $_GET['lecher'] ?? '';
                         <div class="field-group" style="margin-bottom:16px;">
                             <label class="field-label">¿Señale o describa la causa?</label>
                             <input class="md3-input" type="text" name="causa_descripcion"
-                                placeholder="Escriba aquí la causa general..."
-                                style="max-width:560px;">
+                                placeholder="Escriba aquí la causa general..." style="max-width:560px;">
                         </div>
                         <div class="check-grid">
                             <div class="check-item">
@@ -355,8 +384,8 @@ $lecher_get = $_GET['lecher'] ?? '';
                             </div>
                             <div class="check-item">
                                 <span style="white-space:nowrap; font-weight:500;">d) Otros:</span>
-                                <input class="md3-input" type="text" name="causa_d_texto"
-                                    placeholder="Especifique..." style="max-width:260px;">
+                                <input class="md3-input" type="text" name="causa_d_texto" placeholder="Especifique..."
+                                    style="max-width:260px;">
                             </div>
                         </div>
                     </div>
@@ -411,10 +440,14 @@ $lecher_get = $_GET['lecher'] ?? '';
                         </thead>
                         <tbody>
                             <tr>
-                                <td><input type="date" id="surt_fecha" class="md3-input md3-input-sm" value="<?php echo date('Y-m-d'); ?>"></td>
-                                <td><input type="number" id="surt_cajas" class="md3-input md3-input-sm" placeholder="0"></td>
-                                <td><input type="number" id="surt_litros" class="md3-input md3-input-sm" placeholder="0"></td>
-                                <td><input type="text" id="surt_factura" class="md3-input md3-input-sm" placeholder="N° factura"></td>
+                                <td><input type="date" id="surt_fecha" class="md3-input md3-input-sm"
+                                        value="<?php echo date('Y-m-d'); ?>"></td>
+                                <td><input type="number" id="surt_cajas" class="md3-input md3-input-sm" placeholder="0">
+                                </td>
+                                <td><input type="number" id="surt_litros" class="md3-input md3-input-sm"
+                                        placeholder="0"></td>
+                                <td><input type="text" id="surt_factura" class="md3-input md3-input-sm"
+                                        placeholder="N° factura"></td>
                                 <td><input type="date" id="surt_caducidad" class="md3-input md3-input-sm"></td>
                             </tr>
                         </tbody>
@@ -443,8 +476,7 @@ $lecher_get = $_GET['lecher'] ?? '';
                     <div class="field-group" style="margin-bottom:16px;">
                         <label class="field-label">¿Señale o describa la causa?</label>
                         <input class="md3-input" type="text" name="causa_falta_descripcion"
-                            placeholder="Escriba aquí la causa general..."
-                            style="max-width:560px;">
+                            placeholder="Escriba aquí la causa general..." style="max-width:560px;">
                     </div>
                     <div class="check-grid">
                         <div class="check-item">
@@ -457,8 +489,8 @@ $lecher_get = $_GET['lecher'] ?? '';
                         </div>
                         <div class="check-item full-width" style="border-bottom:none;">
                             <span style="white-space:nowrap; font-weight:500;">c) Otros:</span>
-                            <input class="md3-input" type="text" name="causa_falta_c_texto"
-                                placeholder="Especifique..." style="max-width:360px;">
+                            <input class="md3-input" type="text" name="causa_falta_c_texto" placeholder="Especifique..."
+                                style="max-width:360px;">
                         </div>
                     </div>
                 </div>
@@ -516,8 +548,8 @@ $lecher_get = $_GET['lecher'] ?? '';
                     </div>
                     <div class="check-item" style="border-bottom:none;">
                         <span style="white-space:nowrap; font-weight:500;">d) Otros:</span>
-                        <input class="md3-input" type="text" name="prob_d_texto"
-                            placeholder="Especifique..." style="max-width:260px;">
+                        <input class="md3-input" type="text" name="prob_d_texto" placeholder="Especifique..."
+                            style="max-width:260px;">
                     </div>
                 </div>
 
@@ -538,8 +570,7 @@ $lecher_get = $_GET['lecher'] ?? '';
                             <div class="field-group" style="margin-bottom:16px;">
                                 <label class="field-label">Alternativas de solución:</label>
                                 <input class="md3-input" type="text" name="alternativa_general"
-                                    placeholder="Describa la alternativa principal..."
-                                    style="max-width:560px;">
+                                    placeholder="Describa la alternativa principal..." style="max-width:560px;">
                             </div>
                             <div class="check-grid">
                                 <div class="check-item">
@@ -556,8 +587,8 @@ $lecher_get = $_GET['lecher'] ?? '';
                                 </div>
                                 <div class="check-item" style="border-bottom:none;">
                                     <span style="white-space:nowrap; font-weight:500;">d) Otra:</span>
-                                    <input class="md3-input" type="text" name="alt_d_texto"
-                                        placeholder="Especifique..." style="max-width:260px;">
+                                    <input class="md3-input" type="text" name="alt_d_texto" placeholder="Especifique..."
+                                        style="max-width:260px;">
                                 </div>
                             </div>
                         </div>
@@ -577,7 +608,7 @@ $lecher_get = $_GET['lecher'] ?? '';
 
     <script src="../js/temas_md3.js"></script>
     <script src="../js/notificaciones.js"></script>
-        <script src="../js/promotores.js"></script>
+    <script src="../js/promotores.js"></script>
     <script>
         function abrirMenu(id) {
             document.querySelectorAll('md-menu').forEach(m => {
@@ -700,7 +731,7 @@ $lecher_get = $_GET['lecher'] ?? '';
             inputLecheria.addEventListener('focus', () => mostrarOpciones(inputLecheria.value.trim()));
             inputLecheria.addEventListener('click', () => mostrarOpciones(inputLecheria.value.trim()));
             // 5. Filtrar mientras escribe
-            inputLecheria.addEventListener('input', function() {
+            inputLecheria.addEventListener('input', function () {
                 mostrarOpciones(this.value.trim());
             });
 
