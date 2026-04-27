@@ -25,7 +25,7 @@ class Database {
                 $db_path = '/firebird/data/DB_SIDISTLOCAL.FDB';
                 $user = 'SYSDBA';
                 $pass = 'masterkey';
-                self::$envName = "DOCKER LOCAL (PRUEBAS)";
+                self::$envName = "COLIMA LOCAL (PRUEBAS)";
             }
             try {
 $dsn = "firebird:dbname=$host/$puerto:$db_path;charset=NONE";
