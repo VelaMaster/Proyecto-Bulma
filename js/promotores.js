@@ -279,39 +279,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('input[name="venta_no_incluida"]').forEach(r =>
         r.addEventListener('change', (e) => {
-            document.getElementById('motivo_no_incluida').style.display = e.target.value === 'Si' ? 'block' : 'none';
-            if (e.target.value === 'No') document.querySelector('input[name="motivo_venta_no_incluida"]').value = '';
+            const div = document.getElementById('motivo_no_incluida');
+            if (div) div.style.display = e.target.value === 'Si' ? 'block' : 'none';
+            const m = document.querySelector('input[name="motivo_venta_no_incluida"]');
+            if (e.target.value === 'No' && m) m.value = '';
         })
     );
 
     document.querySelectorAll('input[name="falta_surtimiento"]').forEach(r =>
         r.addEventListener('change', (e) => {
-            document.getElementById('causas_falta_surtimiento').style.display = e.target.value === 'Si' ? 'block' : 'none';
+            const div = document.getElementById('causas_falta_surtimiento');
+            if (div) div.style.display = e.target.value === 'Si' ? 'block' : 'none';
             if (e.target.value === 'No') {
-                document.querySelector('input[name="causa_falta_descripcion"]').value = '';
-                document.querySelector('input[name="causa_falta_a"]').checked = false;
-                document.querySelector('input[name="causa_falta_b"]').checked = false;
-                document.querySelector('input[name="causa_falta_c_texto"]').value = '';
+                const d = document.querySelector('input[name="causa_falta_descripcion"]'); if (d) d.value = '';
+                const a = document.querySelector('input[name="causa_falta_a"]'); if (a) a.checked = false;
+                const b = document.querySelector('input[name="causa_falta_b"]'); if (b) b.checked = false;
+                const c = document.querySelector('input[name="causa_falta_c_texto"]'); if (c) c.value = '';
             }
         })
     );
 
     document.querySelectorAll('input[name="continuar_venta"]').forEach(r =>
         r.addEventListener('change', (e) => {
-            document.getElementById('alternativas_solucion').style.display = e.target.value === 'No' ? 'block' : 'none';
+            const div = document.getElementById('alternativas_solucion');
+            if (div) div.style.display = e.target.value === 'No' ? 'block' : 'none';
             if (e.target.value === 'Si') {
-                document.querySelector('input[name="alternativa_general"]').value = '';
-                document.querySelector('input[name="alt_a"]').checked = false;
-                document.querySelector('input[name="alt_b"]').checked = false;
-                document.querySelector('input[name="alt_c"]').checked = false;
-                document.querySelector('input[name="alt_d_texto"]').value = '';
+                const g = document.querySelector('input[name="alternativa_general"]'); if (g) g.value = '';
+                const a = document.querySelector('input[name="alt_a"]'); if (a) a.checked = false;
+                const b = document.querySelector('input[name="alt_b"]'); if (b) b.checked = false;
+                const c = document.querySelector('input[name="alt_c"]'); if (c) c.checked = false;
+                const d = document.querySelector('input[name="alt_d_texto"]'); if (d) d.value = '';
             }
         })
     );
 
-    // ─── EVENTO: LECHERÍA SELECCIONADA ───────────────────────────────────────
-
+    // ─── EVENTO: LECHERÍA SELECCIONADA (solo en modo NUEVO) ───────────────────
+    // 
+    //  IMPORTANTE: Este evento solo debe calcular surtimiento sugerido cuando
+    //  estamos creando un inventario nuevo. En modo edición los datos ya vienen
+    //  cargados desde la BD y no queremos sobreescribirlos.
+    //
     document.addEventListener('lecheriaSeleccionada', () => {
+        // Si el objeto Estado existe y estamos en modo edición → salir
+        if (typeof Estado !== 'undefined' && Estado.modo === 'edicion') return;
+
         const lecheria = document.getElementById('inputLecheria').value.trim();
         const menores  = parseInt(document.getElementById('campoMenores').value) || 0;
         const mayores  = parseInt(document.getElementById('campoMayores').value) || 0;
@@ -350,8 +361,16 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 mostrarNotificacion(data.mensaje, 'error');
             }
+
+            // Restaurar placeholders
+            surtCajas.placeholder  = '0';
+            surtLitros.placeholder = '0';
         })
-        .catch(() => mostrarNotificacion('Error de conexión con el servidor.', 'error'));
+        .catch(() => {
+            mostrarNotificacion('Error de conexión con el servidor.', 'error');
+            surtCajas.placeholder  = '0';
+            surtLitros.placeholder = '0';
+        });
     });
 
     // ─── BLOQUEO DE TECLADO ───────────────────────────────────────────────────
@@ -369,126 +388,4 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
         });
     });
-
-    // ─── GUARDAR / GENERAR PDF ────────────────────────────────────────────────
-
-    const btnGenerarPDF = document.getElementById('btnGenerarPDF');
-    if (btnGenerarPDF) {
-        btnGenerarPDF.addEventListener('click', async () => {
-            if (!document.getElementById('inputLecheria').value) {
-                mostrarNotificacion('Debe seleccionar un punto de venta primero.', 'error');
-                return;
-            }
-
-            const datosFormulario = {
-                fecha:        document.querySelector('input[name="fecha"]').value,
-                mes_periodo:  document.getElementById('mes_periodo').value,
-                anio_periodo: document.getElementById('anio_periodo').value,
-                lecheria:     document.getElementById('inputLecheria').value,
-                tienda:       document.getElementById('campoTienda').value,
-                almacen:      document.getElementById('campoAlmacen').value,
-                municipio:    document.getElementById('campoMunicipio').value,
-                comunidad:    document.getElementById('campoComunidad').value,
-
-                inv_ini_caja:   invCaja.value,   inv_ini_sobres:  invSobres.value,  inv_ini_litros:  invLitros.value,
-                abasto_caja:    abastoCaja.value, abasto_sobres:   abastoSobres.value, abasto_litros: abastoLitros.value,
-                venta_caja:     ventaCaja.value,  venta_sobres:    ventaSobres.value,  venta_litros:  ventaLitros.value,
-                reg_caja:       regCaja.value,    reg_sobres:      regSobres.value,    reg_litros:    regLitros.value,
-                dif_caja:       difCaja.value,    dif_sobres:      difSobres.value,    dif_litros:    difLitros.value,
-                fin_caja:       finCaja.value,    fin_sobres:      finSobres.value,    fin_litros:    finLitros.value,
-
-                venta_igual:       document.querySelector('input[name="venta_igual"]:checked')?.value || 'Si',
-                causa_desc:        document.querySelector('input[name="causa_descripcion"]').value,
-                causa_a:           document.querySelector('input[name="causa_a"]').checked,
-                causa_b:           document.querySelector('input[name="causa_b"]').checked,
-                causa_c:           document.querySelector('input[name="causa_c"]').checked,
-                causa_d:           document.querySelector('input[name="causa_d_texto"]').value,
-                venta_no_incluida: document.querySelector('input[name="venta_no_incluida"]:checked')?.value || 'No',
-                motivo_no_incluida:document.querySelector('input[name="motivo_venta_no_incluida"]').value,
-
-                surt_fecha:    document.getElementById('surt_fecha').value,
-                surt_cajas:    surtCajas.value,
-                surt_litros:   surtLitros.value,
-                surt_factura:  document.getElementById('surt_factura').value,
-                surt_caducidad:document.getElementById('surt_caducidad').value,
-
-                falta_surt:       document.querySelector('input[name="falta_surtimiento"]:checked')?.value || 'No',
-                causa_falta_desc: document.querySelector('input[name="causa_falta_descripcion"]').value,
-                causa_falta_a:    document.querySelector('input[name="causa_falta_a"]').checked,
-                causa_falta_b:    document.querySelector('input[name="causa_falta_b"]').checked,
-                causa_falta_c:    document.querySelector('input[name="causa_falta_c_texto"]').value,
-
-                hogares:  document.getElementById('campoHogares').value,
-                menores:  document.getElementById('campoMenores').value,
-                mayores:  document.getElementById('campoMayores').value,
-                dotacion: document.getElementById('campoDotacion').value,
-
-                prob_a: document.querySelector('input[name="prob_a"]').checked,
-                prob_b: document.querySelector('input[name="prob_b"]').checked,
-                prob_c: document.querySelector('input[name="prob_c"]').checked,
-                prob_d: document.querySelector('input[name="prob_d_texto"]').value,
-
-                continuar:   document.querySelector('input[name="continuar_venta"]:checked')?.value || 'Si',
-                alt_general: document.querySelector('input[name="alternativa_general"]').value,
-                alt_a:       document.querySelector('input[name="alt_a"]').checked,
-                alt_b:       document.querySelector('input[name="alt_b"]').checked,
-                alt_c:       document.querySelector('input[name="alt_c"]').checked,
-                alt_d:       document.querySelector('input[name="alt_d_texto"]').value,
-
-                usuario:            document.getElementById('inputUsuarioOculto').value,
-                confirmado_periodo: false
-            };
-
-            btnGenerarPDF.classList.add('is-loading');
-
-            const intentarGuardar = async (datos) => {
-                const res     = await fetch('guardar_inventario.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datos)
-                });
-                const resultado = await res.json();
-
-                if (resultado.status === 'requiere_confirmacion') {
-                    const seguro = await mostrarConfirmacionMD3(resultado.mensaje);
-                    if (seguro) {
-                        datos.confirmado_periodo = true;
-                        return await intentarGuardar(datos);
-                    } else {
-                        throw new Error('Operación cancelada. Registra primero el mes anterior.');
-                    }
-                }
-
-                if (resultado.status !== 'success') {
-                    throw new Error(resultado.mensaje || 'Error al guardar en base de datos');
-                }
-                return true;
-            };
-
-            try {
-                await intentarGuardar(datosFormulario);
-                mostrarNotificacion('Datos guardados en la base de datos.', 'info');
-
-                const resPDF = await fetch('generar_pdf.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datosFormulario)
-                });
-
-                if (!resPDF.ok) throw new Error('Error en el servidor al generar el PDF');
-
-                const blob = await resPDF.blob();
-                const url  = window.URL.createObjectURL(blob);
-                window.open(url, '_blank');
-                mostrarNotificacion('¡PDF generado exitosamente!', 'info');
-                setTimeout(() => window.URL.revokeObjectURL(url), 1000);
-
-            } catch (error) {
-                console.error(error);
-                mostrarNotificacion(error.message || 'Ocurrió un error en el proceso.', 'error');
-            } finally {
-                btnGenerarPDF.classList.remove('is-loading');
-            }
-        });
-    }
 });

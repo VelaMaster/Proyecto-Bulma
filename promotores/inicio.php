@@ -8,7 +8,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -69,10 +68,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                         <md-menu-item href="generarinventarioMensual.php">
                             <div slot="headline">Generar</div>
                             <md-icon slot="start">add_box</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="editarinventarioMensual.php">
-                            <div slot="headline">Editar</div>
-                            <md-icon slot="start">edit</md-icon>
                         </md-menu-item>
                         <md-menu-item href="consultarinventarioMensual.php">
                             <div slot="headline">Consultar</div>
@@ -143,12 +138,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     <div slot="headline">Generar</div>
                     <md-icon slot="start">add_box</md-icon>
                 </md-list-item>
-
-                <md-list-item href="editarinventarioMensual.php" type="button">
-                    <div slot="headline">Editar</div>
-                    <md-icon slot="start">edit</md-icon>
-                </md-list-item>
-
                 <md-list-item href="consultarinventarioMensual.php" type="button">
                     <div slot="headline">Consultar</div>
                     <md-icon slot="start">search</md-icon>
@@ -209,7 +198,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 16px; margin-bottom: 0;">
             Accesos Rápidos</h3>
         <div class="md3-dashboard-grid">
-            <a href="editarinventarioMensual.php" class="md3-action-card">
+            <a href="generarinventarioMensual.php" class="md3-action-card">
                 <div class="action-card-icon"
                     style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
                     <md-icon>edit</md-icon>
@@ -263,13 +252,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             
             <div class="md3-dialog-actions">
                 <md-filled-button id="btnIrGenerar">
-                    <md-icon slot="icon">add_box</md-icon> Generar Inventario
-                </md-filled-button>
-                
-                <md-filled-tonal-button id="btnIrEditar">
-                    <md-icon slot="icon">edit</md-icon> Editar Inventario
-                </md-filled-tonal-button>
-                
+                    <md-icon slot="icon">add_box</md-icon> Generar/Consultar inventario
+                </md-filled-button>                
                 <md-outlined-button id="btnIrConsultar">
                     <md-icon slot="icon">search</md-icon> Consultar Inventario
                 </md-outlined-button>

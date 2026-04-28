@@ -23,7 +23,6 @@ class InventarioRepositorio
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    // ACTUALIZADO: Ahora recibe mes y año directamente
     private function existeInventarioMes($lecheria, $mes, $anio)
     {
         if (empty($lecheria)) return false;
@@ -38,37 +37,34 @@ class InventarioRepositorio
         return $stmt->fetch() !== false;
     }
 
-public function guardar($datos, $usuario)
+    public function guardar($datos, $usuario)
     {
         $lecheria_limpia = $datos['lecheria'] ?? 'SIN_CLAVE';
         
-        // CORRECCIÓN: Si por alguna razón no llega el dato del combo, lo saca de la fecha
         $anio_actual = !empty($datos['anio_periodo']) ? (int)$datos['anio_periodo'] : (int)date('Y', strtotime($datos['fecha']));
-        $mes_actual = !empty($datos['mes_periodo']) ? (int)$datos['mes_periodo'] : (int)date('m', strtotime($datos['fecha']));
+        $mes_actual  = !empty($datos['mes_periodo'])  ? (int)$datos['mes_periodo']  : (int)date('m', strtotime($datos['fecha']));
 
-        // 1. Verificamos si ya existe el inventario para este periodo (esto bloquea duplicados)
+        // Bloquear duplicados — el JS ya debería haber detectado esto antes de llegar aquí,
+        // pero lo dejamos como red de seguridad en el backend
         if ($this->existeInventarioMes($lecheria_limpia, $mes_actual, $anio_actual)) {
-            $mensaje = "Ya existe un inventario para esta lechería en este periodo. " .
-                "<a href='editarinventarioMensual.php' style='color: #fff; text-decoration: underline; font-weight: bold;'>Haz clic aquí para ir a editarlo.</a>";
-            throw new Exception($mensaje);
+            throw new Exception("Ya existe un inventario para esta lechería en este periodo. Recarga la página para activar el modo edición.");
         }
 
-        // 2. Lógica para verificar el mes anterior
-        $mes_anterior = $mes_actual - 1;
+        // Verificar mes anterior
+        $mes_anterior  = $mes_actual - 1;
         $anio_anterior = $anio_actual;
-        
-        if ($mes_anterior <= 0) { // Si es enero, brinca a diciembre del año pasado
-            $mes_anterior = 12;
+        if ($mes_anterior <= 0) {
+            $mes_anterior  = 12;
             $anio_anterior = $anio_actual - 1;
         }
 
-        // 3. Aviso de que falta el mes anterior (SI LE DA ACEPTAR, SÍ LO DEJA GUARDAR)
         if (!$this->existeInventarioMes($lecheria_limpia, $mes_anterior, $anio_anterior) && empty($datos['confirmado_periodo'])) {
-            $nombres_meses = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+            $nombres_meses = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+                              "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
             $nombre_mes_ant = $nombres_meses[$mes_anterior] ?? '';
             
             return [
-                'status' => 'requiere_confirmacion',
+                'status'  => 'requiere_confirmacion',
                 'mensaje' => "Oye, te falta registrar el inventario de $nombre_mes_ant del $anio_anterior.\n\n¿Estás seguro de que quieres guardar este mes aunque falte el anterior?"
             ];
         }
@@ -85,7 +81,6 @@ public function guardar($datos, $usuario)
 
         $pdf_nombre = "Inventario_{$lecheria_limpia}_{$anio_actual}_{$mes_actual}.pdf";
 
-        // 3. Añadimos MES_PERIODO y ANIO_PERIODO al insert
         $sql = "INSERT INTO INVENTARIOS_MENSUALES (
             FECHA, CLAVE_LECHERIA, CLAVE_TIENDA, ALMACEN, MUNICIPIO, COMUNIDAD,
             SURT_FECHA, SURT_CAJAS, SURT_LITROS, SURT_FACTURA, SURT_CADUCIDAD,
@@ -104,13 +99,11 @@ public function guardar($datos, $usuario)
             " . $q($datos['almacen'], 100) . ", 
             " . $q($datos['municipio'], 100) . ", 
             " . $q($datos['comunidad'], 100) . ", 
-
             " . $q($datos['surt_fecha'], 10) . ", 
             " . $n($datos['surt_cajas']) . ", 
             " . $n($datos['surt_litros']) . ", 
             " . $q($datos['surt_factura'], 60) . ", 
             " . $q($datos['surt_caducidad'], 10) . ", 
-
             " . $n($datos['inv_ini_caja']) . ", " . $n($datos['inv_ini_sobres']) . ", " . $n($datos['inv_ini_litros']) . ",
             " . $n($datos['abasto_caja']) . ", " . $n($datos['abasto_sobres']) . ", " . $n($datos['abasto_litros']) . ",
             " . $n($datos['venta_caja']) . ", " . $n($datos['venta_sobres']) . ", " . $n($datos['venta_litros']) . ",
@@ -141,7 +134,6 @@ public function guardar($datos, $usuario)
         }
     }
 
-    // ACTUALIZADO: Ya busca por MES y ANIO directamente
     public function buscarPorLecheria($clave, $mes = '', $anio = '')
     {
         $clave_limpia = str_replace("'", "''", $clave);
