@@ -1,6 +1,5 @@
 <?php
 session_start();
-// Validación de seguridad para Supervisor
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
     header("Location: ../iniciosesionSupervisor.php");
     exit();
@@ -9,7 +8,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -19,13 +17,78 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <link rel="stylesheet" href="../main_md3.css">
     <link rel="stylesheet" href="../estilos/iniciocards.css">
     <style>
-        /* Estilos específicos para el Hero de Supervisor */
         .md3-hero-card {
-            background-color: var(--md-sys-color-primary-container, #2b2b2b);
-            color: var(--md-sys-color-on-primary-container);
+            overflow: hidden;
+            isolation: isolate;
+            position: relative;
+            background-color: var(--md-sys-color-surface-container-low, #1e1e1e);
             border-radius: 28px;
             padding: 32px;
             margin-bottom: 24px;
+        }
+        .md3-hero-card>*:not(canvas) {
+            position: relative;
+            z-index: 2;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        }
+        .md3-hero-card canvas {
+            will-change: transform, opacity;
+            z-index: 1;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+        }
+
+        /* Grid específico para Promotores del Supervisor */
+        .promotores-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .promotor-card {
+            background: var(--md-sys-color-surface-container);
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        .promotor-card:hover {
+            background: var(--md-sys-color-surface-container-high);
+        }
+
+        .promotor-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .promotor-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: var(--md-sys-color-primary-container);
+            color: var(--md-sys-color-on-primary-container);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .promotor-info h4 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--md-sys-color-on-surface);
+        }
+
+        .promotor-info p {
+            margin: 0;
+            font-size: 0.9rem;
+            color: var(--md-sys-color-on-surface-variant);
         }
     </style>
     <script type="importmap">
@@ -37,8 +100,12 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 <body>
     <header class="md3-top-app-bar">
         <div class="app-bar-start">
-            <md-icon-button onclick="toggleDrawer()"><md-icon>menu</md-icon></md-icon-button>
-            <div class="app-brand"><span>Liconsa - Supervisión</span></div>
+            <md-icon-button class="mobile-menu-btn" onclick="toggleDrawer()">
+                <md-icon>menu</md-icon>
+            </md-icon-button>
+            <div class="app-brand">
+                <span>Liconsa - Supervisión</span>
+            </div>
         </div>
 
         <div class="app-bar-end">
@@ -80,44 +147,64 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
     </header>
 
+    <div id="drawer-scrim" class="md3-drawer-scrim" onclick="toggleDrawer()"></div>
+
     <aside class="md3-drawer" id="mobile-drawer">
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px;">
-            <span style="font-size: 1.25rem; font-weight: 500;">Menú Supervisor</span>
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px 24px;">
+            <span style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface);">Menú Supervisor</span>
             <md-icon-button onclick="toggleDrawer()"><md-icon>close</md-icon></md-icon-button>
         </div>
-        <md-list>
-            <md-list-item href="validarInventarios.php">
-                <div slot="headline">Validar Inventarios</div>
-                <md-icon slot="start">fact_check</md-icon>
-            </md-list-item>
-            <md-list-item href="listaPromotores.php">
-                <div slot="headline">Mis Promotores</div>
-                <md-icon slot="start">group</md-icon>
-            </md-list-item>
-        </md-list>
+        <div style="overflow-y: auto; flex-grow: 1;">
+            <md-list style="background: transparent;">
+                <md-divider style="margin: 8px 0;"></md-divider>
+                
+                <div class="drawer-section-title">Revisión de Inventarios</div>
+                <md-list-item href="validarInventarios.php" type="button">
+                    <div slot="headline">Validar Pendientes</div>
+                    <md-icon slot="start">fact_check</md-icon>
+                </md-list-item>
+                <md-list-item href="historialGlobal.php" type="button">
+                    <div slot="headline">Historial General</div>
+                    <md-icon slot="start">history</md-icon>
+                </md-list-item>
+
+                <md-divider style="margin: 8px 0;"></md-divider>
+
+                <div class="drawer-section-title">Promotores</div>
+                <md-list-item href="listaPromotores.php" type="button">
+                    <div slot="headline">Ver Mis Promotores</div>
+                    <md-icon slot="start">group</md-icon>
+                </md-list-item>
+            </md-list>
+        </div>
     </aside>
 
     <main class="panel-content">
         <div class="md3-hero-card">
-            <h2 style="font-size: 2.25rem; margin: 0;">Panel de Supervisión</h2>
-            <p style="font-size: 1.1rem; opacity: 0.9; margin: 8px 0 20px;">
+            <canvas id="hero-canvas"></canvas>
+            <h2 style="font-size: 2.25rem; font-weight: 500; margin: 0; letter-spacing: -0.5px;">Panel de Supervisión</h2>
+            <p style="font-size: 1.1rem; margin: 8px 0 20px; max-width: 600px; line-height: 1.5; opacity: 0.9;">
                 Bienvenido, <strong><?php echo htmlspecialchars($nombre_usuario); ?></strong>. 
-                Tienes reportes pendientes de validación para el ciclo actual.
+                Aquí podrás gestionar a tus promotores asignados y validar los cierres de inventario de sus respectivas lecherías.
             </p>
-            <md-filled-button onclick="location.href='validarInventarios.php'">
-                <md-icon slot="icon">visibility</md-icon>
-                Revisar Pendientes
-            </md-filled-button>
+            <div style="margin-top: 12px;">
+                <md-filled-button onclick="location.href='validarInventarios.php'" style="--md-filled-button-container-shape: 16px; height: 48px;">
+                    <md-icon slot="icon">fact_check</md-icon>
+                    Validar Cierres Pendientes
+                </md-filled-button>
+            </div>
         </div>
 
-        <h3 style="margin-bottom: 16px;">Acciones de Control</h3>
+        <h3 style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 16px; margin-bottom: 0;">
+            Acciones Rápidas
+        </h3>
         <div class="md3-dashboard-grid">
             <a href="estadisticas.php" class="md3-action-card">
-                <div class="action-card-icon" style="background: var(--md-sys-color-secondary-container);">
+                <div class="action-card-icon" style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
                     <md-icon>monitoring</md-icon>
                 </div>
-                <h4 class="action-card-title">Estadísticas</h4>
-                <p class="action-card-desc">Análisis de distribución y consumo por zona.</p>
+                <h4 class="action-card-title">Estadísticas de Zona</h4>
+                <p class="action-card-desc">Revisa el rendimiento, distribución y consumo de las lecherías a tu cargo.</p>
             </a>
 
             <a href="validarInventarios.php" class="md3-action-card">
@@ -125,13 +212,63 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     <md-icon>assignment_turned_in</md-icon>
                 </div>
                 <h4 class="action-card-title">Validar Cierres</h4>
-                <p class="action-card-desc">Autoriza los inventarios enviados por los promotores.</p>
+                <p class="action-card-desc">Autoriza los inventarios mensuales enviados por tus promotores.</p>
             </a>
+        </div>
+
+        <h3 style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 24px; margin-bottom: 16px;">
+            Mis Promotores Asignados
+        </h3>
+        <div class="promotores-grid" id="promotoresGrid">
+            <div class="promotor-card is-skeleton">
+                <div class="promotor-header">
+                    <div class="sk-avatar skeleton" style="width: 48px; height: 48px; border-radius: 50%;"></div>
+                    <div style="flex-grow: 1;">
+                        <div class="sk-line skeleton" style="width: 70%; margin-bottom: 8px;"></div>
+                        <div class="sk-line skeleton" style="width: 40%;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="promotor-card is-skeleton">
+                <div class="promotor-header">
+                    <div class="sk-avatar skeleton" style="width: 48px; height: 48px; border-radius: 50%;"></div>
+                    <div style="flex-grow: 1;">
+                        <div class="sk-line skeleton" style="width: 60%; margin-bottom: 8px;"></div>
+                        <div class="sk-line skeleton" style="width: 50%;"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
 
+    <div class="md3-dialog-backdrop" id="modalOpcionesPromotor">
+        <div class="md3-dialog-surface">
+            <div class="md3-dialog-header">
+                <div>
+                    <h3 class="md3-dialog-title" id="modalPromotorTitulo">Promotor: [Nombre]</h3>
+                    <p class="md3-dialog-subtitle">Gestión de lecherías asignadas</p>
+                </div>
+                <md-icon-button id="btnCerrarModalPromotor">
+                    <md-icon>close</md-icon>
+                </md-icon-button>
+            </div>
+            
+            <div class="md3-dialog-content" style="padding: 0 24px;">
+                <p style="color: var(--md-sys-color-on-surface-variant); margin-bottom: 12px;">Lecherías a cargo:</p>
+                <md-list id="listaLecheriasModal" style="background: var(--md-sys-color-surface-container-low); border-radius: 12px; max-height: 200px; overflow-y: auto;">
+                    </md-list>
+            </div>
+
+            <div class="md3-dialog-actions" style="margin-top: 16px;">
+                <md-outlined-button id="btnIrValidarPromotor">
+                    <md-icon slot="icon">fact_check</md-icon> Validar sus inventarios
+                </md-outlined-button>
+            </div>
+        </div>
+    </div>
+
     <script src="../js/temas_md3.js"></script>
-    <script>
+    <script src="../js/hero_physics.js"></script> <script src="../js/inicio_supervisor.js"></script> <script>
         function abrirMenu(id) {
             document.querySelectorAll('md-menu').forEach(menu => {
                 if (menu.id !== id) menu.open = false;
@@ -141,8 +278,17 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         }
 
         function toggleDrawer() {
-            document.getElementById('mobile-drawer').classList.toggle('open');
+            const drawer = document.getElementById('mobile-drawer');
+            const scrim = document.getElementById('drawer-scrim');
+            if(drawer) drawer.classList.toggle('open');
+            if(scrim) scrim.classList.toggle('open');
         }
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('md-menu') && !event.target.closest('md-text-button')) {
+                document.querySelectorAll('md-menu').forEach(menu => menu.open = false);
+            }
+        });
     </script>
 </body>
 </html>
