@@ -252,7 +252,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             
             <div class="md3-dialog-actions">
                 <md-filled-button id="btnIrGenerar">
-                    <md-icon slot="icon">add_box</md-icon> Generar/Consultar inventario
+                    <md-icon slot="icon">add_box</md-icon> Generar/Editar inventario
                 </md-filled-button>                
                 <md-outlined-button id="btnIrConsultar">
                     <md-icon slot="icon">search</md-icon> Consultar Inventario

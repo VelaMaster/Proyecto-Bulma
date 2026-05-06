@@ -11,7 +11,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Control - Supervisor</title>
+    <title>Inicio - Supervisor</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="../main_md3.css">
@@ -38,12 +38,15 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             top: 0; left: 0; width: 100%; height: 100%;
         }
 
-        /* Grid específico para Promotores del Supervisor */
+/* Grid específico para Promotores del Supervisor */
         .promotores-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            /* 280px permite que quepan 3 columnas perfectamente en pantallas normales */
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
             gap: 16px;
             margin-top: 16px;
+            align-items: start;
+            grid-auto-flow: dense; /* ✨ LA MAGIA QUE RELLENA LOS HUECOS ESTILO TETRIS ✨ */
         }
 
         .promotor-card {
@@ -52,21 +55,103 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             padding: 16px;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            transition: background 0.2s;
+            /* Animación MD3 ultra suave con curva cubic-bezier */
+            transition: all 0.5s cubic-bezier(0.2, 0, 0, 1); 
             cursor: pointer;
+            border: 1px solid transparent;
+            overflow: hidden;
+            position: relative;
         }
 
         .promotor-card:hover {
             background: var(--md-sys-color-surface-container-high);
+            transform: translateY(-2px); /* Ligero levante al pasar el cursor */
         }
 
-        .promotor-header {
+        /* --- ESTADO EXPANDIDO --- */
+        .promotor-card.expanded {
+            grid-column: 1 / -1; /* Ocupa toda la fila */
+            background: var(--md-sys-color-surface-container-low); /* Contraste perfecto para tema oscuro */
+            border-color: var(--md-sys-color-outline-variant);
+            border-radius: 28px; /* Bordes más redondeados al abrirse */
+            cursor: default;
+            transform: translateY(0); /* Quita el efecto hover */
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2); /* Sombra de elevación MD3 */
+        }
+
+        .card-main-content {
             display: flex;
-            align-items: center;
-            gap: 16px;
+            flex-direction: column;
+            width: 100%;
         }
 
+        /* --- ANIMACIÓN TIPO ACORDEÓN PERFECTA --- */
+        .detalles-wrapper {
+            display: grid;
+            grid-template-rows: 0fr; /* Empieza colapsado */
+            transition: grid-template-rows 0.5s cubic-bezier(0.2, 0, 0, 1);
+        }
+        
+        .detalles-inner {
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            transform: translateY(-10px); /* Efecto de caída suave */
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .promotor-card.expanded .detalles-wrapper {
+            grid-template-rows: 1fr; /* Expande suavemente */
+        }
+
+        .promotor-card.expanded .detalles-inner {
+            opacity: 1;
+            transform: translateY(0);
+            padding-top: 20px;
+        }
+
+        /* --- DISEÑO A 2 COLUMNAS EN PC CUANDO ESTÁ ABIERTO --- */
+        @media (min-width: 768px) {
+            .promotor-card.expanded .card-main-content {
+                flex-direction: row;
+                gap: 32px;
+                align-items: stretch;
+            }
+            
+            .promotor-card.expanded .promotor-header {
+                flex: 0 0 220px;
+                border-right: 1px solid var(--md-sys-color-outline-variant);
+                padding-right: 24px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
+
+            .promotor-card.expanded .promotor-avatar {
+                width: 80px;
+                height: 80px;
+                font-size: 2.5rem;
+                margin-bottom: 16px;
+                background-color: var(--md-sys-color-primary);
+                color: var(--md-sys-color-on-primary);
+            }
+
+            .promotor-card.expanded .detalles-wrapper {
+                flex: 1;
+            }
+
+            .lista-interna-lecherias {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+                gap: 12px;
+            }
+        }
+
+/* Clases base del avatar y texto de la tarjeta cerrada */
         .promotor-avatar {
             width: 48px;
             height: 48px;
@@ -77,6 +162,17 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
+            transition: all 0.4s ease;
+            
+            /* LA MAGIA ANTI-APLASTAMIENTO */
+            flex-shrink: 0; 
+        }
+
+        .promotor-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: all 0.4s ease;
         }
 
         .promotor-info h4 {
@@ -141,7 +237,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 </div>
             </div>
 
-            <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left: 16px;">
+            <md-filled-tonal-button href="../cerrar_sesionsupervisor.php" style="margin-left: 16px;">
                 <md-icon slot="icon">logout</md-icon> Salir
             </md-filled-tonal-button>
         </div>
@@ -241,7 +337,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
     </main>
 
-    <div class="md3-dialog-backdrop" id="modalOpcionesPromotor">
+<div class="md3-dialog-backdrop" id="modalOpcionesPromotor">
         <div class="md3-dialog-surface">
             <div class="md3-dialog-header">
                 <div>
