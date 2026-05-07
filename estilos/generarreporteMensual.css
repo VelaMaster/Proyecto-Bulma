@@ -226,3 +226,25 @@
     .reporte-table { font-size: 0.7rem; }
     .cell-input { font-size: 0.7rem; padding: 4px 2px; }
 }
+/* ── Columna PRECIO ── */
+.col-precio {
+    min-width: 56px;
+    width: 56px;
+}
+.precio-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+.precio-pill.precio-450 {
+    background: color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent);
+    color: var(--md-sys-color-primary);
+}
+.precio-pill.precio-650 {
+    background: color-mix(in srgb, var(--md-sys-color-tertiary) 22%, transparent);
+    color: var(--md-sys-color-tertiary);
+}

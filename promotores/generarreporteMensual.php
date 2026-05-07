@@ -7,7 +7,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
 require_once '../Database.php';
 $pdo = Database::getInstance();
 $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
-$precio_litro = "4.50";
+
 $sql_resumen = "SELECT L.TIPO_PUNTO_VENTA, COUNT(*) as TOTAL
                 FROM LECHERIA L
                 INNER JOIN USUARIOS_INVENTARIOS U ON L.PROMOTOR = U.CLAVE_ROL
@@ -79,12 +79,8 @@ foreach ($conteo as $fila) {
                     </md-text-button>
                     <md-menu id="menu-inv" anchor="btn-inv">
                         <md-menu-item href="generarinventarioMensual.php">
-                            <div slot="headline">Generar</div>
-                            <md-icon slot="start">add_box</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="editarinventarioMensual.php">
-                            <div slot="headline">Editar</div>
-                            <md-icon slot="start">edit</md-icon>
+                            <div slot="headline">Generar / Editar</div>
+                            <md-icon slot="start">edit_document</md-icon>
                         </md-menu-item>
                         <md-menu-item href="consultarinventarioMensual.php">
                             <div slot="headline">Consultar</div>
@@ -93,43 +89,15 @@ foreach ($conteo as $fila) {
                     </md-menu>
                 </div>
 
-                <div style="position: relative;">
-                    <md-text-button id="btn-rep" onclick="abrirMenu('menu-rep')">
-                        Reporte lecherías
-                        <md-icon slot="icon">arrow_drop_down</md-icon>
-                    </md-text-button>
-                    <md-menu id="menu-rep" anchor="btn-rep">
-                        <md-menu-item href="generarreporteMensual.php">
-                            <div slot="headline">Generar</div>
-                            <md-icon slot="start">receipt_long</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="#">
-                            <div slot="headline">Consultar</div>
-                            <md-icon slot="start">find_in_page</md-icon>
-                        </md-menu-item>
-                    </md-menu>
-                </div>
+                <md-text-button href="generarreporteMensual.php">
+                    <md-icon slot="icon">receipt_long</md-icon>
+                    Reporte mensual
+                </md-text-button>
 
-                <div style="position: relative;">
-                    <md-text-button id="btn-req" onclick="abrirMenu('menu-req')">
-                        Requerimiento
-                        <md-icon slot="icon">arrow_drop_down</md-icon>
-                    </md-text-button>
-                    <md-menu id="menu-req" anchor="btn-req">
-                        <md-menu-item href="requerimiento.php">
-                            <div slot="headline">Generar</div>
-                            <md-icon slot="start">inventory</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="#">
-                            <div slot="headline">Consultar</div>
-                            <md-icon slot="start">manage_search</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="#">
-                            <div slot="headline">Enviar reportes</div>
-                            <md-icon slot="start">send</md-icon>
-                        </md-menu-item>
-                    </md-menu>
-                </div>
+                <md-text-button href="requerimiento.php">
+                    <md-icon slot="icon">inventory</md-icon>
+                    Requerimiento
+                </md-text-button>
             </div>
 
             <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left: 16px;">
@@ -152,15 +120,15 @@ foreach ($conteo as $fila) {
                         Reporte Mensual de la Operación en Lecherías
                     </h2>
                     <p style="margin:4px 0 0; font-size:0.9rem; color:var(--md-sys-color-on-surface-variant);">
-                        Con venta de leche en polvo de
-                        <strong id="precioDisplay"
-                            style="color:var(--md-sys-color-primary); font-size:1.1rem;">$<?= htmlspecialchars($precio_litro) ?>/LITRO</strong>
+                        El sistema agrupa tus lecherías por <strong style="color:var(--md-sys-color-primary);">almacén</strong>
+                        y mezcla los precios <strong style="color:var(--md-sys-color-primary);">$4.50</strong> y
+                        <strong style="color:var(--md-sys-color-primary);">$6.50</strong> en una sola tabla.
                     </p>
                 </div>
             </div>
         </div>
         <div class="md3-card">
-            <form id="formReporte" method="POST" action="guardarReporteMensual.php">
+            <form id="formReporte" method="POST" onsubmit="return false;">
                 <h3 style="margin: 0 0 16px; font-size:1rem; font-weight:500; color:var(--md-sys-color-on-surface);">
                     <md-icon
                         style="vertical-align:middle; margin-right:6px; color:var(--md-sys-color-primary);">info</md-icon>
@@ -173,153 +141,35 @@ foreach ($conteo as $fila) {
                         <md-select-option value="">
                             <div slot="headline">Selecciona...</div>
                         </md-select-option>
-                        <md-select-option value="1">
-                            <div slot="headline">Enero</div>
-                        </md-select-option>
-                        <md-select-option value="2">
-                            <div slot="headline">Febrero</div>
-                        </md-select-option>
-                        <md-select-option value="3">
-                            <div slot="headline">Marzo</div>
-                        </md-select-option>
-                        <md-select-option value="4">
-                            <div slot="headline">Abril</div>
-                        </md-select-option>
-                        <md-select-option value="5">
-                            <div slot="headline">Mayo</div>
-                        </md-select-option>
-                        <md-select-option value="6">
-                            <div slot="headline">Junio</div>
-                        </md-select-option>
-                        <md-select-option value="7">
-                            <div slot="headline">Julio</div>
-                        </md-select-option>
-                        <md-select-option value="8">
-                            <div slot="headline">Agosto</div>
-                        </md-select-option>
-                        <md-select-option value="9">
-                            <div slot="headline">Septiembre</div>
-                        </md-select-option>
-                        <md-select-option value="10">
-                            <div slot="headline">Octubre</div>
-                        </md-select-option>
-                        <md-select-option value="11">
-                            <div slot="headline">Noviembre</div>
-                        </md-select-option>
-                        <md-select-option value="12">
-                            <div slot="headline">Diciembre</div>
-                        </md-select-option>
+                        <md-select-option value="1"><div slot="headline">Enero</div></md-select-option>
+                        <md-select-option value="2"><div slot="headline">Febrero</div></md-select-option>
+                        <md-select-option value="3"><div slot="headline">Marzo</div></md-select-option>
+                        <md-select-option value="4"><div slot="headline">Abril</div></md-select-option>
+                        <md-select-option value="5"><div slot="headline">Mayo</div></md-select-option>
+                        <md-select-option value="6"><div slot="headline">Junio</div></md-select-option>
+                        <md-select-option value="7"><div slot="headline">Julio</div></md-select-option>
+                        <md-select-option value="8"><div slot="headline">Agosto</div></md-select-option>
+                        <md-select-option value="9"><div slot="headline">Septiembre</div></md-select-option>
+                        <md-select-option value="10"><div slot="headline">Octubre</div></md-select-option>
+                        <md-select-option value="11"><div slot="headline">Noviembre</div></md-select-option>
+                        <md-select-option value="12"><div slot="headline">Diciembre</div></md-select-option>
                     </md-outlined-select>
 
                     <md-outlined-text-field label="Año del Reporte" id="inputAnioReporte" name="anio_reporte"
-                        type="number" value="<?= date('Y') ?>" style="width:100%;"></md-outlined-text-field>
-                    <md-outlined-select label="Tipo de Venta (Precio)" id="selectTipoVenta" name="tipo_venta"
-                        style="width:100%;">
-                        <md-select-option value="0" selected>
-                            <div slot="headline">$4.50 / Litro</div>
-                        </md-select-option>
-                        <md-select-option value="1">
-                            <div slot="headline">$6.50 / Litro</div>
-                        </md-select-option>
-                    </md-outlined-select>
-
-                    <md-outlined-select label="Almacén Alimentación" id="selectAlmacen" name="almacen"
-                        style="width:100%;">
-                        <md-select-option value="">Cargando almacenes...</md-select-option>
-                    </md-outlined-select>
+                        type="number" value="<?= date('Y') ?>" readonly
+                        style="width:100%;"></md-outlined-text-field>
 
                     <md-outlined-text-field label="Periodo — Fecha inicio" id="periodo_inicio" name="periodo_inicio"
-                        type="date" style="width:100%;"></md-outlined-text-field>
+                        type="date" style="width:100%;" supporting-text="Día 28 del mes anterior (editable)"></md-outlined-text-field>
                     <md-outlined-text-field label="Periodo — Fecha fin" id="periodo_fin" name="periodo_fin" type="date"
-                        style="width:100%;"></md-outlined-text-field>
+                        style="width:100%;" supporting-text="Día 25 del mes del reporte (editable)"></md-outlined-text-field>
                 </div>
 
-                <div class="reporte-wrapper">
-                    <table class="reporte-table" id="tablaReporte">
-                        <thead>
-                            <tr class="header-main">
-                                <th rowspan="2" class="col-numero">N° PUNTO<br>DE VENTA</th>
-                                <th rowspan="2" class="col-clave">CLAVE<br>DE LA<br>TIENDA</th>
-                                <th colspan="2">INVENTARIO<br>INICIAL</th>
-                                <th rowspan="2">DOTACIÓN<br>RECIBIDA<br>(CAJAS)</th>
-                                <th colspan="2">TOTAL (INV INI<br>+ DOT REC.)</th>
-                                <th colspan="2">DOT. VENDIDA<br>EN EL PERIODO</th>
-                                <th colspan="2">INVENTARIO<br>FINAL</th>
-                                <th colspan="2">SEGÚN REG. DE<br>RETIRO DE VENTAS</th>
-                                <th rowspan="2">No. DE FAM.<br>QUE NO ACUD.</th>
-                                <th colspan="2">SOBRES</th>
-                                <th rowspan="2">No. DE DÍAS<br>DE VENTA</th>
-                                <th rowspan="2">DE LA DOT.<br>MES QUE CORRESP.</th>
-                                <th rowspan="2" class="col-fecha">RECIBIDA<br>FECHA ENTRADA</th>
-                                <th rowspan="2" class="col-fecha">CADUCIDAD<br>LECHE</th>
-                                <th rowspan="2" class="col-obs">OBSERVACIONES</th>
-                            </tr>
-                            <tr class="header-sub">
-                                <th class="col-cajas">CAJAS</th>
-                                <th class="col-sobres">SOB.</th>
-                                <th class="col-cajas">CAJAS</th>
-                                <th class="col-sobres">SOB.</th>
-                                <th class="col-cajas">CAJAS</th>
-                                <th class="col-sobres">SOB.</th>
-                                <th class="col-cajas">CAJAS</th>
-                                <th class="col-sobres">SOB.</th>
-                                <th class="col-cajas">CAJAS</th>
-                                <th class="col-sobres">SOB.</th>
-                                <th class="col-cajas">ROTOS</th>
-                                <th class="col-cajas">FALT.</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaBody">
-                            <?php
-                            for ($i = 0; $i < 17; $i++):
-                                ?>
-                                <tr>
-                                    <td><input type="text" class="cell-input" name="punto_venta[]" disabled></td>
-                                    <td><input type="text" class="cell-input" name="clave_tienda[]" disabled></td>
-
-                                    <td><input type="number" class="cell-input" name="inv_ini_cajas[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="inv_ini_sobres[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="dot_recibida_cajas[]" disabled></td>
-                                    <td class="td-total"><input type="number" class="cell-input" name="total_cajas[]"
-                                            readonly disabled></td>
-                                    <td class="td-total"><input type="number" class="cell-input" name="total_sobres[]"
-                                            readonly disabled></td>
-                                    <td><input type="number" class="cell-input" name="dot_vend_cajas[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="dot_vend_sobres[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="inv_fin_cajas[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="inv_fin_sobres[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="retiro_cajas[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="retiro_sobres[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="familias_no_acud[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="sobres_rotos[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="sobres_falt[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="dias_venta[]" disabled></td>
-
-                                    <td>
-                                        <select class="cell-select" name="mes_corresp[]" disabled>
-                                            <option value=""></option>
-                                            <option value="ENERO">Ene</option>
-                                            <option value="FEBRERO">Feb</option>
-                                            <option value="MARZO">Mar</option>
-                                            <option value="ABRIL">Abr</option>
-                                            <option value="MAYO">May</option>
-                                            <option value="JUNIO">Jun</option>
-                                            <option value="JULIO">Jul</option>
-                                            <option value="AGOSTO">Ago</option>
-                                            <option value="SEPTIEMBRE">Sep</option>
-                                            <option value="OCTUBRE">Oct</option>
-                                            <option value="NOVIEMBRE">Nov</option>
-                                            <option value="DICIEMBRE">Dic</option>
-                                        </select>
-                                    </td>
-<td><input type="date" class="cell-input" name="fecha_entrada[]" disabled></td>
-                                    <td><input type="text" class="cell-input" name="caducidad[]" placeholder="YYYY-MM-DD"
-                                            disabled></td>
-                                    <td><input type="text" class="cell-input" name="observaciones[]" disabled></td>
-                                </tr>
-                            <?php endfor; ?>
-                        </tbody>
-                    </table>
+                <!-- Las tablas se generan automáticamente, una por almacén -->
+                <div id="contenedorTablas" style="margin-top:8px;">
+                    <div style="text-align:center; padding:32px; color:var(--md-sys-color-on-surface-variant);">
+                        Selecciona el mes para cargar tus lecherías agrupadas por almacén.
+                    </div>
                 </div>
 
                 <p class="nota-legal">
@@ -343,11 +193,16 @@ foreach ($conteo as $fila) {
                     </div>
                 </div>
 
-                <div class="action-bar" style="margin-top: 24px;">
-                    <md-filled-button type="submit" id="btnGuardar">
+                <div class="action-bar" style="margin-top: 24px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+                    <md-filled-button type="button" id="btnGuardar">
                         <md-icon slot="icon">save</md-icon>
                         Guardar reporte
                     </md-filled-button>
+
+                    <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-size:0.9rem; color:var(--md-sys-color-on-surface);">
+                        <md-checkbox id="chkGenerarPDF" touch-target="wrapper"></md-checkbox>
+                        Generar PDF al guardar
+                    </label>
                 </div>
             </form>
         </div>

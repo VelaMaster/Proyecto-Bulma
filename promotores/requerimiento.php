@@ -9,7 +9,6 @@ require_once '../Database.php';
 $pdo = Database::getInstance();
 
 $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
-$precio_litro = "4.50"; 
 
 // Resumen rápido de lecherías para este promotor
 $sql_resumen = "SELECT L.TIPO_PUNTO_VENTA, COUNT(*) as TOTAL
@@ -91,12 +90,8 @@ foreach ($conteo as $fila) {
                     </md-text-button>
                     <md-menu id="menu-inv" anchor="btn-inv">
                         <md-menu-item href="generarinventarioMensual.php">
-                            <div slot="headline">Generar</div>
-                            <md-icon slot="start">add_box</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="editarinventarioMensual.php">
-                            <div slot="headline">Editar</div>
-                            <md-icon slot="start">edit</md-icon>
+                            <div slot="headline">Generar / Editar</div>
+                            <md-icon slot="start">edit_document</md-icon>
                         </md-menu-item>
                         <md-menu-item href="consultarinventarioMensual.php">
                             <div slot="headline">Consultar</div>
@@ -105,43 +100,15 @@ foreach ($conteo as $fila) {
                     </md-menu>
                 </div>
 
-                <div style="position: relative;">
-                    <md-text-button id="btn-rep" onclick="abrirMenu('menu-rep')">
-                        Reporte lecherías
-                        <md-icon slot="icon">arrow_drop_down</md-icon>
-                    </md-text-button>
-                    <md-menu id="menu-rep" anchor="btn-rep">
-                        <md-menu-item href="generarreporteMensual.php">
-                            <div slot="headline">Generar</div>
-                            <md-icon slot="start">receipt_long</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="#">
-                            <div slot="headline">Consultar</div>
-                            <md-icon slot="start">find_in_page</md-icon>
-                        </md-menu-item>
-                    </md-menu>
-                </div>
+                <md-text-button href="generarreporteMensual.php">
+                    <md-icon slot="icon">receipt_long</md-icon>
+                    Reporte mensual
+                </md-text-button>
 
-                <div style="position: relative;">
-                    <md-text-button id="btn-req" onclick="abrirMenu('menu-req')">
-                        Requerimiento
-                        <md-icon slot="icon">arrow_drop_down</md-icon>
-                    </md-text-button>
-                    <md-menu id="menu-req" anchor="btn-req">
-                        <md-menu-item href="requerimiento.php">
-                            <div slot="headline">Generar</div>
-                            <md-icon slot="start">inventory</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="#">
-                            <div slot="headline">Consultar</div>
-                            <md-icon slot="start">manage_search</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="#">
-                            <div slot="headline">Enviar reportes</div>
-                            <md-icon slot="start">send</md-icon>
-                        </md-menu-item>
-                    </md-menu>
-                </div>
+                <md-text-button href="requerimiento.php">
+                    <md-icon slot="icon">inventory</md-icon>
+                    Requerimiento
+                </md-text-button>
             </div>
 
             <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left: 16px;">
@@ -163,22 +130,25 @@ foreach ($conteo as $fila) {
                         Requerimiento de Leche
                     </h2>
                     <p style="margin:4px 0 0; font-size:0.9rem; color:var(--md-sys-color-on-surface-variant);">
-                        Precio de venta actual:
-                        <strong id="precioDisplay" style="color:var(--md-sys-color-primary); font-size:1.1rem;">$<?= htmlspecialchars($precio_litro) ?>/LITRO</strong>
+                        Tabla por <strong style="color:var(--md-sys-color-primary);">almacén</strong>.
+                        Se carga con el inventario del mes base; el requerimiento corresponde al
+                        <strong id="mesDestinoLabel" style="color:var(--md-sys-color-primary);">mes + 2</strong>
+                        (2 meses de desfase).
                     </p>
                 </div>
             </div>
         </div>
 
         <div class="md3-card">
-            <form id="formRequerimiento" method="POST" action="guardarRequerimiento.php">
+            <form id="formRequerimiento" method="POST" onsubmit="return false;">
                 <h3 style="margin: 0 0 16px; font-size:1rem; font-weight:500; color:var(--md-sys-color-on-surface);">
                     <md-icon style="vertical-align:middle; margin-right:6px; color:var(--md-sys-color-primary);">filter_alt</md-icon>
                     Parámetros del Requerimiento
                 </h3>
 
                 <div class="form-header-grid">
-                    <md-outlined-select label="Mes del Requerimiento" id="selectMesReporte" name="mes_reporte" style="width:100%;">
+                    <md-outlined-select label="Mes base (inventario)" id="selectMesReporte" name="mes_reporte"
+                        supporting-text="Mes en el que estás haciendo el requerimiento" style="width:100%;">
                         <md-select-option value=""><div slot="headline">Selecciona...</div></md-select-option>
                         <md-select-option value="1"><div slot="headline">Enero</div></md-select-option>
                         <md-select-option value="2"><div slot="headline">Febrero</div></md-select-option>
@@ -194,61 +164,19 @@ foreach ($conteo as $fila) {
                         <md-select-option value="12"><div slot="headline">Diciembre</div></md-select-option>
                     </md-outlined-select>
 
-                    <md-outlined-text-field label="Año del Requerimiento" id="inputAnioReporte" name="anio_reporte" type="number" value="<?= date('Y') ?>" style="width:100%;"></md-outlined-text-field>
-                    
-                    <md-outlined-select label="Tipo de Venta (Precio)" id="selectTipoVenta" name="tipo_venta" style="width:100%;">
-                        <md-select-option value="0" selected><div slot="headline">$4.50 / Litro</div></md-select-option>
-                        <md-select-option value="1"><div slot="headline">$6.50 / Litro</div></md-select-option>
-                    </md-outlined-select>
+                    <md-outlined-text-field label="Año" id="inputAnioReporte" name="anio_reporte"
+                        type="number" value="<?= date('Y') ?>" readonly style="width:100%;"></md-outlined-text-field>
 
-                    <md-outlined-select label="Almacén" id="selectAlmacen" name="almacen" style="width:100%;">
-                        <md-select-option value="">Cargando almacenes...</md-select-option>
-                    </md-outlined-select>
+                    <md-outlined-text-field label="Mes destino del requerimiento" id="inputMesDestino"
+                        readonly value="—" supporting-text="Calculado automático: mes base + 2"
+                        style="width:100%;"></md-outlined-text-field>
                 </div>
 
-                <div class="reporte-wrapper" style="margin-top: 20px;">
-                    <table class="reporte-table" id="tablaReporte">
-                        <thead>
-                            <tr class="header-main">
-                                <th>NUMERO DE<br>PUNTO DE<br>VENTA</th>
-                                <th>NO. DE<br>TIENDA</th>
-                                <th>FAMILIAS</th>
-                                <th>NO. DE<br>BENEFICIARIOS</th>
-                                <th>DOTACION<br>TEORICA</th>
-                                <th>INVENTARIO<br>INICIAL</th>
-                                <th>SURT.</th>
-                                <th>VENTAS</th>
-                                <th>INVENTARIO<br>FINAL</th>
-                                <th id="th_req_ms">REQ. M.S.<br>---</th>
-                                <th>V.M.S.</th>
-                                <th id="th_req_actual">REQ.<br>---</th>
-                                <th>OBSERVACIONES</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tablaBody">
-                            <?php for ($i = 0; $i < 17; $i++): ?>
-                                <tr>
-                                    <td><input type="text" class="cell-input" name="punto_venta[]" disabled></td>
-                                    <td><input type="text" class="cell-input" name="clave_tienda[]" disabled></td>
-                                    
-                                    <td><input type="number" class="cell-input" name="familias[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="beneficiarios[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="dotacion_teorica[]" disabled></td>
-                                    
-                                    <td><input type="number" class="cell-input" name="inv_inicial[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="surtimiento[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="ventas[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="inv_final[]" disabled></td>
-                                    
-                                    <td><input type="number" class="cell-input" name="req_ms_anterior[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="vms[]" disabled></td>
-                                    <td><input type="number" class="cell-input" name="req_actual[]" disabled></td>
-                                    
-                                    <td><input type="text" class="cell-input" name="observaciones[]" disabled></td>
-                                </tr>
-                            <?php endfor; ?>
-                        </tbody>
-                    </table>
+                <!-- Las tablas se generan automáticamente, una por almacén -->
+                <div id="contenedorTablas" style="margin-top:20px;">
+                    <div style="text-align:center; padding:32px; color:var(--md-sys-color-on-surface-variant);">
+                        Selecciona el mes base para cargar tus lecherías agrupadas por almacén.
+                    </div>
                 </div>
 
                 <div class="footer-section" style="margin-top: 30px;">
@@ -267,11 +195,16 @@ foreach ($conteo as $fila) {
                     </div>
                 </div>
 
-                <div class="action-bar" style="margin-top: 24px;">
-                    <md-filled-button type="submit" id="btnGuardar">
+                <div class="action-bar" style="margin-top: 24px; display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+                    <md-filled-button type="button" id="btnGuardar">
                         <md-icon slot="icon">save</md-icon>
                         Guardar Requerimiento
                     </md-filled-button>
+
+                    <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-size:0.9rem; color:var(--md-sys-color-on-surface);">
+                        <md-checkbox id="chkGenerarPDF" touch-target="wrapper"></md-checkbox>
+                        Generar PDF al guardar
+                    </label>
                 </div>
             </form>
         </div>

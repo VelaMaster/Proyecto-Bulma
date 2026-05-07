@@ -223,6 +223,11 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     </md-menu>
                 </div>
 
+                <md-text-button href="lecherias.php">
+                    <md-icon slot="icon">storefront</md-icon>
+                    Lecherías
+                </md-text-button>
+
                 <div style="position: relative;">
                     <md-text-button id="btn-prom" onclick="abrirMenu('menu-prom')">
                         Gestión Promotores
@@ -262,6 +267,13 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <md-list-item href="historialGlobal.php" type="button">
                     <div slot="headline">Historial General</div>
                     <md-icon slot="start">history</md-icon>
+                </md-list-item>
+
+                <md-divider style="margin: 8px 0;"></md-divider>
+
+                <md-list-item href="lecherias.php" type="button">
+                    <div slot="headline">Lecherías</div>
+                    <md-icon slot="start">storefront</md-icon>
                 </md-list-item>
 
                 <md-divider style="margin: 8px 0;"></md-divider>
@@ -312,9 +324,33 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </a>
         </div>
 
-        <h3 style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 24px; margin-bottom: 16px;">
-            Mis Promotores Asignados
-        </h3>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:24px; margin-bottom:16px;">
+            <h3 style="font-size:1.25rem; font-weight:500; color:var(--md-sys-color-on-surface); margin:0;">
+                Mis Promotores Asignados
+            </h3>
+
+            <div class="md3-card" style="display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 16px; margin:0;">
+                <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">calendar_month</span>
+                <span style="font-weight:500;">Avance del mes:</span>
+                <select class="md3-input" id="avance_mes" style="margin:0; cursor:pointer;">
+                    <option value="1"  <?= date('n')==1  ? 'selected' : '' ?>>Enero</option>
+                    <option value="2"  <?= date('n')==2  ? 'selected' : '' ?>>Febrero</option>
+                    <option value="3"  <?= date('n')==3  ? 'selected' : '' ?>>Marzo</option>
+                    <option value="4"  <?= date('n')==4  ? 'selected' : '' ?>>Abril</option>
+                    <option value="5"  <?= date('n')==5  ? 'selected' : '' ?>>Mayo</option>
+                    <option value="6"  <?= date('n')==6  ? 'selected' : '' ?>>Junio</option>
+                    <option value="7"  <?= date('n')==7  ? 'selected' : '' ?>>Julio</option>
+                    <option value="8"  <?= date('n')==8  ? 'selected' : '' ?>>Agosto</option>
+                    <option value="9"  <?= date('n')==9  ? 'selected' : '' ?>>Septiembre</option>
+                    <option value="10" <?= date('n')==10 ? 'selected' : '' ?>>Octubre</option>
+                    <option value="11" <?= date('n')==11 ? 'selected' : '' ?>>Noviembre</option>
+                    <option value="12" <?= date('n')==12 ? 'selected' : '' ?>>Diciembre</option>
+                </select>
+                <input class="md3-input" type="number" id="avance_anio" value="<?= date('Y') ?>"
+                       style="max-width:96px; margin:0; text-align:center;">
+            </div>
+        </div>
+
         <div class="promotores-grid" id="promotoresGrid">
             <div class="promotor-card is-skeleton">
                 <div class="promotor-header">
