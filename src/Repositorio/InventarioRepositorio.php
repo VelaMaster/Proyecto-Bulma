@@ -37,10 +37,60 @@ class InventarioRepositorio
         return $stmt->fetch() !== false;
     }
 
+    /**
+     * Hace UPSERT en INVENTARIO_LEP_SUBSIDIADA.
+     * Esta tabla la alimenta originalmente Distribución; ahora también la
+     * llenamos cuando un promotor captura su inventario mensual, para que
+     * el flujo (reporte → requerimiento del mes+2) se quede sincronizado
+     * sin necesidad de cargar datos a mano.
+     *
+     * Conversión:
+     *   INVENTARIO_FINAL    ← fin_litros
+     *   SURTIMIENTO         ← surt_cajas
+     *   VENTA_REAL          ← venta_litros
+     *   VENTA_LIBRO_RETIRO  ← reg_litros
+     */
+    private function upsertLepSubsidiada($lecher, $mes, $anio, $finLitros, $surtCajas, $ventaLitros, $regLitros)
+    {
+        if (empty($lecher)) return;
+
+        $lecher_q  = "'" . str_replace("'", "''", $lecher) . "'";
+        $mes_n     = (int)$mes;
+        $anio_n    = (int)$anio;
+        $finL      = (int)$finLitros;
+        $surtC     = (int)$surtCajas;
+        $ventaL    = (int)$ventaLitros;
+        $regL      = (int)$regLitros;
+
+        // Intentamos UPDATE primero; si no afectó filas, INSERT.
+        $sqlUpd = "UPDATE INVENTARIO_LEP_SUBSIDIADA SET
+                       INVENTARIO_FINAL   = $finL,
+                       SURTIMIENTO        = $surtC,
+                       VENTA_REAL         = $ventaL,
+                       VENTA_LIBRO_RETIRO = $regL
+                   WHERE LECHER = $lecher_q
+                     AND MES_PERIODO  = $mes_n
+                     AND ANIO_PERIODO = $anio_n";
+        $afectadas = $this->db->exec($sqlUpd);
+
+        if ($afectadas === 0 || $afectadas === false) {
+            $sqlIns = "INSERT INTO INVENTARIO_LEP_SUBSIDIADA
+                       (LECHER, MES_PERIODO, ANIO_PERIODO,
+                        INVENTARIO_FINAL, SURTIMIENTO, VENTA_REAL, VENTA_LIBRO_RETIRO)
+                       VALUES ($lecher_q, $mes_n, $anio_n, $finL, $surtC, $ventaL, $regL)";
+            try {
+                $this->db->exec($sqlIns);
+            } catch (PDOException $e) {
+                // Si por carrera otro proceso ya insertó, reintentamos UPDATE.
+                $this->db->exec($sqlUpd);
+            }
+        }
+    }
+
     public function guardar($datos, $usuario)
     {
         $lecheria_limpia = $datos['lecheria'] ?? 'SIN_CLAVE';
-        
+
         $anio_actual = !empty($datos['anio_periodo']) ? (int)$datos['anio_periodo'] : (int)date('Y', strtotime($datos['fecha']));
         $mes_actual  = !empty($datos['mes_periodo'])  ? (int)$datos['mes_periodo']  : (int)date('m', strtotime($datos['fecha']));
 
@@ -124,6 +174,18 @@ class InventarioRepositorio
                 $this->db->beginTransaction();
             }
             $this->db->exec($sql);
+
+            // Sincroniza con la tabla "oficial" de Distribución
+            $this->upsertLepSubsidiada(
+                $lecheria_limpia,
+                $mes_actual,
+                $anio_actual,
+                $datos['fin_litros']   ?? 0,
+                $datos['surt_cajas']   ?? 0,
+                $datos['venta_litros'] ?? 0,
+                $datos['reg_litros']   ?? 0
+            );
+
             $this->db->commit();
             return ['status' => 'success', 'mensaje' => 'Guardado con éxito'];
         } catch (PDOException $e) {
@@ -131,6 +193,32 @@ class InventarioRepositorio
                 $this->db->rollBack();
             }
             throw new Exception("Error Firebird: " . $e->getMessage());
+        }
+    }
+
+    /**
+     * Llamado desde actualizar_inventario.php tras hacer el UPDATE en
+     * INVENTARIOS_MENSUALES. Mantiene INVENTARIO_LEP_SUBSIDIADA sincronizada.
+     */
+    public function syncLepSubsidiada($lecher, $mes, $anio, $datos)
+    {
+        if (!$this->db->inTransaction()) {
+            $this->db->beginTransaction();
+        }
+        try {
+            $this->upsertLepSubsidiada(
+                $lecher,
+                $mes,
+                $anio,
+                $datos['fin_litros']   ?? 0,
+                $datos['surt_cajas']   ?? 0,
+                $datos['venta_litros'] ?? 0,
+                $datos['reg_litros']   ?? 0
+            );
+            $this->db->commit();
+        } catch (Exception $e) {
+            if ($this->db->inTransaction()) $this->db->rollBack();
+            throw $e;
         }
     }
 

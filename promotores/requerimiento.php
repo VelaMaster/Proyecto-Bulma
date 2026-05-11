@@ -15,6 +15,7 @@ $sql_resumen = "SELECT L.TIPO_PUNTO_VENTA, COUNT(*) as TOTAL
                 FROM LECHERIA L
                 INNER JOIN USUARIOS_INVENTARIOS U ON L.PROMOTOR = U.CLAVE_ROL
                 WHERE L.EFD_NUMERO = 20 AND U.USUARIO = :usuario
+                  AND COALESCE(L.EN_OPERACION, 0) = 0
                 GROUP BY L.TIPO_PUNTO_VENTA";
 
 $stmt_resumen = $pdo->prepare($sql_resumen);
@@ -188,9 +189,8 @@ foreach ($conteo as $fila) {
 
                     <div class="firma-block">
                         <span class="firma-label">Autorizó:</span>
-                        <md-outlined-text-field id="supervisor" name="supervisor" type="text"
-                            placeholder="Nombre del supervisor" style="width:100%; margin-top:4px;">
-                        </md-outlined-text-field>
+                        <span class="firma-name" id="nombreSupervisor" style="opacity:.7;">Cargando...</span>
+                        <input type="hidden" id="supervisor" name="supervisor" value="">
                         <span class="firma-role">NOMBRE Y FIRMA DEL SUPERVISOR</span>
                     </div>
                 </div>

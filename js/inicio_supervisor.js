@@ -124,7 +124,7 @@ function renderPromotores(promotores) {
         grid.appendChild(card);
     });
 
-    // Lógica de apertura/cierre
+    // Lógica de apertura/cierre + carga de detalle del mes
     document.querySelectorAll('.btn-toggle-detalles').forEach(btn => {
         btn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -143,6 +143,7 @@ function renderPromotores(promotores) {
                 cardElement.classList.add('expanded');
                 icon.textContent = 'expand_less';
                 text.textContent = 'Ocultar detalles';
+                cargarDetalleMesPromotor(cardElement);
             } else {
                 cardElement.classList.remove('expanded');
                 icon.textContent = 'expand_more';
@@ -150,6 +151,106 @@ function renderPromotores(promotores) {
             }
         });
     });
+}
+
+// ────────────────────────────────────────────────────────────────────
+//  Detalle por mes al expandir: trae el estado de cada lechería del
+//  promotor (capturado/falta) y lo pinta dentro de su tarjeta.
+// ────────────────────────────────────────────────────────────────────
+async function cargarDetalleMesPromotor(cardEl) {
+    const promotorId = cardEl.dataset.promotorId;
+    const selMes  = document.getElementById('avance_mes');
+    const inpAnio = document.getElementById('avance_anio');
+    if (!promotorId || !selMes || !inpAnio) return;
+
+    const mes  = selMes.value;
+    const anio = inpAnio.value;
+
+    // Inserta encabezado "X de Y inventarios capturados" arriba de la lista
+    let header = cardEl.querySelector('.detalle-mes-header');
+    if (!header) {
+        header = document.createElement('div');
+        header.className = 'detalle-mes-header';
+        header.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 14px; margin-bottom:10px; border-radius:12px;';
+        const lista = cardEl.querySelector('.lista-interna-lecherias');
+        if (lista) lista.parentElement.insertBefore(header, lista);
+    }
+    header.style.background = 'var(--md-sys-color-surface-container-high)';
+    header.style.color = 'var(--md-sys-color-on-surface)';
+    header.innerHTML = `
+        <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">calendar_month</span>
+        <strong>${_nombreMesSv(mes)} ${anio}</strong>
+        <span style="margin-left:auto; opacity:.7;">Cargando...</span>
+    `;
+
+    try {
+        const r = await fetch(`api_estado_promotor.php?promotor=${promotorId}&mes=${mes}&anio=${anio}`);
+        const data = await r.json();
+        if (data.status !== 'success') throw new Error(data.message || 'Error');
+
+        const lechs      = data.lecherias || [];
+        const capturadas = lechs.filter(l => l.tiene_inventario).length;
+        const total      = lechs.length;
+
+        const tipo = capturadas === total && total > 0 ? 'ok'
+                   : capturadas === 0 ? 'falta' : 'parcial';
+        const colorBg = tipo === 'ok'    ? 'color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent)'
+                      : tipo === 'falta' ? 'color-mix(in srgb, var(--md-sys-color-error) 18%, transparent)'
+                                         : 'color-mix(in srgb, var(--md-sys-color-tertiary) 18%, transparent)';
+        const colorTx = tipo === 'ok'    ? 'var(--md-sys-color-primary)'
+                      : tipo === 'falta' ? 'var(--md-sys-color-error)'
+                                         : 'var(--md-sys-color-tertiary)';
+        const ico = tipo === 'ok' ? 'check_circle' : (tipo === 'falta' ? 'pending' : 'progress_activity');
+
+        header.style.background = colorBg;
+        header.style.color = colorTx;
+        header.innerHTML = `
+            <span class="material-symbols-outlined">${ico}</span>
+            <strong>${_nombreMesSv(mes)} ${anio}</strong>
+            <span style="margin-left:auto; font-weight:600;">${capturadas} de ${total} inventarios</span>
+        `;
+
+        // Refrescar la lista interna pintando cada lechería con su estado
+        const ul = cardEl.querySelector('.lista-interna-lecherias');
+        if (ul) {
+            const mapa = {};
+            lechs.forEach(l => { mapa[l.lecher] = l; });
+
+            ul.querySelectorAll('li').forEach(li => {
+                const strongEl = li.querySelector('strong');
+                if (!strongEl) return;
+                const clave = strongEl.textContent.trim();
+                const info  = mapa[clave];
+
+                let pill = li.querySelector('.estado-pill-lech');
+                if (!pill) {
+                    pill = document.createElement('span');
+                    pill.className = 'estado-pill-lech';
+                    pill.style.cssText = 'margin-left:auto; padding:3px 10px; border-radius:999px; font-size:0.75rem; font-weight:600; display:inline-flex; align-items:center; gap:4px;';
+                    li.appendChild(pill);
+                }
+                if (info && info.tiene_inventario) {
+                    pill.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">check_circle</span>Capturado`;
+                    pill.style.background = 'color-mix(in srgb, var(--md-sys-color-primary) 18%, transparent)';
+                    pill.style.color = 'var(--md-sys-color-primary)';
+                } else {
+                    pill.innerHTML = `<span class="material-symbols-outlined" style="font-size:14px;">pending</span>Falta`;
+                    pill.style.background = 'color-mix(in srgb, var(--md-sys-color-error) 18%, transparent)';
+                    pill.style.color = 'var(--md-sys-color-error)';
+                }
+            });
+        }
+    } catch (e) {
+        console.error('Error cargando detalle mes promotor:', e);
+        header.style.background = 'color-mix(in srgb, var(--md-sys-color-error) 18%, transparent)';
+        header.style.color = 'var(--md-sys-color-error)';
+        header.innerHTML = `<span class="material-symbols-outlined">error</span><strong>No se pudo cargar el detalle</strong>`;
+    }
+}
+
+function _nombreMesSv(m) {
+    const meses = ["", "Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+    return meses[parseInt(m)] || '';
 }
 
 async function cargarAvance() {
@@ -214,6 +315,11 @@ async function cargarAvance() {
                 bar.style.background = 'var(--md-sys-color-tertiary)';
                 icon.textContent = 'progress_activity';
             }
+        });
+
+        // Si hay una tarjeta expandida, refresca su detalle por mes
+        document.querySelectorAll('.promotor-card.expanded').forEach(c => {
+            cargarDetalleMesPromotor(c);
         });
     } catch (e) {
         console.error('Error cargando avance:', e);

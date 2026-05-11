@@ -46,6 +46,7 @@ try {
                  AND L.LOC_NUMERO = LOC.LOC_NUMERO)
             WHERE L.EFD_NUMERO = 20
               AND L.PROMOTOR = ?
+              AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
             ORDER BY L.NOMBRELECH";
 
     $stmt = $pdo->prepare($sql);

@@ -51,6 +51,7 @@ class UsuarioRepositorio
             JOIN PROMOTOR P ON L.PROMOTOR = P.PMT_NUMERO
             WHERE M.ID_SUPERVISOR = :id_supervisor
               AND P.PMT_ACTIVO = 'S'
+              AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
             ORDER BY P.PMT_NOMBRE, L.LECHER
         ";
 

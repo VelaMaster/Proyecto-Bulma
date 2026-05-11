@@ -19,6 +19,7 @@ if (!$datos || empty($datos['inventario_id'])) {
 
 // 1. Usamos nuestra conexión parcheada
 require_once __DIR__ . '/../Database.php';
+require_once __DIR__ . '/../src/Repositorio/InventarioRepositorio.php';
 
 // 2. Funciones ayudantes (Spoon-feeding para el SQL Crudo)
 $q = function ($val, $len = 255) {
@@ -33,9 +34,9 @@ $n = function ($val) {
 };
 
 $lecheria = $datos['lecheria'] ?? 'X';
-$time = strtotime($datos['fecha'] ?? date('Y-m-d'));
-$anio = date('Y', $time);
-$mes = date('m', $time);
+// Tomamos el periodo del payload si viene, si no caemos a la fecha del documento.
+$mes  = !empty($datos['mes_periodo'])  ? (int)$datos['mes_periodo']  : (int)date('m', strtotime($datos['fecha'] ?? 'now'));
+$anio = !empty($datos['anio_periodo']) ? (int)$datos['anio_periodo'] : (int)date('Y', strtotime($datos['fecha'] ?? 'now'));
 $nombreArchivo = "Inventario_{$lecheria}_{$anio}_{$mes}.pdf";
 
 try {
@@ -86,6 +87,18 @@ try {
     $db->exec($sql);
 
     $db->commit();
+
+    // 5. Sincronizamos también INVENTARIO_LEP_SUBSIDIADA para que el flujo
+    //    (reporte/requerimiento) pueda leer los nuevos valores sin que
+    //    Distribución tenga que cargar nada a mano.
+    try {
+        $repo = new InventarioRepositorio();
+        $repo->syncLepSubsidiada($lecheria, $mes, $anio, $datos);
+    } catch (Exception $eSync) {
+        // No tumbamos la operación principal por un fallo en el sync.
+        error_log('[actualizar_inventario] sync LEP falló: ' . $eSync->getMessage());
+    }
+
     echo json_encode(["status" => "success", "mensaje" => "Inventario actualizado correctamente."]);
 
 } catch (Exception $e) {

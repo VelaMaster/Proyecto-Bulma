@@ -34,6 +34,7 @@ try {
             INNER JOIN USUARIOS_INVENTARIOS U ON L.PROMOTOR = U.CLAVE_ROL
             WHERE L.EFD_NUMERO = 20
               AND U.USUARIO = :usuario
+              AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
               $filtroAlmacen
             ORDER BY TRIM(L.ALMACEN_RURAL) ASC, L.TIPO_PUNTO_VENTA ASC, TRIM(L.LECHER) ASC";
             

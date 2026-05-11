@@ -17,6 +17,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const listaEstado       = document.getElementById('listaEstadoInventarios');
     const btnGuardar        = document.getElementById('btnGuardar');
     const chkGenerarPDF     = document.getElementById('chkGenerarPDF');
+    const nombreSupervisor  = document.getElementById('nombreSupervisor');
+    const inputSupervisor   = document.getElementById('supervisor');
+
+    // Carga el supervisor asignado al promotor (no se escribe a mano).
+    fetch('obtenerSupervisorAsignado.php')
+        .then(r => r.json())
+        .then(d => {
+            if (d.status === 'success' && d.supervisor) {
+                if (nombreSupervisor) {
+                    nombreSupervisor.textContent = d.supervisor.nombre.toUpperCase();
+                    nombreSupervisor.style.opacity = '1';
+                }
+                if (inputSupervisor) inputSupervisor.value = d.supervisor.nombre;
+            } else {
+                if (nombreSupervisor) {
+                    nombreSupervisor.textContent = '— Sin supervisor asignado —';
+                    nombreSupervisor.style.opacity = '.6';
+                }
+            }
+        })
+        .catch(() => {
+            if (nombreSupervisor) nombreSupervisor.textContent = '— Sin supervisor asignado —';
+        });
 
     const L_X_CAJA  = 72;
     const L_X_SOBRE = 2;
@@ -33,6 +56,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function ultimoDiaDelMes(anio, mes) { return new Date(anio, mes, 0).getDate(); }
     function precioDeTipoVenta(tipo) { return parseInt(tipo) === 0 ? '$4.50' : '$6.50'; }
+    // Tipo de punto de venta = 2 → Distribución Mercantil (clave "DM")
+    function claveTiendaMostrar(lech) {
+        return parseInt(lech.TIPO_PUNTO_VENTA) === 2 ? 'DM' : (lech.NUM_TIENDA || '');
+    }
 
     function calcularPeriodo() {
         const mes  = parseInt(selectMesReporte.value);
@@ -171,7 +198,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tr.innerHTML = `
             <td><input type="text"   class="cell-input" name="punto_venta[]"    value="${lecheria.LECHER}" readonly></td>
-            <td><input type="text"   class="cell-input" name="clave_tienda[]"   value="${lecheria.NUM_TIENDA || ''}" readonly></td>
+            <td><input type="text"   class="cell-input" name="clave_tienda[]"   value="${claveTiendaMostrar(lecheria)}" readonly></td>
             <td><span class="precio-pill ${parseInt(lecheria.TIPO_PUNTO_VENTA)===0 ? 'precio-450' : 'precio-650'}">${precio}</span>
                 <input type="hidden" name="precio[]"     value="${precio}">
                 <input type="hidden" name="tipo_venta[]" value="${lecheria.TIPO_PUNTO_VENTA}"></td>

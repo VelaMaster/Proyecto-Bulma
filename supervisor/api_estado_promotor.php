@@ -70,21 +70,26 @@ try {
     $sqlL = "
         SELECT TRIM(L.LECHER) AS LECHER,
                TRIM(L.NUM_TIENDA) AS NUM_TIENDA,
+               L.TIPO_PUNTO_VENTA AS TIPO_PUNTO_VENTA,
                TRIM(L.NOMBRELECH) AS NOMBRE,
                TRIM(L.ALMACEN_RURAL) AS ALMACEN
         FROM LECHERIA L
         JOIN MAPEO_SUPERVISOR_LECHERIA M ON M.LECHER = L.LECHER
         WHERE L.PROMOTOR     = :id_prom
           AND M.ID_SUPERVISOR = :id_sup
+          AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
         ORDER BY TRIM(L.ALMACEN_RURAL), TRIM(L.LECHER)
     ";
     $stmt = $pdo->prepare($sqlL);
     $stmt->execute([':id_prom' => $promotor_id, ':id_sup' => $id_supervisor]);
     $lecherias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 3) Cuáles tienen inventario en BDD para mes/año.
-    $sqlI = "SELECT FIRST 1 1 FROM INVENTARIO_LEP_SUBSIDIADA
-             WHERE LECHER = ? AND MES_PERIODO = ? AND ANIO_PERIODO = ?";
+    // 3) Cuáles tienen inventario CAPTURADO POR EL PROMOTOR (mes/año).
+    //    Validamos contra INVENTARIOS_MENSUALES (flujo del promotor),
+    //    no contra INVENTARIO_LEP_SUBSIDIADA, que puede traer datos
+    //    precargados por Distribución y daría falsos positivos.
+    $sqlI = "SELECT FIRST 1 1 FROM INVENTARIOS_MENSUALES
+             WHERE CLAVE_LECHERIA = ? AND MES_PERIODO = ? AND ANIO_PERIODO = ?";
     $stmtI = $pdo->prepare($sqlI);
 
     // Carpeta donde se guardan los PDFs individuales de inventario.
@@ -101,9 +106,14 @@ try {
         $pdfPath = $dirInventarios . '/' . $pdfName;
         $pdfExiste = file_exists($pdfPath);
 
+        // TIPO_PUNTO_VENTA = 2 → Distribución Mercantil → mostramos "DM"
+        $tipoPV = (int)($l['TIPO_PUNTO_VENTA'] ?? 0);
+        $numTiendaMostrar = ($tipoPV === 2) ? 'DM' : ($l['NUM_TIENDA'] ?? '');
+
         $out[] = [
             'lecher'           => $lecher,
-            'num_tienda'       => $l['NUM_TIENDA'],
+            'num_tienda'       => $numTiendaMostrar,
+            'tipo_punto_venta' => $tipoPV,
             'nombre'           => $l['NOMBRE'],
             'almacen'          => $l['ALMACEN'],
             'tiene_inventario' => $tieneInv,

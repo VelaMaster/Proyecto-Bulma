@@ -33,21 +33,26 @@ if ($mes < 1 || $mes > 12 || $anio < 2000) {
 try {
     $pdo = Database::getInstance();
 
+    // "Capturado" significa que el promotor llenó su inventario mensual:
+    // se valida contra INVENTARIOS_MENSUALES (la tabla del flujo del
+    // promotor), NO contra INVENTARIO_LEP_SUBSIDIADA, que puede traer
+    // datos precargados por Distribución y daría falsos positivos.
     $sql = "
         SELECT
             P.PMT_NUMERO  AS ID,
             P.PMT_NOMBRE  AS NOMBRE,
             COUNT(DISTINCT L.LECHER) AS TOTAL,
-            COUNT(DISTINCT CASE WHEN I.LECHER IS NOT NULL THEN L.LECHER END) AS CAPTURADAS
+            COUNT(DISTINCT CASE WHEN IM.CLAVE_LECHERIA IS NOT NULL THEN L.LECHER END) AS CAPTURADAS
         FROM MAPEO_SUPERVISOR_LECHERIA M
         JOIN LECHERIA L  ON M.LECHER = L.LECHER
         JOIN PROMOTOR P  ON L.PROMOTOR = P.PMT_NUMERO
-        LEFT JOIN INVENTARIO_LEP_SUBSIDIADA I
-               ON I.LECHER = L.LECHER
-              AND I.MES_PERIODO  = :mes
-              AND I.ANIO_PERIODO = :anio
+        LEFT JOIN INVENTARIOS_MENSUALES IM
+               ON IM.CLAVE_LECHERIA = L.LECHER
+              AND IM.MES_PERIODO    = :mes
+              AND IM.ANIO_PERIODO   = :anio
         WHERE M.ID_SUPERVISOR = :id_sup
           AND P.PMT_ACTIVO = 'S'
+          AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
         GROUP BY P.PMT_NUMERO, P.PMT_NOMBRE
         ORDER BY P.PMT_NOMBRE
     ";

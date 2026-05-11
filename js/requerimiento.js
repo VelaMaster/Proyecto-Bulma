@@ -17,6 +17,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const contenedorTablas  = document.getElementById('contenedorTablas');
     const btnGuardar        = document.getElementById('btnGuardar');
     const chkGenerarPDF     = document.getElementById('chkGenerarPDF');
+    const nombreSupervisor  = document.getElementById('nombreSupervisor');
+    const inputSupervisor   = document.getElementById('supervisor');
+
+    // Carga el supervisor asignado al promotor (no se escribe a mano).
+    fetch('obtenerSupervisorAsignado.php')
+        .then(r => r.json())
+        .then(d => {
+            if (d.status === 'success' && d.supervisor) {
+                if (nombreSupervisor) {
+                    nombreSupervisor.textContent = d.supervisor.nombre.toUpperCase();
+                    nombreSupervisor.style.opacity = '1';
+                }
+                if (inputSupervisor) inputSupervisor.value = d.supervisor.nombre;
+            } else {
+                if (nombreSupervisor) {
+                    nombreSupervisor.textContent = '— Sin supervisor asignado —';
+                    nombreSupervisor.style.opacity = '.6';
+                }
+            }
+        })
+        .catch(() => {
+            if (nombreSupervisor) nombreSupervisor.textContent = '— Sin supervisor asignado —';
+        });
 
     const L_X_CAJA = 72;
     const nombresMeses = ["", "Enero","Febrero","Marzo","Abril","Mayo","Junio",
@@ -25,6 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ──── Helpers ─────────────────────────────────────────────────
     function precioDeTipoVenta(tipo) {
         return parseInt(tipo) === 0 ? '$4.50' : '$6.50';
+    }
+    // Tipo de punto de venta = 2 → Distribución Mercantil (clave "DM")
+    function claveTiendaMostrar(lech) {
+        return parseInt(lech.TIPO_PUNTO_VENTA) === 2 ? 'DM' : (lech.NUM_TIENDA || '');
     }
     function sumarMeses(mes, anio, n) {
         let m = mes + n;
@@ -149,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const precio = precioDeTipoVenta(lech.TIPO_PUNTO_VENTA);
         tr.innerHTML = `
             <td><input type="text"   class="cell-input" name="punto_venta[]"      value="${lech.LECHER}" readonly></td>
-            <td><input type="text"   class="cell-input" name="clave_tienda[]"     value="${lech.NUM_TIENDA || ''}" readonly></td>
+            <td><input type="text"   class="cell-input" name="clave_tienda[]"     value="${claveTiendaMostrar(lech)}" readonly></td>
             <td><span class="precio-pill ${parseInt(lech.TIPO_PUNTO_VENTA)===0 ? 'precio-450' : 'precio-650'}">${precio}</span>
                 <input type="hidden" name="precio[]"     value="${precio}">
                 <input type="hidden" name="tipo_venta[]" value="${lech.TIPO_PUNTO_VENTA}"></td>
