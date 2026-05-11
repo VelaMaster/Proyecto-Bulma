@@ -1,12 +1,3 @@
-// ────────────────────────────────────────────────────────────────────
-//  Reporte Mensual de Lecherías — Promotor
-//  - El promotor solo elige MES; el sistema genera UNA TABLA POR ALMACÉN
-//  - Cada fila lleva su columna PRECIO ($4.50 / $6.50)
-//  - Periodo del 28 del mes anterior al 25 del mes seleccionado (editable)
-//  - Auto-rellena con el inventario mensual del mes seleccionado
-//  - Checkbox "Generar PDF al guardar" + confirmación
-// ────────────────────────────────────────────────────────────────────
-
 document.addEventListener('DOMContentLoaded', () => {
     const selectMesReporte  = document.getElementById('selectMesReporte');
     const inputAnioReporte  = document.getElementById('inputAnioReporte');
@@ -60,7 +51,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function claveTiendaMostrar(lech) {
         return parseInt(lech.TIPO_PUNTO_VENTA) === 2 ? 'DM' : (lech.NUM_TIENDA || '');
     }
-
     function calcularPeriodo() {
         const mes  = parseInt(selectMesReporte.value);
         const anio = parseInt(inputAnioReporte.value);
@@ -186,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 </tr>
             </thead>`;
     }
-
     function crearFila(lecheria, mesReporte, anioReporte) {
         const tr = document.createElement('tr');
         tr.dataset.lecher = lecheria.LECHER;
@@ -224,7 +213,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         return tr;
     }
-
     function crearTablaAlmacen(almacenNombre, lecherias, mes, anio) {
         const wrapper = document.createElement('div');
         wrapper.className = 'almacen-block';
@@ -245,23 +233,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = wrapper.querySelector('tbody');
         let faltantes = 0;
 
-        lecherias.forEach(lech => {
+lecherias.forEach(lech => {
             const fila = crearFila(lech, mes, anio);
             tbody.appendChild(fila);
 
             if (lech.encontrado) {
-                const fmtIni = litrosACajasYSobres(parseFloat(lech.inventario_inicial) || 0);
-                fila.querySelector('input[name="inv_ini_cajas[]"]').value  = fmtIni.cajas;
-                fila.querySelector('input[name="inv_ini_sobres[]"]').value = fmtIni.sobres;
-                fila.querySelector('input[name="dot_recibida_cajas[]"]').value = parseFloat(lech.surtimiento) || 0;
-
-                const fmtVenta = litrosACajasYSobres(parseFloat(lech.venta_real) || 0);
-                fila.querySelector('input[name="dot_vend_cajas[]"]').value  = fmtVenta.cajas;
-                fila.querySelector('input[name="dot_vend_sobres[]"]').value = fmtVenta.sobres;
-
-                const fmtRet = litrosACajasYSobres(parseFloat(lech.venta_libro_retiro) || 0);
-                fila.querySelector('input[name="retiro_cajas[]"]').value  = fmtRet.cajas;
-                fila.querySelector('input[name="retiro_sobres[]"]').value = fmtRet.sobres;
+                fila.querySelector('input[name="inv_ini_cajas[]"]').value      = lech.inv_ini_cajas || 0;
+                fila.querySelector('input[name="inv_ini_sobres[]"]').value     = lech.inv_ini_sobres || 0;
+                fila.querySelector('input[name="dot_recibida_cajas[]"]').value = lech.dot_recibida_cajas || 0;
+                
+                fila.querySelector('input[name="dot_vend_cajas[]"]').value     = lech.venta_cajas || 0;
+                fila.querySelector('input[name="dot_vend_sobres[]"]').value    = lech.venta_sobres || 0;
+                
+                fila.querySelector('input[name="retiro_cajas[]"]').value       = lech.retiro_cajas || 0;
+                fila.querySelector('input[name="retiro_sobres[]"]').value      = lech.retiro_sobres || 0;
+                
+                if (lech.fecha_entrada) fila.querySelector('input[name="fecha_entrada[]"]').value = lech.fecha_entrada;
+                if (lech.caducidad)     fila.querySelector('input[name="caducidad[]"]').value     = lech.caducidad;
             } else {
                 ['inv_ini_cajas','inv_ini_sobres','dot_recibida_cajas','dot_vend_cajas','dot_vend_sobres','retiro_cajas','retiro_sobres'].forEach(n => {
                     const i = fila.querySelector(`input[name="${n}[]"]`);
@@ -269,12 +257,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 faltantes++;
             }
+
+            // Calculamos primero la fila para que las fórmulas matemáticas hagan su trabajo
             calcularFila(fila);
+
+            // ¡EL TRUCO! Restauramos el Total y el Inv. Final inyectando los datos 
+            // directos de la Base de Datos para que JS no los deje en 0.
+            if (lech.encontrado) {
+                fila.querySelector('input[name="total_cajas[]"]').value        = lech.abasto_cajas || 0;
+                fila.querySelector('input[name="total_sobres[]"]').value       = lech.abasto_sobres || 0;
+                fila.querySelector('input[name="inv_fin_cajas[]"]').value      = lech.inv_fin_cajas || 0;
+                fila.querySelector('input[name="inv_fin_sobres[]"]').value     = lech.inv_fin_sobres || 0;
+            }
         });
 
         return { wrapper, faltantes };
     }
-
     // ──── Cargar lecherías y poblar tablas ───────────────────────
     function cargarLecherias() {
         const mes  = selectMesReporte.value;

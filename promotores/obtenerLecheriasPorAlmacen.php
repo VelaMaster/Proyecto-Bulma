@@ -21,9 +21,6 @@ if (!$usuario || $mes_reporte === 0 || $anio_reporte === 0) {
 }
 
 try {
-    // Si NO se especifica almacén → devolvemos TODAS las lecherías del
-    // promotor (con su ALMACEN_RURAL) para que el front pueda agrupar
-    // en N tablas. Si sí se especifica → solo ese almacén.
     $filtroAlmacen = $almacen !== '' ? "AND TRIM(L.ALMACEN_RURAL) = :almacen" : '';
 
     $sql = "SELECT TRIM(L.LECHER) AS LECHER,
@@ -34,7 +31,7 @@ try {
             INNER JOIN USUARIOS_INVENTARIOS U ON L.PROMOTOR = U.CLAVE_ROL
             WHERE L.EFD_NUMERO = 20
               AND U.USUARIO = :usuario
-              AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
+              AND COALESCE(L.EN_OPERACION, 0) = 0
               $filtroAlmacen
             ORDER BY TRIM(L.ALMACEN_RURAL) ASC, L.TIPO_PUNTO_VENTA ASC, TRIM(L.LECHER) ASC";
             
@@ -46,35 +43,45 @@ try {
     $stmt->execute();
     $lecherias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // El reporte mensual usa el inventario del MISMO mes/año capturado en
-    // campo (cierre del 25 del mes correspondiente).
     $mes_inv  = $mes_reporte;
     $anio_inv = $anio_reporte;
 
-    $sql_inv = "SELECT INVENTARIO_FINAL, SURTIMIENTO, VENTA_REAL, VENTA_LIBRO_RETIRO
-                FROM INVENTARIO_LEP_SUBSIDIADA
-                WHERE LECHER = ? AND MES_PERIODO = ? AND ANIO_PERIODO = ?";
+    // MAGIA APLICADA: Usamos IN (?, ?) y pasamos los enteros de forma directa
+    $sql_inv = "SELECT INV_INI_CAJA, INV_INI_SOBRES, SURT_CAJAS, ABASTO_CAJA, ABASTO_SOBRES, 
+                       VENTA_CAJA, VENTA_SOBRES, FIN_CAJA, FIN_SOBRES, REG_CAJA, REG_SOBRES, 
+                       SURT_FECHA, SURT_CADUCIDAD
+                FROM INVENTARIOS_MENSUALES
+                WHERE CLAVE_LECHERIA IN (?, ?) 
+                  AND MES_PERIODO = " . (int)$mes_inv . " 
+                  AND ANIO_PERIODO = " . (int)$anio_inv;
     $stmt_inv = $pdo->prepare($sql_inv);
 
     foreach ($lecherias as &$lech) {
-        $stmt_inv->execute([$lech['LECHER'], $mes_inv, $anio_inv]);
+        $clave_normal = trim($lech['LECHER']);
+        $clave_00     = $clave_normal . '00'; // Concatenamos en PHP, no en Firebird
+
+        // Mandamos ambas opciones a Firebird (8 dígitos y 10 dígitos)
+        $stmt_inv->execute([$clave_normal, $clave_00]);
         $inv = $stmt_inv->fetch(PDO::FETCH_ASSOC);
 
         if ($inv) {
             $lech['encontrado']         = true;
-            $lech['inventario_inicial'] = $inv['INVENTARIO_FINAL'];
-            $lech['surtimiento']        = $inv['SURTIMIENTO'];
-            $lech['venta_real']         = $inv['VENTA_REAL'];
-            $lech['venta_libro_retiro'] = $inv['VENTA_LIBRO_RETIRO'];
+            $lech['inv_ini_cajas']      = (int)$inv['INV_INI_CAJA'];
+            $lech['inv_ini_sobres']     = (int)$inv['INV_INI_SOBRES'];
+            $lech['dot_recibida_cajas'] = (int)$inv['SURT_CAJAS'];
+            $lech['abasto_cajas']       = (int)$inv['ABASTO_CAJA'];
+            $lech['abasto_sobres']      = (int)$inv['ABASTO_SOBRES'];
+            $lech['venta_cajas']        = (int)$inv['VENTA_CAJA'];
+            $lech['venta_sobres']       = (int)$inv['VENTA_SOBRES'];
+            $lech['inv_fin_cajas']      = (int)$inv['FIN_CAJA'];
+            $lech['inv_fin_sobres']     = (int)$inv['FIN_SOBRES'];
+            $lech['retiro_cajas']       = (int)$inv['REG_CAJA'];
+            $lech['retiro_sobres']      = (int)$inv['REG_SOBRES'];
+            $lech['fecha_entrada']      = $inv['SURT_FECHA'];
+            $lech['caducidad']          = $inv['SURT_CADUCIDAD'];
         } else {
             $lech['encontrado']         = false;
-            $lech['inventario_inicial'] = 0;
-            $lech['surtimiento']        = 0;
-            $lech['venta_real']         = 0;
-            $lech['venta_libro_retiro'] = 0;
         }
-        // Mantenemos el nombre 'mes_anterior'/'anio_anterior' para no romper
-        // el JS pero apuntan al mes del inventario consultado.
         $lech['mes_anterior']  = $mes_inv;
         $lech['anio_anterior'] = $anio_inv;
     }
