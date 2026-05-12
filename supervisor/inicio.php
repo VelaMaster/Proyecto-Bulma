@@ -16,177 +16,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="../main_md3.css">
     <link rel="stylesheet" href="../estilos/iniciocards.css">
-    <style>
-        .md3-hero-card {
-            overflow: hidden;
-            isolation: isolate;
-            position: relative;
-            background-color: var(--md-sys-color-surface-container-low, #1e1e1e);
-            border-radius: 28px;
-            padding: 32px;
-            margin-bottom: 24px;
-        }
-        .md3-hero-card>*:not(canvas) {
-            position: relative;
-            z-index: 2;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
-        }
-        .md3-hero-card canvas {
-            will-change: transform, opacity;
-            z-index: 1;
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-        }
+    <link rel="stylesheet" href="../estilos/iniciosupervisor.css">
 
-/* Grid específico para Promotores del Supervisor */
-        .promotores-grid {
-            display: grid;
-            /* 280px permite que quepan 3 columnas perfectamente en pantallas normales */
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
-            gap: 16px;
-            margin-top: 16px;
-            align-items: start;
-            grid-auto-flow: dense; /* ✨ LA MAGIA QUE RELLENA LOS HUECOS ESTILO TETRIS ✨ */
-        }
-
-        .promotor-card {
-            background: var(--md-sys-color-surface-container);
-            border-radius: 16px;
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            /* Animación MD3 ultra suave con curva cubic-bezier */
-            transition: all 0.5s cubic-bezier(0.2, 0, 0, 1); 
-            cursor: pointer;
-            border: 1px solid transparent;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .promotor-card:hover {
-            background: var(--md-sys-color-surface-container-high);
-            transform: translateY(-2px); /* Ligero levante al pasar el cursor */
-        }
-
-        /* --- ESTADO EXPANDIDO --- */
-        .promotor-card.expanded {
-            grid-column: 1 / -1; /* Ocupa toda la fila */
-            background: var(--md-sys-color-surface-container-low); /* Contraste perfecto para tema oscuro */
-            border-color: var(--md-sys-color-outline-variant);
-            border-radius: 28px; /* Bordes más redondeados al abrirse */
-            cursor: default;
-            transform: translateY(0); /* Quita el efecto hover */
-            box-shadow: 0 12px 24px rgba(0,0,0,0.2); /* Sombra de elevación MD3 */
-        }
-
-        .card-main-content {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-        }
-
-        /* --- ANIMACIÓN TIPO ACORDEÓN PERFECTA --- */
-        .detalles-wrapper {
-            display: grid;
-            grid-template-rows: 0fr; /* Empieza colapsado */
-            transition: grid-template-rows 0.5s cubic-bezier(0.2, 0, 0, 1);
-        }
-        
-        .detalles-inner {
-            min-height: 0;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            opacity: 0;
-            transform: translateY(-10px); /* Efecto de caída suave */
-            transition: opacity 0.4s ease, transform 0.4s ease;
-        }
-
-        .promotor-card.expanded .detalles-wrapper {
-            grid-template-rows: 1fr; /* Expande suavemente */
-        }
-
-        .promotor-card.expanded .detalles-inner {
-            opacity: 1;
-            transform: translateY(0);
-            padding-top: 20px;
-        }
-
-        /* --- DISEÑO A 2 COLUMNAS EN PC CUANDO ESTÁ ABIERTO --- */
-        @media (min-width: 768px) {
-            .promotor-card.expanded .card-main-content {
-                flex-direction: row;
-                gap: 32px;
-                align-items: stretch;
-            }
-            
-            .promotor-card.expanded .promotor-header {
-                flex: 0 0 220px;
-                border-right: 1px solid var(--md-sys-color-outline-variant);
-                padding-right: 24px;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                text-align: center;
-            }
-
-            .promotor-card.expanded .promotor-avatar {
-                width: 80px;
-                height: 80px;
-                font-size: 2.5rem;
-                margin-bottom: 16px;
-                background-color: var(--md-sys-color-primary);
-                color: var(--md-sys-color-on-primary);
-            }
-
-            .promotor-card.expanded .detalles-wrapper {
-                flex: 1;
-            }
-
-            .lista-interna-lecherias {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-                gap: 12px;
-            }
-        }
-
-/* Clases base del avatar y texto de la tarjeta cerrada */
-        .promotor-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background-color: var(--md-sys-color-primary-container);
-            color: var(--md-sys-color-on-primary-container);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            transition: all 0.4s ease;
-            
-            /* LA MAGIA ANTI-APLASTAMIENTO */
-            flex-shrink: 0; 
-        }
-
-        .promotor-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            transition: all 0.4s ease;
-        }
-
-        .promotor-info h4 {
-            margin: 0;
-            font-size: 1.1rem;
-            color: var(--md-sys-color-on-surface);
-        }
-
-        .promotor-info p {
-            margin: 0;
-            font-size: 0.9rem;
-            color: var(--md-sys-color-on-surface-variant);
-        }
-    </style>
     <script type="importmap">
         { "imports": { "@material/web/": "https://esm.run/@material/web/" } }
     </script>
@@ -206,9 +37,13 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
         <div class="app-bar-end">
             <div class="desktop-nav">
+                                <md-text-button href="lecherias.php">
+                    <md-icon slot="icon">storefront</md-icon>
+                    Lecherías
+                </md-text-button>
                 <div style="position: relative;">
                     <md-text-button id="btn-rev" onclick="abrirMenu('menu-rev')">
-                        Revisión de Inventarios
+                        Requerimiento de dotacion
                         <md-icon slot="icon">arrow_drop_down</md-icon>
                     </md-text-button>
                     <md-menu id="menu-rev" anchor="btn-rev">
@@ -223,14 +58,9 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     </md-menu>
                 </div>
 
-                <md-text-button href="lecherias.php">
-                    <md-icon slot="icon">storefront</md-icon>
-                    Lecherías
-                </md-text-button>
-
                 <div style="position: relative;">
                     <md-text-button id="btn-prom" onclick="abrirMenu('menu-prom')">
-                        Gestión Promotores
+                        Inventarios leche en polvo
                         <md-icon slot="icon">arrow_drop_down</md-icon>
                     </md-text-button>
                     <md-menu id="menu-prom" anchor="btn-prom">
@@ -239,6 +69,13 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                             <md-icon slot="start">group</md-icon>
                         </md-menu-item>
                     </md-menu>
+                </div>
+
+                                <div style="position: relative;">
+                    <md-text-button id="btn-prom" onclick="abrirMenu('menu-prom')">
+                        Reporte mensual de la operacion
+                        <md-icon slot="icon">arrow_drop_down</md-icon>
+                    </md-text-button>
                 </div>
             </div>
 
@@ -258,23 +95,22 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         <div style="overflow-y: auto; flex-grow: 1;">
             <md-list style="background: transparent;">
                 <md-divider style="margin: 8px 0;"></md-divider>
+                                <md-list-item href="lecherias.php" type="button">
+                    <div slot="headline">Lecherías</div>
+                    <md-icon slot="start">storefront</md-icon>
+                </md-list-item>
                 
                 <div class="drawer-section-title">Revisión de Inventarios</div>
                 <md-list-item href="validarInventarios.php" type="button">
                     <div slot="headline">Validar Pendientes</div>
                     <md-icon slot="start">fact_check</md-icon>
                 </md-list-item>
+                               <md-divider style="margin: 8px 0;"></md-divider>
                 <md-list-item href="historialGlobal.php" type="button">
                     <div slot="headline">Historial General</div>
                     <md-icon slot="start">history</md-icon>
                 </md-list-item>
 
-                <md-divider style="margin: 8px 0;"></md-divider>
-
-                <md-list-item href="lecherias.php" type="button">
-                    <div slot="headline">Lecherías</div>
-                    <md-icon slot="start">storefront</md-icon>
-                </md-list-item>
 
                 <md-divider style="margin: 8px 0;"></md-divider>
 

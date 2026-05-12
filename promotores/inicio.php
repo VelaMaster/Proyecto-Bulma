@@ -69,6 +69,10 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                             <div slot="headline">Generar</div>
                             <md-icon slot="start">add_box</md-icon>
                         </md-menu-item>
+                        <md-menu-item href="escaner.php">
+                            <div slot="headline">Subir desde camara</div>
+                            <md-icon slot="start">scan</md-icon>
+                        </md-menu-item>
                         <md-menu-item href="consultarinventarioMensual.php">
                             <div slot="headline">Consultar</div>
                             <md-icon slot="start">search</md-icon>
