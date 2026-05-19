@@ -18,8 +18,31 @@ const OfflinePreload = (() => {
   let _card = null;
   let _bar  = null;
   let _msg  = null;
+  let _themeObs = null;
 
-  /* Inyecta los estilos del card una sola vez (respeta tema claro/oscuro via CSS vars) */
+  function getCSSTema(varName, fallback) {
+    return getComputedStyle(document.documentElement).getPropertyValue(varName).trim() || fallback;
+  }
+
+  function aplicarTemaAlCard() {
+    if (!_card) return;
+    _card.style.background           = getCSSTema('--md-sys-color-surface-container-high', '#ECE6F0');
+    _card.style.color                = getCSSTema('--md-sys-color-on-surface', '#1D1B20');
+    _card.style.borderColor          = getCSSTema('--md-sys-color-outline-variant', '#CAC4D0');
+    const icon = _card.querySelector('.preload-icon');
+    if (icon) icon.style.color       = getCSSTema('--md-sys-color-primary', '#6750A4');
+    const title = _card.querySelector('.preload-title');
+    if (title) title.style.color     = getCSSTema('--md-sys-color-on-surface', '#1D1B20');
+    const close = _card.querySelector('#preload-close');
+    if (close) close.style.color     = getCSSTema('--md-sys-color-on-surface-variant', '#49454F');
+    if (_msg) _msg.style.color       = getCSSTema('--md-sys-color-on-surface-variant', '#49454F');
+    const track = _card.querySelector('.preload-track');
+    if (track) track.style.background = getCSSTema('--md-sys-color-surface-container-highest', '#E6E0E9');
+    if (_bar) _bar.style.background  = getCSSTema('--md-sys-color-primary', '#6750A4');
+    const pct = _card.querySelector('#preload-pct');
+    if (pct) pct.style.color         = getCSSTema('--md-sys-color-on-surface-variant', '#49454F');
+  }
+
   function inyectarEstilos() {
     if (document.getElementById('preload-styles')) return;
     const s = document.createElement('style');
@@ -29,17 +52,16 @@ const OfflinePreload = (() => {
         position: fixed;
         bottom: 24px;
         right: 24px;
-        background: var(--md-sys-color-surface-container-high);
-        color: var(--md-sys-color-on-surface);
         border-radius: 16px;
         padding: 16px 20px;
         min-width: 280px;
         max-width: 340px;
-        box-shadow: var(--md-sys-elevation-3, 0 4px 20px rgba(0,0,0,0.25));
+        box-shadow: 0 4px 20px rgba(0,0,0,0.25);
         z-index: 8000;
         font-size: 0.85rem;
         font-family: Roboto, sans-serif;
-        border: 1px solid var(--md-sys-color-outline-variant);
+        border-style: solid;
+        border-width: 1px;
         opacity: 0;
         transform: translateY(16px);
         transition: opacity 0.3s, transform 0.3s, background-color 0.3s, color 0.3s, border-color 0.3s;
@@ -52,38 +74,32 @@ const OfflinePreload = (() => {
       }
       #preload-card .preload-icon {
         font-size: 20px;
-        color: var(--md-sys-color-primary);
         flex-shrink: 0;
       }
       #preload-card .preload-title {
         font-weight: 500;
         flex-grow: 1;
-        color: var(--md-sys-color-on-surface);
       }
       #preload-card .preload-close {
         cursor: pointer;
         opacity: .55;
         font-size: 18px;
-        color: var(--md-sys-color-on-surface-variant);
         line-height: 1;
       }
       #preload-card .preload-close:hover { opacity: 1; }
       #preload-msg {
-        color: var(--md-sys-color-on-surface-variant);
         margin-bottom: 10px;
         min-height: 18px;
         line-height: 1.4;
         font-size: 0.82rem;
       }
       .preload-track {
-        background: var(--md-sys-color-surface-container-highest);
         border-radius: 100px;
         height: 6px;
         overflow: hidden;
       }
       #preload-bar {
         height: 100%;
-        background: var(--md-sys-color-primary);
         width: 0%;
         transition: width 0.4s ease;
         border-radius: 100px;
@@ -92,7 +108,6 @@ const OfflinePreload = (() => {
         text-align: right;
         margin-top: 4px;
         font-size: 0.75rem;
-        color: var(--md-sys-color-on-surface-variant);
         opacity: .7;
       }
     `;
@@ -125,7 +140,12 @@ const OfflinePreload = (() => {
     _bar = _card.querySelector('#preload-bar');
     _msg = _card.querySelector('#preload-msg');
 
+    aplicarTemaAlCard();
+
     _card.querySelector('#preload-close').addEventListener('click', () => ocultarUI());
+
+    _themeObs = new MutationObserver(() => aplicarTemaAlCard());
+    _themeObs.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-theme-accent'] });
 
     requestAnimationFrame(() => {
       _card.style.opacity   = '1';
@@ -150,13 +170,14 @@ const OfflinePreload = (() => {
     if (titulo) titulo.textContent = ok ? 'Datos offline listos ✓' : 'Descarga parcial';
 
     if (_bar) _bar.style.background = ok
-      ? 'var(--md-sys-color-tertiary)'
-      : 'var(--md-sys-color-error)';
+      ? getCSSTema('--md-sys-color-tertiary', '#00639B')
+      : getCSSTema('--md-sys-color-error', '#B3261E');
 
     setTimeout(ocultarUI, ok ? 3500 : 6000);
   }
 
   function ocultarUI() {
+    if (_themeObs) { _themeObs.disconnect(); _themeObs = null; }
     if (!_card) return;
     _card.style.opacity   = '0';
     _card.style.transform = 'translateY(16px)';
