@@ -1,0 +1,6 @@
+# Excluir directorios que se montan como volúmenes o no son necesarios en la imagen
+datos/
+node_modules/
+database/
+*.md
+.git/
