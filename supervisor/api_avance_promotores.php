@@ -4,9 +4,10 @@
 //  Salida: { status, mes, anio, promotores: [
 //    { id, nombre, total_lecherias, capturadas, faltantes, porcentaje }
 //  ] }
-//  Sólo cuenta lecherías que estén asignadas a ESTE supervisor en
-//  MAPEO_SUPERVISOR_LECHERIA, evitando contar lecherías del promotor
-//  que ya no son de este supervisor.
+//  Identificamos a los promotores del supervisor vía
+//  MAPEO_SUPERVISOR_LECHERIA (les basta con tener UNA lechería mapeada)
+//  y contamos TODAS las lecherías activas del promotor, para que el
+//  total que ve el supervisor coincida con el que ve el propio promotor.
 // ────────────────────────────────────────────────────────────────────
 session_start();
 header('Content-Type: application/json; charset=utf-8');
@@ -43,14 +44,19 @@ try {
             P.PMT_NOMBRE  AS NOMBRE,
             COUNT(DISTINCT L.LECHER) AS TOTAL,
             COUNT(DISTINCT CASE WHEN IM.CLAVE_LECHERIA IS NOT NULL THEN L.LECHER END) AS CAPTURADAS
-        FROM MAPEO_SUPERVISOR_LECHERIA M
-        JOIN LECHERIA L  ON M.LECHER = L.LECHER
-        JOIN PROMOTOR P  ON L.PROMOTOR = P.PMT_NUMERO
+        FROM PROMOTOR P
+        JOIN LECHERIA L ON L.PROMOTOR = P.PMT_NUMERO
         LEFT JOIN INVENTARIOS_MENSUALES IM
                ON IM.CLAVE_LECHERIA = L.LECHER
               AND IM.MES_PERIODO    = :mes
               AND IM.ANIO_PERIODO   = :anio
-        WHERE M.ID_SUPERVISOR = :id_sup
+        WHERE EXISTS (
+                SELECT 1
+                FROM MAPEO_SUPERVISOR_LECHERIA M
+                JOIN LECHERIA L2 ON M.LECHER = L2.LECHER
+                WHERE M.ID_SUPERVISOR = :id_sup
+                  AND L2.PROMOTOR = P.PMT_NUMERO
+              )
           AND P.PMT_ACTIVO = 'S'
           AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
         GROUP BY P.PMT_NUMERO, P.PMT_NOMBRE

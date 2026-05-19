@@ -1,0 +1,436 @@
+<?php
+session_start();
+if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
+    header('Location: ../iniciosesionSupervisor.php');
+    exit();
+}
+$nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
+?>
+<!DOCTYPE html>
+<html lang="es" data-theme="dark" data-theme-accent="violeta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Requerimiento de Dotación</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+    <link rel="stylesheet" href="../main_md3.css">
+    <link rel="stylesheet" href="../estilos/iniciocards.css">
+    <style>
+        .filtros-card{
+            display:flex; flex-wrap:wrap; align-items:center; gap:14px;
+            padding:16px 20px; margin-bottom:16px;
+        }
+        .filtros-card label{font-size:0.85rem; color:var(--md-sys-color-on-surface-variant);}
+        .precio-pills{display:inline-flex; gap:8px;}
+        .precio-pill-btn{
+            cursor:pointer; padding:6px 14px; border-radius:999px;
+            border:1px solid var(--md-sys-color-outline-variant);
+            background:var(--md-sys-color-surface-container); color:var(--md-sys-color-on-surface);
+            font-size:0.85rem; font-weight:500;
+        }
+        .precio-pill-btn.active{
+            background:var(--md-sys-color-primary); color:var(--md-sys-color-on-primary);
+            border-color:transparent;
+        }
+        /* Grid responsivo: 2 columnas en desktop, 1 en móvil */
+        .almacenes-grid{
+            display:grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap:14px;
+        }
+        .almacen-card{
+            background:var(--md-sys-color-surface-container);
+            border:1px solid var(--md-sys-color-outline-variant);
+            border-radius:14px;
+            overflow:hidden;
+        }
+        .almacen-card .almacen-titulo{
+            display:flex; align-items:center; gap:10px;
+            padding:10px 14px;
+            background:var(--md-sys-color-secondary-container);
+            color:var(--md-sys-color-on-secondary-container);
+            font-weight:600; font-size:0.95rem;
+        }
+        .almacen-card .almacen-titulo .meta{
+            margin-left:auto; font-weight:500; opacity:.85; font-size:0.8rem;
+        }
+        .reporte-table{width:100%; border-collapse:collapse; font-size:0.85rem;}
+        .reporte-table th, .reporte-table td{
+            padding:6px 10px; border-bottom:1px solid var(--md-sys-color-outline-variant);
+            text-align:left;
+        }
+        .reporte-table th{
+            font-weight:600; color:var(--md-sys-color-on-surface-variant);
+            background:var(--md-sys-color-surface-container-high);
+            font-size:0.75rem; text-transform:uppercase; letter-spacing:.4px;
+        }
+        .reporte-table th:last-child, .reporte-table td:last-child{text-align:right;}
+        .subtotal-row td{
+            background:var(--md-sys-color-surface-container-high);
+            font-weight:700; color:var(--md-sys-color-on-surface);
+        }
+        .falta-pill{
+            display:inline-block; padding:2px 10px; border-radius:999px;
+            background:color-mix(in srgb, var(--md-sys-color-error) 18%, transparent);
+            color:var(--md-sys-color-error); font-weight:600; font-size:0.75rem;
+        }
+        tr.faltante td{opacity:.85;}
+        .dm-tag{
+            display:inline-block; padding:1px 8px; border-radius:6px;
+            background:color-mix(in srgb, var(--md-sys-color-tertiary) 22%, transparent);
+            color:var(--md-sys-color-tertiary); font-weight:600; font-size:0.75rem;
+            letter-spacing:.5px;
+        }
+        /* Resumen final */
+        .resumen-grid{
+            display:grid; grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));
+            gap:12px; margin-top:14px;
+        }
+        .resumen-cell{
+            padding:14px 16px; border-radius:12px;
+            background:var(--md-sys-color-surface-container);
+            border:1px solid var(--md-sys-color-outline-variant);
+        }
+        .resumen-cell .label{
+            font-size:0.78rem; color:var(--md-sys-color-on-surface-variant);
+            text-transform:uppercase; letter-spacing:.5px;
+        }
+        .resumen-cell .value{
+            font-size:1.5rem; font-weight:600; color:var(--md-sys-color-primary);
+            margin-top:4px;
+        }
+        .grand-total{
+            display:flex; align-items:center; justify-content:flex-end; gap:14px;
+            padding:14px 18px; margin-top:8px; border-radius:14px;
+            background:color-mix(in srgb, var(--md-sys-color-primary) 14%, transparent);
+            color:var(--md-sys-color-on-surface);
+        }
+        .grand-total strong{color:var(--md-sys-color-primary); font-size:1.15rem;}
+        .skel-row td{padding:14px 10px;}
+        .skel-bar{height:14px; border-radius:6px; background:var(--md-sys-color-surface-container-highest);
+                  animation:pulseSkel 1.4s infinite ease-in-out;}
+        @keyframes pulseSkel{50%{opacity:.5}}
+        .warn-card{
+            display:flex; align-items:flex-start; gap:12px; padding:12px 16px; border-radius:12px;
+            background:color-mix(in srgb, var(--md-sys-color-tertiary) 16%, transparent);
+            color:var(--md-sys-color-on-surface);
+            margin-bottom:14px;
+        }
+    </style>
+    <script type="importmap">{ "imports": { "@material/web/": "https://esm.run/@material/web/" } }</script>
+    <script type="module"> import '@material/web/all.js'; </script>
+</head>
+<body>
+    <header class="md3-top-app-bar">
+        <div class="app-bar-start">
+            <md-icon-button class="mobile-menu-btn" onclick="toggleDrawer()">
+                <md-icon>menu</md-icon>
+            </md-icon-button>
+            <div class="app-brand"><span>Liconsa - Supervisión</span></div>
+        </div>
+
+        <div class="app-bar-end">
+            <div class="desktop-nav">
+                <md-text-button href="inicio.php">
+                    <md-icon slot="icon">home</md-icon>
+                    Inicio
+                </md-text-button>
+                <md-text-button href="lecherias.php">
+                    <md-icon slot="icon">storefront</md-icon>
+                    Lecherías
+                </md-text-button>
+            </div>
+
+            <md-filled-tonal-button href="../cerrar_sesionsupervisor.php" style="margin-left:16px;">
+                <md-icon slot="icon">logout</md-icon> Salir
+            </md-filled-tonal-button>
+        </div>
+    </header>
+
+    <main class="panel-content">
+        <div class="md3-card md3-hero-card">
+            <div style="display:flex; align-items:center; gap:16px;">
+                <div style="background:var(--md-sys-color-primary-container); border-radius:16px; padding:10px; display:flex;">
+                    <md-icon style="color:var(--md-sys-color-on-primary-container); font-size:32px; width:32px; height:32px;">description</md-icon>
+                </div>
+                <div>
+                    <h2 style="margin:0; font-size:1.6rem; font-weight:500; color:var(--md-sys-color-on-surface);">
+                        Requerimiento de Dotación
+                    </h2>
+                    <p style="margin:4px 0 0; font-size:0.9rem; color:var(--md-sys-color-on-surface-variant);">
+                        Consolidado en base al desplazamiento mensual reportado por tus promotores,
+                        agrupado por almacén y separado por precio.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="md3-card filtros-card">
+            <md-outlined-select label="Mes" id="selMes" style="min-width:140px;">
+                <md-select-option value="1"><div slot="headline">Enero</div></md-select-option>
+                <md-select-option value="2"><div slot="headline">Febrero</div></md-select-option>
+                <md-select-option value="3"><div slot="headline">Marzo</div></md-select-option>
+                <md-select-option value="4"><div slot="headline">Abril</div></md-select-option>
+                <md-select-option value="5"><div slot="headline">Mayo</div></md-select-option>
+                <md-select-option value="6"><div slot="headline">Junio</div></md-select-option>
+                <md-select-option value="7"><div slot="headline">Julio</div></md-select-option>
+                <md-select-option value="8"><div slot="headline">Agosto</div></md-select-option>
+                <md-select-option value="9"><div slot="headline">Septiembre</div></md-select-option>
+                <md-select-option value="10"><div slot="headline">Octubre</div></md-select-option>
+                <md-select-option value="11"><div slot="headline">Noviembre</div></md-select-option>
+                <md-select-option value="12"><div slot="headline">Diciembre</div></md-select-option>
+            </md-outlined-select>
+
+            <md-outlined-text-field label="Año" id="inputAnio" type="number"
+                value="<?= date('Y') ?>" style="max-width:110px;"></md-outlined-text-field>
+
+            <div class="precio-pills" role="tablist" aria-label="Filtro por precio">
+                <button type="button" class="precio-pill-btn active" data-precio="6.50">$6.50 / litro</button>
+                <button type="button" class="precio-pill-btn"        data-precio="4.50">$4.50 / litro</button>
+            </div>
+
+            <span style="flex-grow:1;"></span>
+
+            <md-filled-button id="btnGenerarPDF">
+                <md-icon slot="icon">picture_as_pdf</md-icon> Generar PDF
+            </md-filled-button>
+        </div>
+                <div class="md3-card" id="resumenCard" style="display:none; margin-top:14px;">
+            <h3 style="margin:0 0 4px; font-size:1rem; font-weight:500; color:var(--md-sys-color-on-surface);">
+                <md-icon style="vertical-align:middle; margin-right:6px; color:var(--md-sys-color-primary);">insights</md-icon>
+                Resumen del padrón a tu cargo
+            </h3>
+            <p style="margin:0 0 8px; font-size:0.85rem; color:var(--md-sys-color-on-surface-variant);">
+            </p>
+            <div class="resumen-grid">
+                <div class="resumen-cell">
+                    <div class="label">Promotores</div>
+                    <div class="value" id="resPromotores">0</div>
+                </div>
+                <div class="resumen-cell">
+                    <div class="label">Lecherías en total</div>
+                    <div class="value" id="resLechTotal">0</div>
+                </div>
+                <div class="resumen-cell">
+                    <div class="label">Lecherías $4.50</div>
+                    <div class="value" id="resLech450">0</div>
+                </div>
+                <div class="resumen-cell">
+                    <div class="label">Lecherías $6.50</div>
+                    <div class="value" id="resLech650">0</div>
+                </div>
+            </div>
+        </div>
+        <div id="warnPromos" style="display:none;"></div>
+
+        <div id="contenedorTabla">
+            <div class="md3-card" style="text-align:center; padding:24px; color:var(--md-sys-color-on-surface-variant);">
+                Selecciona mes y año para ver el consolidado.
+            </div>
+        </div>
+
+        <div class="grand-total" id="grandTotal" style="display:none;">
+            <md-icon style="color:var(--md-sys-color-primary);">summarize</md-icon>
+            <span>Total general:</span>
+            <strong id="totalGeneralVal">0</strong>
+            <span style="opacity:.75;" id="totalLechVal">(0 lecherías)</span>
+        </div>
+    </main>
+
+    <script src="../js/temas_md3.js"></script>
+    <script>
+        const selMes        = document.getElementById('selMes');
+        const inputAnio     = document.getElementById('inputAnio');
+        const contenedor    = document.getElementById('contenedorTabla');
+        const btnPDF        = document.getElementById('btnGenerarPDF');
+        const grandTotal    = document.getElementById('grandTotal');
+        const totalGeneralEl= document.getElementById('totalGeneralVal');
+        const totalLechEl   = document.getElementById('totalLechVal');
+        const warnPromos    = document.getElementById('warnPromos');
+        const pills         = document.querySelectorAll('.precio-pill-btn');
+
+        let precioActivo = '6.50';
+        let ultimoConsolidado = null;
+        const supervisorNombre = <?= json_encode($nombre_usuario, JSON_UNESCAPED_UNICODE) ?>;
+
+        // Default: mes actual
+        selMes.value = String(new Date().getMonth() + 1);
+
+        pills.forEach(p => p.addEventListener('click', () => {
+            pills.forEach(x => x.classList.remove('active'));
+            p.classList.add('active');
+            precioActivo = p.dataset.precio;
+            cargar();
+        }));
+        selMes.addEventListener('change', cargar);
+        inputAnio.addEventListener('change', cargar);
+
+        function skeleton() {
+            const placeholder = Array(4).fill(0).map(() => `
+                <div class="almacen-card">
+                    <div class="almacen-titulo">
+                        <md-icon>warehouse</md-icon>
+                        <div class="skel-bar" style="flex:1; max-width:160px;"></div>
+                    </div>
+                    <div style="padding:14px;">
+                        ${Array(3).fill('<div class="skel-bar" style="margin-bottom:8px;"></div>').join('')}
+                    </div>
+                </div>`).join('');
+            contenedor.innerHTML = `<div class="almacenes-grid">${placeholder}</div>`;
+        }
+
+        function fmtNum(n) { return Number(n || 0).toLocaleString('es-MX'); }
+
+        function tiendaCell(l) {
+            // "DM" se muestra como pildora; cualquier otro num_tienda como texto plano.
+            if (l.num_tienda === 'DM') return `<span class="dm-tag">DM</span>`;
+            return l.num_tienda || '';
+        }
+
+        function pintarAlmacen(b) {
+            const filas = b.lecherias.map(l => {
+                if (l.capturado) {
+                    return `
+                        <tr>
+                            <td>${l.punto_venta}</td>
+                            <td>${tiendaCell(l)}</td>
+                            <td>${fmtNum(l.requerimiento)}</td>
+                        </tr>`;
+                }
+                return `
+                    <tr class="faltante">
+                        <td>${l.punto_venta}</td>
+                        <td>${tiendaCell(l)}</td>
+                        <td><span class="falta-pill">FALTA</span></td>
+                    </tr>`;
+            }).join('');
+
+            return `
+                <div class="almacen-card">
+                    <div class="almacen-titulo">
+                        <md-icon>warehouse</md-icon>
+                        <span>ALMACÉN ${b.almacen}</span>
+                        <span class="meta">${b.capturadas}/${b.total}</span>
+                    </div>
+                    <table class="reporte-table">
+                        <thead>
+                            <tr>
+                                <th>Punto de Venta</th>
+                                <th>Tienda</th>
+                                <th>Req.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filas}
+                            <tr class="subtotal-row">
+                                <td colspan="2" style="text-align:right;">SUBTOTAL =</td>
+                                <td>${fmtNum(b.subtotal)}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>`;
+        }
+
+        function pintarResumen(r) {
+            if (!r) {
+                document.getElementById('resumenCard').style.display = 'none';
+                return;
+            }
+            document.getElementById('resPromotores').textContent = fmtNum(r.promotores);
+            document.getElementById('resLechTotal').textContent  = fmtNum(r.lecherias_total);
+            document.getElementById('resLech450').textContent    = fmtNum(r.lecherias_450);
+            document.getElementById('resLech650').textContent    = fmtNum(r.lecherias_650);
+            document.getElementById('resumenCard').style.display = 'block';
+        }
+
+        function pintar(data) {
+            ultimoConsolidado = data;
+
+            if (!data.almacenes || data.almacenes.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="md3-card" style="text-align:center; padding:24px; color:var(--md-sys-color-on-surface-variant);">
+                        <md-icon style="font-size:36px; color:var(--md-sys-color-tertiary);">inbox</md-icon>
+                        <p style="margin-top:8px;">No hay lecherías para ${selMes.options[selMes.selectedIndex].textContent} ${inputAnio.value} con precio $${precioActivo}.</p>
+                    </div>`;
+                grandTotal.style.display = 'none';
+                pintarResumen(data.resumen);
+                return;
+            }
+
+            contenedor.innerHTML =
+                `<div class="almacenes-grid">${data.almacenes.map(pintarAlmacen).join('')}</div>`;
+
+            totalGeneralEl.textContent = fmtNum(data.total_general);
+            totalLechEl.textContent =
+                `(${data.total_capturadas}/${data.total_lecherias} capturadas en este precio)`;
+            grandTotal.style.display = 'flex';
+
+            pintarResumen(data.resumen);
+        }
+
+        async function cargar() {
+            const mes  = selMes.value;
+            const anio = inputAnio.value;
+            if (!mes || !anio) return;
+
+            skeleton();
+            grandTotal.style.display = 'none';
+            try {
+                const r = await fetch(`api_requerimiento_dotacion.php?mes=${mes}&anio=${anio}&precio=${precioActivo}`);
+                const j = await r.json();
+                if (j.status !== 'success') {
+                    contenedor.innerHTML = `<p style="color:var(--md-sys-color-error); padding:16px;">${j.message || 'Error al cargar.'}</p>`;
+                    return;
+                }
+                pintar(j);
+                warnPromos.style.display = 'none';
+            } catch (e) {
+                contenedor.innerHTML = `<p style="color:var(--md-sys-color-error); padding:16px;">Error de conexión: ${e.message}</p>`;
+            }
+        }
+
+        btnPDF.addEventListener('click', async () => {
+            if (!ultimoConsolidado || !ultimoConsolidado.almacenes?.length) {
+                alert('No hay datos para imprimir aún. Selecciona mes/año y precio primero.');
+                return;
+            }
+            const payload = {
+                mes:        Number(selMes.value),
+                anio:       Number(inputAnio.value),
+                precio:     precioActivo,
+                zona:       '',
+                esquema:    '',
+                supervisor: ultimoConsolidado.supervisor?.nombre || supervisorNombre,
+                almacenes:  ultimoConsolidado.almacenes,
+            };
+            const resp = await fetch('generar_pdf_requerimiento_supervisor.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            if (!resp.ok) {
+                alert('No se pudo generar el PDF.');
+                return;
+            }
+            const blob = await resp.blob();
+            const url = URL.createObjectURL(blob);
+            window.open(url, '_blank');
+        });
+
+        function abrirMenu(id) {
+            document.querySelectorAll('md-menu').forEach(m => { if (m.id !== id) m.open = false; });
+            const menu = document.getElementById(id);
+            if (menu) menu.open = !menu.open;
+        }
+        function toggleDrawer() {
+            const d = document.getElementById('mobile-drawer');
+            const s = document.getElementById('drawer-scrim');
+            if (d) d.classList.toggle('open');
+            if (s) s.classList.toggle('open');
+        }
+
+        cargar();
+    </script>
+</body>
+</html>

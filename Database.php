@@ -8,7 +8,7 @@ class Database {
     public static function getInstance() {
         if (self::$instance === null) {
             $host_remote = '172.24.10.251';
-            $host_local  = 'proyecto-bulma-db-1'; 
+            $host_local  = 'db'; 
             $puerto = 3050;
 
             $socket = @fsockopen($host_remote, $puerto, $errno, $errstr, 2);

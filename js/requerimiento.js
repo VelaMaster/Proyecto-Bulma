@@ -283,10 +283,98 @@ document.addEventListener('DOMContentLoaded', () => {
     selectMesReporte.addEventListener('change', cargarLecherias);
     inputAnioReporte.addEventListener('change', cargarLecherias);
 
+    function recolectarPayload() {
+        const mes  = parseInt(selectMesReporte.value);
+        const anio = parseInt(inputAnioReporte.value);
+        if (!mes || !anio) return null;
+
+        const ms = sumarMeses(mes, anio, 1);
+        const md = sumarMeses(mes, anio, 2);
+
+        const almacenes = [];
+        document.querySelectorAll('.almacen-block').forEach(block => {
+            const almacen = block.dataset.almacen || '';
+            const lecherias = [];
+            block.querySelectorAll('tbody tr').forEach(tr => {
+                const v = (sel) => tr.querySelector(`input[name="${sel}"]`)?.value ?? '';
+                lecherias.push({
+                    punto_venta:      v('punto_venta[]'),
+                    clave_tienda:     v('clave_tienda[]'),
+                    precio:           v('precio[]'),
+                    tipo_venta:       v('tipo_venta[]'),
+                    familias:         parseInt(v('familias[]'))         || 0,
+                    beneficiarios:    parseInt(v('beneficiarios[]'))    || 0,
+                    dotacion_teorica: parseInt(v('dotacion_teorica[]')) || 0,
+                    inv_inicial:      v('inv_inicial[]'),
+                    surtimiento:      parseInt(v('surtimiento[]'))      || 0,
+                    ventas:           v('ventas[]'),
+                    inv_final:        v('inv_final[]'),
+                    req_ms_anterior:  parseInt(v('req_ms_anterior[]'))  || 0,
+                    vms:              parseInt(v('vms[]'))              || 0,
+                    req_actual:       parseInt(v('req_actual[]'))       || 0,
+                    observaciones:    v('observaciones[]'),
+                });
+            });
+            if (lecherias.length) {
+                almacenes.push({ almacen, lecherias });
+            }
+        });
+
+        return {
+            mes_base:           mes,
+            anio_base:          anio,
+            mes_ms:             ms.mes,
+            mes_destino:        md.mes,
+            anio_destino:       md.anio,
+            mes_ms_nombre:      nombresMeses[ms.mes].toUpperCase(),
+            mes_destino_nombre: nombresMeses[md.mes].toUpperCase(),
+            promotor:           '',
+            supervisor:         (inputSupervisor?.value || '').toString(),
+            almacenes,
+        };
+    }
+
     btnGuardar.addEventListener('click', async () => {
-        // ... (Tu código de guardado original se mantiene igual aquí) ...
-        // Dado que el payload original tomaba los input values, ahora tomará "4 -- 16".
-        // Si tu guardarRequerimiento.php necesita separarlos, me avisas, pero por ahora se enviarán tal cual.
-        notificar('Guardado no implementado en esta vista de prueba.', 'info'); 
+        const payload = recolectarPayload();
+        if (!payload || !payload.almacenes.length) {
+            notificar('Carga primero las lecherías (mes/año) antes de guardar.', 'error');
+            return;
+        }
+
+        btnGuardar.disabled = true;
+        try {
+            const resp = await fetch('guardarRequerimiento.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+            const data = await resp.json();
+            if (data.status === 'success') {
+                notificar(`Requerimiento guardado (${data.lecherias} lecherías en ${data.almacenes} almacén${data.almacenes===1?'':'es'}).`, 'info');
+
+                // Si el checkbox de PDF está activo, también pedimos el PDF.
+                if (chkGenerarPDF && chkGenerarPDF.checked) {
+                    try {
+                        const r2 = await fetch('generar_pdf_requerimiento.php', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload),
+                        });
+                        if (r2.ok) {
+                            const blob = await r2.blob();
+                            window.open(URL.createObjectURL(blob), '_blank');
+                        }
+                    } catch (e) {
+                        notificar('Guardado OK, pero el PDF no se pudo generar.', 'error');
+                    }
+                }
+            } else {
+                notificar(data.mensaje || 'No se pudo guardar.', 'error');
+            }
+        } catch (e) {
+            notificar('Error de red al guardar: ' + e.message, 'error');
+        } finally {
+            btnGuardar.disabled = false;
+        }
     });
 });

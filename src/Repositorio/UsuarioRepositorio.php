@@ -40,16 +40,27 @@ class UsuarioRepositorio
 
     public function obtenerPromotoresDeSupervisor($id_supervisor)
     {
+        // Identificamos a los promotores del supervisor a partir de
+        // MAPEO_SUPERVISOR_LECHERIA (con que tengan UNA lechería mapeada
+        // basta para considerarlos "su promotor"). Luego listamos TODAS
+        // las lecherías activas del promotor, no nada más las que están
+        // en el mapeo — de lo contrario el conteo del supervisor queda
+        // por debajo del que ve el propio promotor.
         $sql = "
-            SELECT 
-                P.PMT_NUMERO, 
-                P.PMT_NOMBRE, 
-                L.LECHER AS NUMERO_LECHERIA, 
+            SELECT
+                P.PMT_NUMERO,
+                P.PMT_NOMBRE,
+                L.LECHER AS NUMERO_LECHERIA,
                 L.NOMBRELECH AS NOMBRE_LECHERIA
-            FROM MAPEO_SUPERVISOR_LECHERIA M
-            JOIN LECHERIA L ON M.LECHER = L.LECHER
-            JOIN PROMOTOR P ON L.PROMOTOR = P.PMT_NUMERO
-            WHERE M.ID_SUPERVISOR = :id_supervisor
+            FROM PROMOTOR P
+            JOIN LECHERIA L ON L.PROMOTOR = P.PMT_NUMERO
+            WHERE EXISTS (
+                    SELECT 1
+                    FROM MAPEO_SUPERVISOR_LECHERIA M
+                    JOIN LECHERIA L2 ON M.LECHER = L2.LECHER
+                    WHERE M.ID_SUPERVISOR = :id_supervisor
+                      AND L2.PROMOTOR = P.PMT_NUMERO
+                  )
               AND P.PMT_ACTIVO = 'S'
               AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
             ORDER BY P.PMT_NOMBRE, L.LECHER

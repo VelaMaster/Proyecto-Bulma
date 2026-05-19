@@ -47,8 +47,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                         <md-icon slot="icon">arrow_drop_down</md-icon>
                     </md-text-button>
                     <md-menu id="menu-rev" anchor="btn-rev">
-                        <md-menu-item href="validarInventarios.php">
-                            <div slot="headline">Validar Pendientes</div>
+                        <md-menu-item href="requerimientodedotacion.php">
+                            <div slot="headline">Revisar</div>
                             <md-icon slot="start">fact_check</md-icon>
                         </md-menu-item>
                         <md-menu-item href="historialGlobal.php">
@@ -100,6 +100,14 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     <md-icon slot="start">storefront</md-icon>
                 </md-list-item>
                 
+                <div class="drawer-section-title">Requerimiento de Dotación</div>
+                <md-list-item href="requerimientodedotacion.php" type="button">
+                    <div slot="headline">Generar Requerimiento</div>
+                    <md-icon slot="start">description</md-icon>
+                </md-list-item>
+
+                <md-divider style="margin: 8px 0;"></md-divider>
+
                 <div class="drawer-section-title">Revisión de Inventarios</div>
                 <md-list-item href="validarInventarios.php" type="button">
                     <div slot="headline">Validar Pendientes</div>

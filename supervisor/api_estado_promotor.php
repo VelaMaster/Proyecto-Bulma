@@ -66,7 +66,11 @@ try {
     $promotor_usuario = $datosProm['USUARIO'] ?? '';
     $promotor_nombre  = trim($datosProm['PMT_NOMBRE'] ?? '');
 
-    // 2) Lecherías de este promotor que están bajo supervisión de este supervisor.
+    // 2) TODAS las lecherías activas del promotor.
+    //    Antes filtrábamos por MAPEO_SUPERVISOR_LECHERIA, lo que dejaba
+    //    fuera lecherías que ya están asignadas al promotor pero aún
+    //    no se reflejan en el mapeo, haciendo que al supervisor le
+    //    aparezcan menos lecherías de las que realmente tiene el promotor.
     $sqlL = "
         SELECT TRIM(L.LECHER) AS LECHER,
                TRIM(L.NUM_TIENDA) AS NUM_TIENDA,
@@ -74,14 +78,12 @@ try {
                TRIM(L.NOMBRELECH) AS NOMBRE,
                TRIM(L.ALMACEN_RURAL) AS ALMACEN
         FROM LECHERIA L
-        JOIN MAPEO_SUPERVISOR_LECHERIA M ON M.LECHER = L.LECHER
-        WHERE L.PROMOTOR     = :id_prom
-          AND M.ID_SUPERVISOR = :id_sup
+        WHERE L.PROMOTOR = :id_prom
           AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
         ORDER BY TRIM(L.ALMACEN_RURAL), TRIM(L.LECHER)
     ";
     $stmt = $pdo->prepare($sqlL);
-    $stmt->execute([':id_prom' => $promotor_id, ':id_sup' => $id_supervisor]);
+    $stmt->execute([':id_prom' => $promotor_id]);
     $lecherias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // 3) Cuáles tienen inventario CAPTURADO POR EL PROMOTOR (mes/año).
