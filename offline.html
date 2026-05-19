@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sin conexión — Inventarios Leche Bienestar</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#6750A4">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #141218;
+      --surface:   #1e1b2e;
+      --primary:   #d0bcff;
+      --on-bg:     #e6e1e5;
+      --muted:     rgba(230,225,229,0.6);
+      --radius:    24px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--on-bg);
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 40px 32px;
+      max-width: 420px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+
+    .icon-wrap {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(208,188,255,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+    }
+
+    .icon-wrap .material-symbols-outlined {
+      font-size: 40px;
+      color: var(--primary);
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin-bottom: 12px;
+      color: var(--on-bg);
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 16px;
+      font-size: 0.95rem;
+    }
+
+    .info-box {
+      background: rgba(208,188,255,0.08);
+      border: 1px solid rgba(208,188,255,0.2);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 0.85rem;
+      color: var(--primary);
+      margin-bottom: 28px;
+      text-align: left;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+
+    .info-box .material-symbols-outlined {
+      font-size: 20px;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary);
+      color: #21005d;
+      border: none;
+      border-radius: 100px;
+      padding: 12px 28px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .btn:hover { opacity: 0.88; }
+
+    .pending-section {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(230,225,229,0.12);
+    }
+
+    .pending-count {
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+
+    #pendiente-num {
+      color: var(--primary);
+      font-weight: 600;
+    }
+
+    .logo {
+      max-width: 160px;
+      margin-bottom: 24px;
+      opacity: 0.85;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="/imagenes/Logos/Logo_lecheparaelbienestar.png" alt="Leche Bienestar" class="logo">
+
+    <div class="icon-wrap">
+      <span class="material-symbols-outlined">wifi_off</span>
+    </div>
+
+    <h1>Sin conexión a internet</h1>
+    <p>No se puede conectar al servidor en este momento. Los datos que hayas capturado se guardarán localmente.</p>
+
+    <div class="info-box">
+      <span class="material-symbols-outlined">sync</span>
+      <span>Cuando se restaure la conexión, todos los cambios se sincronizarán automáticamente con la base de datos.</span>
+    </div>
+
+    <button class="btn" onclick="intentarRecargar()">
+      <span class="material-symbols-outlined">refresh</span>
+      Reintentar
+    </button>
+
+    <div class="pending-section" id="pending-section" style="display:none">
+      <p class="pending-count">
+        Tienes <span id="pendiente-num">0</span> cambio(s) pendiente(s) de sincronizar.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function intentarRecargar() {
+      if (navigator.onLine) {
+        history.back();
+      } else {
+        window.location.reload();
+      }
+    }
+
+    /* Mostrar conteo de pendientes desde IndexedDB */
+    async function mostrarPendientes() {
+      try {
+        const req = indexedDB.open('bulma_sync_db', 1);
+        req.onsuccess = () => {
+          const db = req.result;
+          if (!db.objectStoreNames.contains('pending_requests')) return;
+          const tx    = db.transaction('pending_requests', 'readonly');
+          const count = tx.objectStore('pending_requests').count();
+          count.onsuccess = () => {
+            if (count.result > 0) {
+              document.getElementById('pendiente-num').textContent = count.result;
+              document.getElementById('pending-section').style.display = 'block';
+            }
+          };
+        };
+      } catch {}
+    }
+
+    mostrarPendientes();
+
+    /* Redirigir automáticamente cuando regrese internet */
+    window.addEventListener('online', () => {
+      mostrarPendientes();
+      setTimeout(() => history.back(), 1500);
+    });
+  </script>
+</body>
+</html>

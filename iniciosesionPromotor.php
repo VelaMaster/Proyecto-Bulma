@@ -15,7 +15,16 @@ $origen_conexion = Database::getEnvName();
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
 
     <link rel="stylesheet" href="main_md3.css">
-    <link rel="stylesheet" href="loader_md3.css"> 
+    <link rel="stylesheet" href="loader_md3.css">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6750A4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Inventarios">
+    <link rel="apple-touch-icon" href="/imagenes/Logos/icon-192.png">
 
     <script type="importmap">
         {
@@ -69,11 +78,16 @@ $origen_conexion = Database::getEnvName();
                     </md-icon-button>
                 </md-outlined-text-field>
 
-                <div class="form-actions">
+                <div class="form-actions" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.875rem; color:var(--md-sys-color-on-surface-variant);">
+                        <input type="checkbox" name="recordar_sesion" value="1" id="chk-recordar"
+                               style="accent-color:var(--md-sys-color-primary); width:16px; height:16px; cursor:pointer;">
+                        Recordar sesión (30 días)
+                    </label>
                     <a href="#" class="md3-link">¿Olvidó su contraseña?</a>
                 </div>
 
-                <md-filled-button type="submit" style="width: 100%; margin-top: 10px;">
+                <md-filled-button type="submit" id="btn-ingresar" style="width: 100%; margin-top: 10px;">
                     Ingresar
                     <md-icon slot="icon">login</md-icon>
                 </md-filled-button>
@@ -132,5 +146,22 @@ $origen_conexion = Database::getEnvName();
     </script>
 
     <script src="js/temas_md3.js"></script>
-    <script src="js/loader_md3.js"></script> </body>
+    <script src="js/loader_md3.js"></script>
+    <script src="js/pwa_offline.js"></script>
+    <script src="js/offline_login.js"></script>
+    <?php if (isset($_GET['logout'])): ?>
+    <script>
+    // Limpiar sesión offline al hacer logout
+    document.addEventListener('DOMContentLoaded', async () => {
+        if (window.OfflineLogin) {
+            await window.OfflineLogin.limpiarSesionOffline();
+        }
+        // También borrar datos del SW
+        if (navigator.serviceWorker?.controller) {
+            navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_SESSION' });
+        }
+    });
+    </script>
+    <?php endif; ?>
+</body>
 </html>

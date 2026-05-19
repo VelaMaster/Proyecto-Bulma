@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
 header("Pragma: no-cache");
 header("Expires: 0");
@@ -24,6 +24,14 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <link rel="stylesheet" href="../estilos/consultarInventarioMensual.css">
     <script type="importmap">{"imports":{"@material/web/":"https://esm.run/@material/web/"}}</script>
     <script type="module">import '@material/web/all.js';</script>
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6750A4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Inventarios">
+    <link rel="apple-touch-icon" href="/imagenes/Logos/icon-192.png">
 </head>
 <body>
 
@@ -372,5 +380,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
+<script src="../js/pwa_offline.js"></script>
 </body>
 </html>

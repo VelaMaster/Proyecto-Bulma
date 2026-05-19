@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     header("Location: ../iniciosesionPromotor.php");
     exit();
@@ -16,6 +16,16 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="../main_md3.css">
     <link rel="stylesheet" href="../estilos/iniciocards.css">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6750A4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Inventarios">
+    <link rel="apple-touch-icon" href="/imagenes/Logos/icon-192.png">
+
     <style>
         .md3-hero-card {
             overflow: hidden;
@@ -57,6 +67,22 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
 
         <div class="app-bar-end">
+            <!-- Badge de datos pendientes de sincronizar -->
+            <span id="offline-badge" style="
+                display:none;
+                background:var(--md-sys-color-error,#B3261E);
+                color:#fff;
+                border-radius:50%;
+                font-size:0.7rem;
+                font-weight:700;
+                min-width:18px;
+                height:18px;
+                padding:0 4px;
+                align-items:center;
+                justify-content:center;
+                margin-right:4px;
+                title='Cambios pendientes de sincronizar'
+            " title="Cambios pendientes de sincronizar">0</span>
             <div class="desktop-nav">
 
                 <div style="position: relative;">
@@ -221,9 +247,28 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
     </div>
 
+    <!-- Guardar sesión en IndexedDB para acceso offline -->
+    <script>
+    window.__SESION_PHP__ = {
+        usuario:   '<?= htmlspecialchars($_SESSION['usuario'],  ENT_QUOTES) ?>',
+        nombre:    '<?= htmlspecialchars($_SESSION['nombre'],   ENT_QUOTES) ?>',
+        rol:       '<?= htmlspecialchars($_SESSION['rol'],      ENT_QUOTES) ?>',
+        clave_rol: '<?= htmlspecialchars($_SESSION['clave_rol'] ?? '', ENT_QUOTES) ?>',
+    };
+    </script>
     <script src="../js/temas_md3.js"></script>
     <script src="../js/hero_physics.js"></script>
     <script src="../js/inicio_lecherias.js"></script>
+    <script src="../js/pwa_offline.js"></script>
+    <script src="../js/offline_login.js"></script>
+    <script>
+    // Guardar sesión PHP en IndexedDB para acceso offline futuro
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.__SESION_PHP__ && window.OfflineLogin) {
+            window.OfflineLogin.guardarSesionOffline(window.__SESION_PHP__);
+        }
+    });
+    </script>
     <script>
         function abrirMenu(id) {
             document.querySelectorAll('md-menu').forEach(menu => {

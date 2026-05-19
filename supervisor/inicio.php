@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
     header("Location: ../iniciosesionSupervisor.php");
     exit();
@@ -17,6 +17,14 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <link rel="stylesheet" href="../main_md3.css">
     <link rel="stylesheet" href="../estilos/iniciocards.css">
     <link rel="stylesheet" href="../estilos/iniciosupervisor.css">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6750A4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Inventarios">
+    <link rel="apple-touch-icon" href="/imagenes/Logos/icon-192.png">
 
     <script type="importmap">
         { "imports": { "@material/web/": "https://esm.run/@material/web/" } }
@@ -265,6 +273,24 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 document.querySelectorAll('md-menu').forEach(menu => menu.open = false);
             }
         });
+    </script>
+    <!-- Guardar sesión en IndexedDB para acceso offline -->
+    <script>
+    window.__SESION_PHP__ = {
+        usuario:   '<?= htmlspecialchars($_SESSION['usuario'],  ENT_QUOTES) ?>',
+        nombre:    '<?= htmlspecialchars($_SESSION['nombre'],   ENT_QUOTES) ?>',
+        rol:       '<?= htmlspecialchars($_SESSION['rol'],      ENT_QUOTES) ?>',
+        clave_rol: '<?= htmlspecialchars($_SESSION['clave_rol'] ?? '', ENT_QUOTES) ?>',
+    };
+    </script>
+    <script src="../js/pwa_offline.js"></script>
+    <script src="../js/offline_login.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.__SESION_PHP__ && window.OfflineLogin) {
+            window.OfflineLogin.guardarSesionOffline(window.__SESION_PHP__);
+        }
+    });
     </script>
 </body>
 </html>

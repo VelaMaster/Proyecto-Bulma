@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     header("Location: ../iniciosesionPromotor.php");
     exit();
@@ -43,6 +43,15 @@ foreach ($conteo as $fila) {
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="../main_md3.css">
     <link rel="stylesheet" href="../estilos/generarreporteMensual.css">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6750A4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Inventarios">
+    <link rel="apple-touch-icon" href="/imagenes/Logos/icon-192.png">
+
     <script type="importmap">
     {
         "imports": {
@@ -258,6 +267,7 @@ foreach ($conteo as $fila) {
             }
         });
     </script>
+    <script src="../js/pwa_offline.js"></script>
 </body>
 
 </html>

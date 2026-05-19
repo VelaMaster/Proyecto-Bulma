@@ -1,7 +1,6 @@
 <?php
 
-session_start();
-
+require_once __DIR__ . '/../includes/session_guard.php';
 require_once '../Database.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
@@ -28,6 +27,16 @@ $lecher_get = $_GET['lecher'] ?? '';
     <link rel="stylesheet" href="../main_md3.css">
     <link rel="stylesheet" href="../estilos/generarInventarioMensual.css">
     <link rel="stylesheet" href="../estilos/editarinventarioMensual.css">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6750A4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Inventarios">
+    <link rel="apple-touch-icon" href="/imagenes/Logos/icon-192.png">
+
     <script type="importmap">
         {
         "imports": {
@@ -1010,5 +1019,6 @@ $lecher_get = $_GET['lecher'] ?? '';
         };
     }
     </script>
+    <script src="../js/pwa_offline.js"></script>
 </body>
 </html>
