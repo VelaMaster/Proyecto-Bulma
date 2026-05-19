@@ -285,10 +285,17 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     </script>
     <script src="../js/pwa_offline.js"></script>
     <script src="../js/offline_login.js"></script>
+    <script src="../js/offline_preload.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         if (window.__SESION_PHP__ && window.OfflineLogin) {
             window.OfflineLogin.guardarSesionOffline(window.__SESION_PHP__);
+        }
+        // Precargar datos del supervisor (apis de avance, etc.)
+        if (window.OfflinePreload && navigator.onLine) {
+            setTimeout(() => {
+                window.OfflinePreload.runIfStale('/supervisor');
+            }, 2500);
         }
     });
     </script>

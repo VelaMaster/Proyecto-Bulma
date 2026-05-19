@@ -261,11 +261,19 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <script src="../js/inicio_lecherias.js"></script>
     <script src="../js/pwa_offline.js"></script>
     <script src="../js/offline_login.js"></script>
+    <script src="../js/offline_preload.js"></script>
     <script>
-    // Guardar sesión PHP en IndexedDB para acceso offline futuro
     document.addEventListener('DOMContentLoaded', () => {
+        // Guardar sesión en IndexedDB para acceso offline
         if (window.__SESION_PHP__ && window.OfflineLogin) {
             window.OfflineLogin.guardarSesionOffline(window.__SESION_PHP__);
+        }
+        // Precargar datos offline (solo si pasaron >4h desde el último preload)
+        if (window.OfflinePreload && navigator.onLine) {
+            // Pequeño delay para no competir con la carga de la página
+            setTimeout(() => {
+                window.OfflinePreload.runIfStale('/promotores');
+            }, 2500);
         }
     });
     </script>

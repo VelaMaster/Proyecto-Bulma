@@ -129,6 +129,44 @@ foreach ($conteo as $fila) {
         </div>
     </header>
 
+    <div class="md3-drawer-scrim" id="drawer-scrim" onclick="toggleDrawer()"></div>
+
+    <aside class="md3-drawer" id="mobile-drawer">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px 24px;">
+            <span style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface);">Menú</span>
+            <md-icon-button onclick="toggleDrawer()">
+                <md-icon>close</md-icon>
+            </md-icon-button>
+        </div>
+        <div style="overflow-y: auto; flex-grow: 1;">
+            <md-list style="background: transparent;">
+                <md-list-item href="inicio.php" type="button">
+                    <div slot="headline">Inicio</div>
+                    <md-icon slot="start">home</md-icon>
+                </md-list-item>
+                <md-divider style="margin: 8px 0;"></md-divider>
+                <div class="drawer-section-title">Inventario mensual</div>
+                <md-list-item href="generarinventarioMensual.php" type="button">
+                    <div slot="headline">Generar / Editar</div>
+                    <md-icon slot="start">edit_document</md-icon>
+                </md-list-item>
+                <md-list-item href="consultarinventarioMensual.php" type="button">
+                    <div slot="headline">Consultar</div>
+                    <md-icon slot="start">search</md-icon>
+                </md-list-item>
+                <md-divider style="margin: 8px 0;"></md-divider>
+                <md-list-item href="generarreporteMensual.php" type="button">
+                    <div slot="headline">Reporte mensual</div>
+                    <md-icon slot="start">receipt_long</md-icon>
+                </md-list-item>
+                <md-list-item href="requerimiento.php" type="button">
+                    <div slot="headline">Requerimiento</div>
+                    <md-icon slot="start">inventory</md-icon>
+                </md-list-item>
+            </md-list>
+        </div>
+    </aside>
+
     <main class="panel-content">
         <div class="md3-card md3-hero-card">
             <div style="display:flex; align-items:center; gap:16px;">

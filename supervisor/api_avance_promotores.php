@@ -9,7 +9,7 @@
 //  y contamos TODAS las lecherías activas del promotor, para que el
 //  total que ve el supervisor coincida con el que ve el propio promotor.
 // ────────────────────────────────────────────────────────────────────
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../Database.php';
 

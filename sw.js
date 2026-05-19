@@ -3,22 +3,28 @@
  *
  * Estrategias:
  *  - Assets estáticos (CSS/JS/imágenes): Cache-First
- *  - Páginas PHP:                        Network-First  → cache fallback
+ *  - Páginas PHP (HTML):                 Network-First  → cache fallback
+ *  - APIs PHP GET (datos JSON):          Network-First  → api-cache-v1 (90 días)
  *  - POSTs a endpoints de guardado:      Network → si falla, guarda en
  *                                        IndexedDB y registra Background Sync
  *
- * IndexedDB: bulma_sync_db  |  store: pending_requests
+ * Caches:
+ *   bulma-pwa-v2   → assets estáticos + páginas HTML
+ *   api-cache-v1   → respuestas JSON de APIs (lecherías, inventarios, etc.)
+ *
+ * IndexedDB: bulma_sync_db  |  stores: pending_requests, offline_session
  * Sync tag:  sync-inventarios
  */
 
 'use strict';
 
-const CACHE_NAME   = 'bulma-pwa-v1';
+const CACHE_NAME   = 'bulma-pwa-v2';
+const API_CACHE    = 'api-cache-v1';
 const SYNC_TAG     = 'sync-inventarios';
 const DB_NAME      = 'bulma_sync_db';
 const STORE_NAME   = 'pending_requests';
 
-/* ─── Assets que se pre-cachean en el install ────────────────────── */
+/* ─── Assets pre-cacheados en install ───────────────────────────── */
 const PRECACHE_ASSETS = [
   '/main_md3.css',
   '/loader_md3.css',
@@ -32,13 +38,14 @@ const PRECACHE_ASSETS = [
   '/js/editar_inventario.js',
   '/js/pwa_offline.js',
   '/js/offline_login.js',
+  '/js/offline_preload.js',
   '/imagenes/Logos/icon-192.png',
   '/imagenes/Logos/icon-512.png',
   '/imagenes/Logos/Logo_lecheparaelbienestar.png',
   '/offline.html',
 ];
 
-/* ─── Páginas que se cachean en runtime con Network-First ─────────── */
+/* ─── Páginas PHP que se cachean con Network-First ───────────────── */
 const CACHE_PAGES = [
   '/iniciosesionPromotor.php',
   '/iniciosesionSupervisor.php',
@@ -47,10 +54,32 @@ const CACHE_PAGES = [
   '/promotores/consultarinventarioMensual.php',
   '/promotores/generarreporteMensual.php',
   '/promotores/requerimiento.php',
+  '/promotores/editarinventarioMensual.php',
   '/supervisor/inicio.php',
 ];
 
-/* ─── Endpoints de guardado que se encoloan si no hay red ─────────── */
+/* ─── APIs de datos (GET) que se cachean en api-cache-v1 ─────────── */
+const API_ENDPOINTS = [
+  'mis_lecherias',
+  'obtenerAlmacenes',
+  'obtenerLecheriasPorAlmacen',
+  'obtenerInventarioAnterior',
+  'obtenerSupervisorAsignado',
+  'obtenerLecheriasRequerimiento',
+  'buscar_inventario_guardado',
+  'obtener_inventarios_por_lecheria',
+  'obtener_inventario',
+  'listar_inventarios_lecheria',
+  'detalleInventarioMensual',
+  'api_requerimiento_dotacion',
+  'buscarLecheria',
+  'calcularSurtimiento',
+  'api_supervisor',
+  'api_avance_promotores',
+  'api_estado_promotor',
+];
+
+/* ─── POSTs que se encolan si no hay red ─────────────────────────── */
 const SYNC_ENDPOINTS = [
   '/promotores/guardar_inventario.php',
   '/promotores/guardarReporteMensual.php',
@@ -59,7 +88,7 @@ const SYNC_ENDPOINTS = [
 ];
 
 /* ════════════════════════════════════════════════════════════════════
-   INDEXEDDB  helpers
+   INDEXEDDB helpers
    ════════════════════════════════════════════════════════════════════ */
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -80,14 +109,7 @@ async function savePendingRequest(url, method, body, headers) {
   const db = await openDB();
   return new Promise((resolve, reject) => {
     const tx = db.transaction(STORE_NAME, 'readwrite');
-    tx.objectStore(STORE_NAME).add({
-      url,
-      method,
-      body,
-      headers: headers || {},
-      timestamp: Date.now(),
-      retries: 0,
-    });
+    tx.objectStore(STORE_NAME).add({ url, method, body, headers: headers || {}, timestamp: Date.now(), retries: 0 });
     tx.oncomplete = resolve;
     tx.onerror    = () => reject(tx.error);
   });
@@ -119,17 +141,14 @@ async function incrementRetry(id) {
     const tx    = db.transaction(STORE_NAME, 'readwrite');
     const store = tx.objectStore(STORE_NAME);
     const get   = store.get(id);
-    get.onsuccess = () => {
-      const item = get.result;
-      if (item) { item.retries = (item.retries || 0) + 1; store.put(item); }
-    };
+    get.onsuccess = () => { const i = get.result; if (i) { i.retries = (i.retries||0)+1; store.put(i); } };
     tx.oncomplete = resolve;
     tx.onerror    = () => reject(tx.error);
   });
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   INSTALL — pre-cache assets estáticos
+   INSTALL
    ════════════════════════════════════════════════════════════════════ */
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -141,16 +160,15 @@ self.addEventListener('install', (event) => {
 });
 
 /* ════════════════════════════════════════════════════════════════════
-   ACTIVATE — limpiar caches viejos
+   ACTIVATE — limpiar caches viejos (respetar api-cache-v1)
    ════════════════════════════════════════════════════════════════════ */
 self.addEventListener('activate', (event) => {
+  const keepCaches = [CACHE_NAME, API_CACHE];
   event.waitUntil(
     caches.keys()
-      .then((keys) =>
-        Promise.all(
-          keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
-        )
-      )
+      .then((keys) => Promise.all(
+        keys.filter((k) => !keepCaches.includes(k)).map((k) => caches.delete(k))
+      ))
       .then(() => self.clients.claim())
   );
 });
@@ -162,14 +180,11 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  /* Solo interceptar peticiones al mismo origen */
+  /* Solo mismo origen */
   if (url.origin !== self.location.origin) return;
 
-  /* POSTs a endpoints de guardado → encolar si offline */
-  if (
-    req.method === 'POST' &&
-    SYNC_ENDPOINTS.some((ep) => url.pathname.includes(ep))
-  ) {
+  /* POST a sync endpoints → encolar si offline */
+  if (req.method === 'POST' && SYNC_ENDPOINTS.some((ep) => url.pathname.includes(ep))) {
     event.respondWith(handleSyncEndpoint(req));
     return;
   }
@@ -180,25 +195,39 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  /* Páginas PHP → Network-First con fallback a cache */
+  /* APIs de datos (GET) → Network-First con api-cache-v1 */
+  if (req.method === 'GET' && isApiEndpoint(url.pathname)) {
+    event.respondWith(apiNetworkFirst(req));
+    return;
+  }
+
+  /* Páginas PHP → Network-First con page cache */
   if (url.pathname.endsWith('.php') || url.pathname === '/') {
     event.respondWith(networkFirst(req));
     return;
   }
 
-  /* Default → Network-First */
+  /* Default */
   event.respondWith(networkFirst(req));
 });
 
+/* ── Helpers de tipo ─────────────────────────────────────────────── */
 function isStaticAsset(pathname) {
   return /\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp)$/i.test(pathname);
 }
 
-/* ── Cache-First ─────────────────────────────────────────────────── */
+function isApiEndpoint(pathname) {
+  return API_ENDPOINTS.some((ep) => pathname.includes(ep));
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ESTRATEGIAS DE CACHE
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ── Cache-First (assets estáticos) ─────────────────────────────── */
 async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
-
   try {
     const response = await fetch(request);
     if (response.ok) {
@@ -211,16 +240,13 @@ async function cacheFirst(request) {
   }
 }
 
-/* ── Network-First ───────────────────────────────────────────────── */
+/* ── Network-First (páginas HTML) ───────────────────────────────── */
 async function networkFirst(request) {
   try {
     const response = await fetch(request);
     if (response.ok) {
-      /* Cachear solo páginas conocidas */
       const url = new URL(request.url);
-      const shouldCache =
-        CACHE_PAGES.some((p) => url.pathname.includes(p)) ||
-        isStaticAsset(url.pathname);
+      const shouldCache = CACHE_PAGES.some((p) => url.pathname.includes(p));
       if (shouldCache) {
         const cache = await caches.open(CACHE_NAME);
         cache.put(request, response.clone());
@@ -228,91 +254,105 @@ async function networkFirst(request) {
     }
     return response;
   } catch {
-    /* Sin red → servir caché o fallback */
+    /* Sin red → caché → offline.html */
     const cached = await caches.match(request);
     if (cached) return cached;
-
     const offline = await caches.match('/offline.html');
-    return (
-      offline ||
-      new Response(
-        `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
-         <meta name="viewport" content="width=device-width,initial-scale=1">
-         <title>Sin conexión</title>
-         <style>
-           body{font-family:Roboto,sans-serif;background:#141218;color:#e6e1e5;
-                display:flex;align-items:center;justify-content:center;
-                min-height:100vh;margin:0;text-align:center;padding:24px;}
-           .card{background:#1e1b2e;border-radius:24px;padding:40px 32px;max-width:400px;}
-           .icon{font-size:64px;margin-bottom:16px;}
-           h1{font-size:1.5rem;font-weight:500;margin:0 0 12px}
-           p{opacity:.7;line-height:1.6;margin:0}
-         </style></head>
-         <body><div class="card">
-           <div class="icon">📶</div>
-           <h1>Sin conexión a internet</h1>
-           <p>Esta página no está disponible sin conexión.<br>
-              Los datos que hayas guardado se sincronizarán automáticamente cuando se restaure la red.</p>
-         </div></body></html>`,
-        { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
-      )
+    return offline || new Response(
+      `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8">
+       <meta name="viewport" content="width=device-width,initial-scale=1">
+       <title>Sin conexión</title>
+       <style>body{font-family:Roboto,sans-serif;background:#141218;color:#e6e1e5;
+        display:flex;align-items:center;justify-content:center;min-height:100vh;
+        margin:0;text-align:center;padding:24px;}
+        .card{background:#1e1b2e;border-radius:24px;padding:40px 32px;max-width:400px;}
+       </style></head><body><div class="card">
+       <p style="font-size:3rem">📶</p>
+       <h1 style="font-size:1.5rem;font-weight:500">Sin conexión</h1>
+       <p style="opacity:.7">Esta página no está disponible offline.<br>
+       Regresa cuando tengas internet.</p>
+       </div></body></html>`,
+      { headers: { 'Content-Type': 'text/html;charset=utf-8' } }
     );
   }
 }
 
-/* ── Sync endpoint handler (POST offline) ────────────────────────── */
-async function handleSyncEndpoint(request) {
-  /* Intentar enviar por red primero */
+/* ── Network-First para APIs (datos JSON) ───────────────────────── */
+async function apiNetworkFirst(request) {
+  const cache = await caches.open(API_CACHE);
   try {
-    const response = await fetch(request.clone());
+    const response = await fetch(request);
+    /* Solo cachear respuestas JSON exitosas */
+    if (response.ok) {
+      const ct = response.headers.get('content-type') || '';
+      if (ct.includes('json') || ct.includes('text')) {
+        cache.put(request, response.clone());
+      }
+    }
     return response;
   } catch {
-    /* Sin red: guardar en IndexedDB y registrar Background Sync */
-    let body = '';
-    try { body = await request.clone().text(); } catch {}
-
-    const headersObj = {};
-    request.headers.forEach((v, k) => { headersObj[k] = v; });
-
-    await savePendingRequest(request.url, request.method, body, headersObj);
-
-    /* Registrar Background Sync si está disponible */
-    try {
-      await self.registration.sync.register(SYNC_TAG);
-    } catch {
-      /* Background Sync API no disponible en este navegador */
+    /* Sin red → buscar en api-cache-v1 */
+    const cached = await cache.match(request);
+    if (cached) {
+      /* Agregar header para que el cliente sepa que es dato offline */
+      const headers = new Headers(cached.headers);
+      headers.set('X-Served-From', 'offline-cache');
+      return new Response(cached.body, { status: cached.status, headers });
     }
-
-    /* Notificar a los clientes que hay datos pendientes */
-    notifyClients({ type: 'QUEUED', url: request.url });
-
-    /* Respuesta "falsa" de éxito para que la UI no falle */
+    /* No hay cache → respuesta de error JSON amigable */
+    const url = new URL(request.url);
+    const endpoint = url.pathname.split('/').pop();
     return new Response(
       JSON.stringify({
-        status:  'offline_queued',
-        mensaje: 'Sin conexión. El dato se guardó localmente y se sincronizará cuando haya internet.',
+        error: true,
         offline: true,
+        mensaje: `Sin conexión. No hay datos en caché para "${endpoint}". Conecta a internet para descargar datos offline.`,
       }),
       {
-        status:  202,
-        headers: { 'Content-Type': 'application/json; charset=utf-8' },
+        status: 503,
+        headers: { 'Content-Type': 'application/json;charset=utf-8' },
       }
     );
   }
 }
 
+/* ── POST offline → encolar en IndexedDB ────────────────────────── */
+async function handleSyncEndpoint(request) {
+  try {
+    return await fetch(request.clone());
+  } catch {
+    let body = '';
+    try { body = await request.clone().text(); } catch {}
+    const headersObj = {};
+    request.headers.forEach((v, k) => { headersObj[k] = v; });
+
+    await savePendingRequest(request.url, request.method, body, headersObj);
+
+    try { await self.registration.sync.register(SYNC_TAG); } catch {}
+
+    notifyClients({ type: 'QUEUED', url: request.url });
+
+    return new Response(
+      JSON.stringify({
+        status:  'offline_queued',
+        offline: true,
+        mensaje: 'Sin conexión. Guardado localmente. Se enviará cuando regrese internet.',
+      }),
+      { status: 202, headers: { 'Content-Type': 'application/json;charset=utf-8' } }
+    );
+  }
+}
+
 /* ════════════════════════════════════════════════════════════════════
-   BACKGROUND SYNC — enviar requests pendientes
+   BACKGROUND SYNC
    ════════════════════════════════════════════════════════════════════ */
 self.addEventListener('sync', (event) => {
-  if (event.tag === SYNC_TAG) {
-    event.waitUntil(syncPendingRequests());
-  }
+  if (event.tag === SYNC_TAG) event.waitUntil(syncPendingRequests());
 });
 
 async function syncPendingRequests() {
   const pending = await getPendingRequests();
-  if (pending.length === 0) return;
+  if (!pending.length) return;
 
   let synced = 0;
   let failed = 0;
@@ -325,12 +365,10 @@ async function syncPendingRequests() {
         body:    item.body,
         credentials: 'include',
       });
-
       if (response.ok) {
         await deletePendingRequest(item.id);
         synced++;
       } else if (response.status === 401) {
-        /* Sesión expirada — no tiene sentido reintentar */
         await deletePendingRequest(item.id);
         notifyClients({ type: 'SYNC_SESSION_EXPIRED', url: item.url });
       } else {
@@ -340,22 +378,16 @@ async function syncPendingRequests() {
     } catch {
       failed++;
       await incrementRetry(item.id);
-      throw new Error('Sync incompleto, se reintentará'); // Fuerza retry del Background Sync
+      throw new Error('Sync incompleto');
     }
   }
 
-  if (synced > 0) {
-    notifyClients({ type: 'SYNC_SUCCESS', count: synced });
-  }
-
-  /* Si hubo fallas parciales, re-lanzar el sync */
-  if (failed > 0) {
-    throw new Error(`${failed} elemento(s) no pudieron sincronizarse`);
-  }
+  if (synced > 0) notifyClients({ type: 'SYNC_SUCCESS', count: synced });
+  if (failed > 0) throw new Error(`${failed} elemento(s) fallaron`);
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   MENSAJES desde los clientes
+   MENSAJES desde clientes
    ════════════════════════════════════════════════════════════════════ */
 self.addEventListener('message', async (event) => {
   switch (event.data?.type) {
@@ -364,22 +396,34 @@ self.addEventListener('message', async (event) => {
       event.source?.postMessage({ type: 'PENDING_COUNT', count: items.length });
       break;
     }
-    case 'TRIGGER_SYNC': {
-      try {
-        await self.registration.sync.register(SYNC_TAG);
-      } catch {
-        await syncPendingRequests().catch(() => {});
-      }
+    case 'TRIGGER_SYNC':
+      try { await self.registration.sync.register(SYNC_TAG); }
+      catch { await syncPendingRequests().catch(() => {}); }
       break;
-    }
     case 'SKIP_WAITING':
       self.skipWaiting();
       break;
+    case 'CLEAR_API_CACHE':
+      await caches.delete(API_CACHE);
+      break;
+    case 'CACHE_API_URLS': {
+      /* Precachear una lista de URLs en api-cache-v1 */
+      const urls = event.data.urls || [];
+      const cache = await caches.open(API_CACHE);
+      let cached = 0;
+      for (const url of urls) {
+        try {
+          const res = await fetch(url, { credentials: 'include' });
+          if (res.ok) { await cache.put(url, res); cached++; }
+        } catch { /* skip URL inaccesible */ }
+      }
+      event.source?.postMessage({ type: 'CACHE_API_DONE', cached, total: urls.length });
+      break;
+    }
   }
 });
 
-/* ── Utilidad: notificar a todos los clientes abiertos ───────────── */
 async function notifyClients(message) {
   const clients = await self.clients.matchAll({ includeUncontrolled: true });
-  clients.forEach((client) => client.postMessage(message));
+  clients.forEach((c) => c.postMessage(message));
 }

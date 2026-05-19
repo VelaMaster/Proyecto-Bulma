@@ -89,10 +89,13 @@ $origen_conexion = Database::getEnvName();
                 </md-outlined-text-field>
 
                 <div class="form-actions" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
-                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:0.875rem; color:var(--md-sys-color-on-surface-variant);">
-                        <input type="checkbox" name="recordar_sesion" value="1" id="chk-recordar"
-                               style="accent-color:var(--md-sys-color-primary); width:16px; height:16px; cursor:pointer;">
-                        Recordar sesión (30 días)
+                    <label style="display:flex; align-items:center; gap:12px; cursor:pointer;"
+                           onclick="const sw=document.getElementById('chk-recordar'); sw.selected=!sw.selected; document.getElementById('chk-recordar-hidden').value=sw.selected?'1':'';">
+                        <md-switch id="chk-recordar" aria-label="Recordar sesión por 30 días"></md-switch>
+                        <input type="hidden" name="recordar_sesion" id="chk-recordar-hidden" value="">
+                        <span style="font-size:0.875rem; color:var(--md-sys-color-on-surface-variant); user-select:none;">
+                            Recordar sesión (30 días)
+                        </span>
                     </label>
                     <a href="#" class="md3-link">¿Olvidó su contraseña?</a>
                 </div>

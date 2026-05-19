@@ -1,5 +1,5 @@
 <?php
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 header('Content-Type: application/json');
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {

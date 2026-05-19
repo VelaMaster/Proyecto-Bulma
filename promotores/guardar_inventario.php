@@ -2,7 +2,7 @@
 <?php
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 header('Content-Type: application/json');
 require_once __DIR__ . '/../src/Repositorio/InventarioRepositorio.php';
 

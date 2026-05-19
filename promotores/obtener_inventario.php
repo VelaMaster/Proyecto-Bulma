@@ -1,6 +1,6 @@
 <?php
 // promotores/obtener_inventario.php
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {

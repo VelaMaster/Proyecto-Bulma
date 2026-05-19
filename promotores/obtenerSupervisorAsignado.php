@@ -13,7 +13,7 @@
 //    { status:"success", supervisor: { id, nombre, lecherias_cubiertas, total_lecherias } }
 //    o { status:"error", message:"..." }
 // ────────────────────────────────────────────────────────────────────
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 session_write_close();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../Database.php';

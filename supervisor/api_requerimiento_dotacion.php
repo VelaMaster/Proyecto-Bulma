@@ -22,7 +22,7 @@
 //    total_general, total_lecherias, total_capturadas
 //  }
 // ────────────────────────────────────────────────────────────────────
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 session_write_close();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../Database.php';

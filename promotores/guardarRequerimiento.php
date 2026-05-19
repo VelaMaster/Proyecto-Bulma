@@ -4,7 +4,7 @@
 //  Escribe en la tabla REQUERIMIENTO_DOTACION (fuente de verdad para
 //  el supervisor) y deja un snapshot JSON como respaldo / bitácora.
 // ────────────────────────────────────────────────────────────────────
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../Database.php';
 require_once __DIR__ . '/../src/Repositorio/RequerimientoDotacionSchema.php';
