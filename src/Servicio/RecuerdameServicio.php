@@ -21,7 +21,11 @@ class RecuerdameServicio
     /* ── Crear token y setear cookie ─────────────────────────────── */
     public static function crear(array $datosUsuario): void
     {
-        self::inicializarDirectorio();
+        if (!self::inicializarDirectorio()) {
+            /* Si el directorio no es escribible, omitir recordar-sesión sin romper el login */
+            error_log('[RecuerdameServicio] No se pudo inicializar ' . self::DIR_SESIONES . ' — revisa permisos Docker.');
+            return;
+        }
 
         /* Borrar tokens anteriores de este usuario */
         self::revocarPorUsuario($datosUsuario['usuario']);
@@ -42,10 +46,15 @@ class RecuerdameServicio
         ];
 
         /* Guardar en disco: nombre del archivo = hash del token */
-        file_put_contents(
+        $resultado = @file_put_contents(
             self::DIR_SESIONES . '/' . $tokenHash . '.json',
             json_encode($datos, JSON_UNESCAPED_UNICODE)
         );
+
+        if ($resultado === false) {
+            error_log('[RecuerdameServicio] No se pudo guardar token en ' . self::DIR_SESIONES);
+            return;
+        }
 
         /* Setear cookie en el navegador */
         $secure   = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
@@ -124,17 +133,25 @@ class RecuerdameServicio
         }
     }
 
-    /* ── Crear directorio si no existe ──────────────────────────── */
-    private static function inicializarDirectorio(): void
+    /* ── Crear directorio si no existe; devuelve true si es usable ── */
+    private static function inicializarDirectorio(): bool
     {
         if (!is_dir(self::DIR_SESIONES)) {
-            mkdir(self::DIR_SESIONES, 0700, true);
-
-            /* .htaccess de seguridad: bloquear acceso web directo */
-            file_put_contents(
-                self::DIR_SESIONES . '/.htaccess',
-                "Deny from all\n"
-            );
+            if (!@mkdir(self::DIR_SESIONES, 0700, true)) {
+                return false;
+            }
         }
+
+        if (!is_writable(self::DIR_SESIONES)) {
+            return false;
+        }
+
+        /* .htaccess de seguridad: bloquear acceso web directo */
+        $htaccess = self::DIR_SESIONES . '/.htaccess';
+        if (!file_exists($htaccess)) {
+            @file_put_contents($htaccess, "Deny from all\n");
+        }
+
+        return true;
     }
 }

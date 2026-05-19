@@ -12,3 +12,9 @@ RUN docker-php-ext-install pdo_firebird
 # Activamos rewrite para las rutas de tu app
 RUN a2enmod rewrite
 RUN a2enmod headers
+
+# Entrypoint que fija permisos de datos/sesiones al arrancar (post-volume-mount)
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

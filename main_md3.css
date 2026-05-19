@@ -17,7 +17,9 @@
     --md-sys-color-on-error-container: #410E0B;
     --md-sys-color-surface: #FEF7FF;
     --md-sys-color-on-surface: #1D1B20;
+    --md-sys-color-surface-container-low: #F7F2FB;
     --md-sys-color-surface-container: #F3EDF7;
+    --md-sys-color-surface-container-high: #ECE6F0;
     --md-sys-color-surface-container-highest: #E6E0E9;
     --md-sys-color-outline: #79747E;
     /* ── TOKENS QUE FALTABAN (light violeta) ── */
@@ -37,7 +39,7 @@
 html[data-theme-accent="verde"] {
     --md-sys-color-primary: #386A20;
     --md-sys-color-primary-container: #B7F397;
-    --md-sys-color-on-primary-container: #042100;   
+    --md-sys-color-on-primary-container: #042100;
     /* Agregamos Terciario (Verde agua) */
     --md-sys-color-tertiary: #006B5E;
     --md-sys-color-tertiary-container: #76F8E2;
@@ -45,7 +47,9 @@ html[data-theme-accent="verde"] {
     --md-sys-color-secondary-container: #D3E8C9;
     --md-sys-color-on-secondary-container: #111F0A;
     --md-sys-color-surface: #FDFDF5;
+    --md-sys-color-surface-container-low: #F7FAF1;
     --md-sys-color-surface-container: #EEF2E6;
+    --md-sys-color-surface-container-high: #E8ECE1;
     --md-sys-color-surface-container-highest: #E2E6DA;
     /* ── TOKENS QUE FALTABAN (light verde) ── */
     --md-sys-color-outline-variant: #BEC9B4;
@@ -58,7 +62,7 @@ html[data-theme-accent="verde"] {
 html[data-theme-accent="naranja"] {
     --md-sys-color-primary: #8F4C38;
     --md-sys-color-primary-container: #FFDBD1;
-    --md-sys-color-on-primary-container: #3A0B01;   
+    --md-sys-color-on-primary-container: #3A0B01;
     /* Agregamos Terciario (Ámbar oscuro) */
     --md-sys-color-tertiary: #705D00;
     --md-sys-color-tertiary-container: #FFE16E;
@@ -66,7 +70,9 @@ html[data-theme-accent="naranja"] {
     --md-sys-color-secondary-container: #F5DED8;
     --md-sys-color-on-secondary-container: #2C150F;
     --md-sys-color-surface: #FFF8F6;
+    --md-sys-color-surface-container-low: #FFF3EF;
     --md-sys-color-surface-container: #FFEDE8;
+    --md-sys-color-surface-container-high: #F8E7E2;
     --md-sys-color-surface-container-highest: #F4DFD9;
     /* ── TOKENS QUE FALTABAN (light naranja) ── */
     --md-sys-color-outline-variant: #D8C2BC;
@@ -93,7 +99,9 @@ html[data-theme="dark"] {
     --md-sys-color-on-error-container: #F9DEDC;
     --md-sys-color-surface: #141218;
     --md-sys-color-on-surface: #E6E0E9;
+    --md-sys-color-surface-container-low: #1D1B20;
     --md-sys-color-surface-container: #211F26;
+    --md-sys-color-surface-container-high: #2B2930;
     --md-sys-color-surface-container-highest: #36343B;
     --md-sys-color-outline: #CAC4D0;
 
@@ -107,13 +115,15 @@ html[data-theme="dark"][data-theme-accent="verde"] {
     --md-sys-color-primary: #9CD67D;
     --md-sys-color-primary-container: #205107;
     --md-sys-color-on-primary-container: #B7F397;
-    
+
     /* Verde Agua brillante */
     --md-sys-color-tertiary: #57DBC5;
     --md-sys-color-tertiary-container: #005046;
     --md-sys-color-on-tertiary-container: #76F8E2;
 
+    --md-sys-color-surface-container-low: #181D14;
     --md-sys-color-surface-container: #1E201B;
+    --md-sys-color-surface-container-high: #282B24;
     --md-sys-color-surface-container-highest: #33352F;
 
     /* ── TOKENS QUE FALTABAN (dark verde) ── */
@@ -125,13 +135,15 @@ html[data-theme="dark"][data-theme-accent="naranja"] {
     --md-sys-color-primary: #FFB59C;
     --md-sys-color-primary-container: #723523;
     --md-sys-color-on-primary-container: #FFDBD1;
-    
+
     /* Ámbar brillante */
     --md-sys-color-tertiary: #E3C54A;
     --md-sys-color-tertiary-container: #554500;
     --md-sys-color-on-tertiary-container: #FFE16E;
 
+    --md-sys-color-surface-container-low: #201815;
     --md-sys-color-surface-container: #271E1B;
+    --md-sys-color-surface-container-high: #312724;
     --md-sys-color-surface-container-highest: #3D322F;
 
     /* ── TOKENS QUE FALTABAN (dark naranja) ── */
@@ -259,7 +271,7 @@ md-dialog form {
     align-items: center;
     justify-content: space-between;
     padding: 12px 24px;
-    background-color: var(--md-sys-color-surface);
+    background-color: var(--md-sys-color-surface-container);
     color: var(--md-sys-color-on-surface);
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
     position: sticky;

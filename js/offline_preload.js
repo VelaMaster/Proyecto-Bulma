@@ -19,49 +19,112 @@ const OfflinePreload = (() => {
   let _bar  = null;
   let _msg  = null;
 
+  /* Inyecta los estilos del card una sola vez (respeta tema claro/oscuro via CSS vars) */
+  function inyectarEstilos() {
+    if (document.getElementById('preload-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'preload-styles';
+    s.textContent = `
+      #preload-card {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--md-sys-color-surface-container-high);
+        color: var(--md-sys-color-on-surface);
+        border-radius: 16px;
+        padding: 16px 20px;
+        min-width: 280px;
+        max-width: 340px;
+        box-shadow: var(--md-sys-elevation-3, 0 4px 20px rgba(0,0,0,0.25));
+        z-index: 8000;
+        font-size: 0.85rem;
+        font-family: Roboto, sans-serif;
+        border: 1px solid var(--md-sys-color-outline-variant);
+        opacity: 0;
+        transform: translateY(16px);
+        transition: opacity 0.3s, transform 0.3s;
+      }
+      #preload-card .preload-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      #preload-card .preload-icon {
+        font-size: 20px;
+        color: var(--md-sys-color-primary);
+        flex-shrink: 0;
+      }
+      #preload-card .preload-title {
+        font-weight: 500;
+        flex-grow: 1;
+        color: var(--md-sys-color-on-surface);
+      }
+      #preload-card .preload-close {
+        cursor: pointer;
+        opacity: .55;
+        font-size: 18px;
+        color: var(--md-sys-color-on-surface-variant);
+        line-height: 1;
+      }
+      #preload-card .preload-close:hover { opacity: 1; }
+      #preload-msg {
+        color: var(--md-sys-color-on-surface-variant);
+        margin-bottom: 10px;
+        min-height: 18px;
+        line-height: 1.4;
+        font-size: 0.82rem;
+      }
+      .preload-track {
+        background: var(--md-sys-color-surface-container-highest);
+        border-radius: 100px;
+        height: 6px;
+        overflow: hidden;
+      }
+      #preload-bar {
+        height: 100%;
+        background: var(--md-sys-color-primary);
+        width: 0%;
+        transition: width 0.4s ease;
+        border-radius: 100px;
+      }
+      #preload-pct {
+        text-align: right;
+        margin-top: 4px;
+        font-size: 0.75rem;
+        color: var(--md-sys-color-on-surface-variant);
+        opacity: .7;
+      }
+    `;
+    document.head.appendChild(s);
+  }
+
   function crearUI() {
     if (document.getElementById('preload-card')) return;
+
+    inyectarEstilos();
 
     _card = document.createElement('div');
     _card.id = 'preload-card';
     _card.setAttribute('role', 'status');
-    _card.style.cssText = `
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      background: var(--md-sys-color-surface-container-high, #2b2930);
-      color: var(--md-sys-color-on-surface, #e6e1e5);
-      border-radius: 16px;
-      padding: 16px 20px;
-      min-width: 280px;
-      max-width: 340px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.35);
-      z-index: 8000;
-      font-size: 0.85rem;
-      border: 1px solid var(--md-sys-color-outline-variant, #49454f);
-      opacity: 0;
-      transform: translateY(16px);
-      transition: opacity 0.3s, transform 0.3s;
-    `;
 
     _card.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-        <span class="material-symbols-outlined" style="font-size:20px;color:var(--md-sys-color-primary,#d0bcff);flex-shrink:0">cloud_download</span>
-        <span style="font-weight:500;flex-grow:1">Preparando datos offline</span>
-        <span id="preload-close" style="cursor:pointer;opacity:.6;font-size:18px" class="material-symbols-outlined" title="Ocultar">close</span>
+      <div class="preload-header">
+        <span class="material-symbols-outlined preload-icon">cloud_download</span>
+        <span class="preload-title">Preparando datos offline</span>
+        <span id="preload-close" class="material-symbols-outlined preload-close" title="Ocultar">close</span>
       </div>
-      <div id="preload-msg" style="opacity:.75;margin-bottom:10px;min-height:18px;line-height:1.4"></div>
-      <div style="background:var(--md-sys-color-surface-container-highest,#36343b);border-radius:100px;height:6px;overflow:hidden;">
-        <div id="preload-bar" style="height:100%;background:var(--md-sys-color-primary,#d0bcff);width:0%;transition:width 0.4s ease;border-radius:100px;"></div>
+      <div id="preload-msg"></div>
+      <div class="preload-track">
+        <div id="preload-bar"></div>
       </div>
-      <div id="preload-pct" style="text-align:right;margin-top:4px;font-size:0.75rem;opacity:.5">0%</div>
+      <div id="preload-pct">0%</div>
     `;
 
     document.body.appendChild(_card);
     _bar = _card.querySelector('#preload-bar');
     _msg = _card.querySelector('#preload-msg');
 
-    /* Botón cerrar */
     _card.querySelector('#preload-close').addEventListener('click', () => ocultarUI());
 
     requestAnimationFrame(() => {
@@ -80,17 +143,15 @@ const OfflinePreload = (() => {
 
   function finalizarUI(ok) {
     if (!_card) return;
-    const icon = _card.querySelector('.material-symbols-outlined');
+    const icon = _card.querySelector('.preload-icon');
     if (icon) icon.textContent = ok ? 'cloud_done' : 'cloud_off';
 
-    const titulo = _card.querySelector('span[style*="font-weight"]');
-    if (titulo) titulo.textContent = ok
-      ? 'Datos offline listos ✓'
-      : 'Descarga parcial';
+    const titulo = _card.querySelector('.preload-title');
+    if (titulo) titulo.textContent = ok ? 'Datos offline listos ✓' : 'Descarga parcial';
 
     if (_bar) _bar.style.background = ok
-      ? 'var(--md-sys-color-tertiary,#7d5260)'
-      : 'var(--md-sys-color-error,#f2b8b5)';
+      ? 'var(--md-sys-color-tertiary)'
+      : 'var(--md-sys-color-error)';
 
     setTimeout(ocultarUI, ok ? 3500 : 6000);
   }
