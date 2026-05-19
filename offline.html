@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="dark" data-theme-accent="violeta">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,45 +8,40 @@
   <meta name="theme-color" content="#6750A4">
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+  <link rel="stylesheet" href="/main_md3.css">
   <style>
-    :root {
-      --bg:        #141218;
-      --surface:   #1e1b2e;
-      --primary:   #d0bcff;
-      --on-bg:     #e6e1e5;
-      --muted:     rgba(230,225,229,0.6);
-      --radius:    24px;
-    }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
       font-family: Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--on-bg);
+      background: var(--md-sys-color-surface);
+      color: var(--md-sys-color-on-surface);
       min-height: 100dvh;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 24px;
+      transition: background-color 0.4s ease, color 0.4s ease;
     }
 
     .card {
-      background: var(--surface);
-      border-radius: var(--radius);
+      background: var(--md-sys-color-surface-container-high);
+      border-radius: 24px;
       padding: 40px 32px;
       max-width: 420px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      box-shadow: var(--md-sys-elevation-3, 0 8px 32px rgba(0,0,0,0.4));
+      border: 1px solid var(--md-sys-color-outline-variant);
+      transition: background-color 0.3s ease;
     }
 
     .icon-wrap {
       width: 80px;
       height: 80px;
       border-radius: 50%;
-      background: rgba(208,188,255,0.12);
+      background: color-mix(in srgb, var(--md-sys-color-primary) 12%, transparent);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -55,30 +50,30 @@
 
     .icon-wrap .material-symbols-outlined {
       font-size: 40px;
-      color: var(--primary);
+      color: var(--md-sys-color-primary);
     }
 
     h1 {
       font-size: 1.5rem;
       font-weight: 500;
       margin-bottom: 12px;
-      color: var(--on-bg);
+      color: var(--md-sys-color-on-surface);
     }
 
     p {
-      color: var(--muted);
+      color: var(--md-sys-color-on-surface-variant);
       line-height: 1.6;
       margin-bottom: 16px;
       font-size: 0.95rem;
     }
 
     .info-box {
-      background: rgba(208,188,255,0.08);
-      border: 1px solid rgba(208,188,255,0.2);
+      background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+      border: 1px solid color-mix(in srgb, var(--md-sys-color-primary) 20%, transparent);
       border-radius: 12px;
       padding: 14px 18px;
       font-size: 0.85rem;
-      color: var(--primary);
+      color: var(--md-sys-color-primary);
       margin-bottom: 28px;
       text-align: left;
       display: flex;
@@ -96,8 +91,8 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: var(--primary);
-      color: #21005d;
+      background: var(--md-sys-color-primary);
+      color: var(--md-sys-color-on-primary);
       border: none;
       border-radius: 100px;
       padding: 12px 28px;
@@ -105,24 +100,25 @@
       font-weight: 500;
       cursor: pointer;
       text-decoration: none;
-      transition: opacity 0.2s;
+      transition: opacity 0.2s, background-color 0.3s ease;
     }
 
     .btn:hover { opacity: 0.88; }
+    .btn .material-symbols-outlined { color: var(--md-sys-color-on-primary); }
 
     .pending-section {
       margin-top: 24px;
       padding-top: 20px;
-      border-top: 1px solid rgba(230,225,229,0.12);
+      border-top: 1px solid var(--md-sys-color-outline-variant);
     }
 
     .pending-count {
       font-size: 0.85rem;
-      color: var(--muted);
+      color: var(--md-sys-color-on-surface-variant);
     }
 
     #pendiente-num {
-      color: var(--primary);
+      color: var(--md-sys-color-primary);
       font-weight: 600;
     }
 
@@ -161,6 +157,7 @@
     </div>
   </div>
 
+  <script src="/js/temas_md3.js"></script>
   <script>
     function intentarRecargar() {
       if (navigator.onLine) {
@@ -170,7 +167,6 @@
       }
     }
 
-    /* Mostrar conteo de pendientes desde IndexedDB */
     async function mostrarPendientes() {
       try {
         const req = indexedDB.open('bulma_sync_db', 1);
@@ -191,7 +187,6 @@
 
     mostrarPendientes();
 
-    /* Redirigir automáticamente cuando regrese internet */
     window.addEventListener('online', () => {
       mostrarPendientes();
       setTimeout(() => history.back(), 1500);

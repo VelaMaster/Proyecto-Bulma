@@ -42,7 +42,7 @@ const OfflinePreload = (() => {
         border: 1px solid var(--md-sys-color-outline-variant);
         opacity: 0;
         transform: translateY(16px);
-        transition: opacity 0.3s, transform 0.3s;
+        transition: opacity 0.3s, transform 0.3s, background-color 0.3s, color 0.3s, border-color 0.3s;
       }
       #preload-card .preload-header {
         display: flex;
