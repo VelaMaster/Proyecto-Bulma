@@ -373,8 +373,17 @@ lecherias.forEach(lech => {
 
             // ── Guardado en cola offline ─────────────────────────────────
             if (jsG.status === 'offline_queued') {
-                notificar('Sin conexión. El reporte se sincronizará automáticamente cuando regrese internet.', 'info');
-                return; // no intentar PDF offline
+                notificar('Sin conexión. El reporte se guardó localmente y se sincronizará cuando regrese internet.', 'info');
+                // Si el usuario marcó PDF, también encolarlo — el SW lo intercepta igual
+                if (generarPDF) {
+                    await fetch('generar_pdf_reporte.php', {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body:    JSON.stringify(datos)
+                    }).catch(() => {});
+                    notificar('PDF también en cola. Se generará (o reemplazará) al sincronizar.', 'info');
+                }
+                return;
             }
 
             if (!resG.ok || jsG.status !== 'success') {

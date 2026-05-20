@@ -352,8 +352,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // ── Guardado en cola offline ─────────────────────────────────
             if (data.status === 'offline_queued') {
-                notificar('Sin conexión. El requerimiento se sincronizará automáticamente cuando regrese internet.', 'info');
-                return; // no intentar PDF offline
+                notificar('Sin conexión. El requerimiento se guardó localmente y se sincronizará cuando regrese internet.', 'info');
+                // Si el usuario marcó PDF, también encolarlo — el SW lo intercepta igual
+                if (chkGenerarPDF && chkGenerarPDF.checked) {
+                    await fetch('generar_pdf_requerimiento.php', {
+                        method:  'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body:    JSON.stringify(payload)
+                    }).catch(() => {});
+                    notificar('PDF también en cola. Se generará (o reemplazará) al sincronizar.', 'info');
+                }
+                return;
             }
 
             if (data.status === 'success') {

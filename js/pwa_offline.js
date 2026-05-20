@@ -155,11 +155,19 @@ function ocultarBannerOffline() {
   _bannerOffline.style.pointerEvents = 'none';
 }
 
-window.addEventListener('online', () => {
+window.addEventListener('online', async () => {
   ocultarBannerOffline();
   mostrarToast('Conexión restaurada. Sincronizando...', 'success');
 
-  /* Disparar sync manual por si Background Sync no está disponible */
+  /* 1. Registrar Background Sync desde el cliente — el browser lo ejecuta
+        incluso si el usuario navega o cierra la app antes de que termine */
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    await reg.sync.register('sync-inventarios');
+  } catch {}
+
+  /* 2. TRIGGER_SYNC manual como respaldo inmediato (por si Background Sync
+        no está disponible en este browser/plataforma) */
   if (navigator.serviceWorker?.controller) {
     navigator.serviceWorker.controller.postMessage({ type: 'TRIGGER_SYNC' });
   }
