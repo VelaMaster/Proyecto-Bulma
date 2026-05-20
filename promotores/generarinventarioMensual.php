@@ -882,6 +882,8 @@ $lecher_get = $_GET['lecher'] ?? '';
             btnGuardar.classList.add('is-loading');
 
             try {
+                let guardadoOffline = false;
+
                 if (Estado.modo === 'edicion' && Estado.inventarioId) {
                     // ── MODO EDICIÓN: actualizar ──
                     datosFormulario.inventario_id = Estado.inventarioId;
@@ -893,11 +895,14 @@ $lecher_get = $_GET['lecher'] ?? '';
                     });
                     const resultado = await res.json();
 
-                    if (resultado.status !== 'success') {
+                    if (resultado.status === 'offline_queued') {
+                        guardadoOffline = true;
+                        mostrarNotificacion('Sin conexión. Cambios guardados localmente. Se sincronizarán cuando regreses a internet.', 'info');
+                    } else if (resultado.status !== 'success') {
                         throw new Error(resultado.mensaje || 'Error al actualizar en base de datos');
+                    } else {
+                        mostrarNotificacion('Inventario actualizado correctamente.', 'info');
                     }
-
-                    mostrarNotificacion('Inventario actualizado correctamente.', 'info');
 
                 } else {
                     // ── MODO NUEVO: guardar ──
@@ -911,6 +916,8 @@ $lecher_get = $_GET['lecher'] ?? '';
                         });
                         const resultado = await res.json();
 
+                        if (resultado.status === 'offline_queued') return 'offline_queued';
+
                         if (resultado.status === 'requiere_confirmacion') {
                             const seguro = await mostrarConfirmacionMD3(resultado.mensaje);
                             if (seguro) {
@@ -923,27 +930,52 @@ $lecher_get = $_GET['lecher'] ?? '';
                         if (resultado.status !== 'success') {
                             throw new Error(resultado.mensaje || 'Error al guardar en base de datos');
                         }
-                        return true;
+                        return 'success';
                     };
 
-                    await intentarGuardar(datosFormulario);
-                    mostrarNotificacion('Datos guardados en la base de datos.', 'info');
+                    const estadoGuardado = await intentarGuardar(datosFormulario);
+                    if (estadoGuardado === 'offline_queued') {
+                        guardadoOffline = true;
+                        mostrarNotificacion('Sin conexión. Inventario guardado localmente. Se sincronizará cuando regreses a internet.', 'info');
+                    } else {
+                        mostrarNotificacion('Datos guardados en la base de datos.', 'info');
+                    }
                 }
 
-                // ── Generar PDF (igual en ambos modos) ──
-                const resPDF = await fetch('generar_pdf.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(datosFormulario)
-                });
+                // ── Generar PDF ───────────────────────────────────────────
+                if (guardadoOffline) {
+                    // Sin conexión: generar PDF local con jsPDF y encolar el del servidor
+                    try {
+                        const blob = await window.generarPDFInventarioOffline(datosFormulario);
+                        const url  = URL.createObjectURL(blob);
+                        window.open(url, '_blank');
+                        mostrarNotificacion('PDF generado localmente (offline). El PDF oficial se creará al sincronizar.', 'info');
+                        setTimeout(() => URL.revokeObjectURL(url), 60000);
+                    } catch (ePDF) {
+                        mostrarNotificacion('No se pudo generar el PDF offline: ' + ePDF.message, 'error');
+                    }
+                    // Encolar generación del PDF oficial en el servidor para cuando haya red
+                    fetch('generar_pdf.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datosFormulario)
+                    }).catch(() => {}); // SW lo guarda en IndexedDB
+                } else {
+                    // Con conexión: PDF del servidor
+                    const resPDF = await fetch('generar_pdf.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(datosFormulario)
+                    });
 
-                if (!resPDF.ok) throw new Error('Error en el servidor al generar el PDF');
+                    if (!resPDF.ok) throw new Error('Error en el servidor al generar el PDF');
 
-                const blob = await resPDF.blob();
-                const url  = window.URL.createObjectURL(blob);
-                window.open(url, '_blank');
-                mostrarNotificacion('¡PDF generado exitosamente!', 'info');
-                setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+                    const blob = await resPDF.blob();
+                    const url  = window.URL.createObjectURL(blob);
+                    window.open(url, '_blank');
+                    mostrarNotificacion('¡PDF generado exitosamente!', 'info');
+                    setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+                }
 
             } catch (error) {
                 console.error(error);
@@ -1030,5 +1062,6 @@ $lecher_get = $_GET['lecher'] ?? '';
     }
     </script>
     <script src="../js/pwa_offline.js"></script>
+    <script src="../js/pdf_offline.js"></script>
 </body>
 </html>

@@ -18,7 +18,7 @@
 
 'use strict';
 
-const CACHE_NAME   = 'bulma-pwa-v7';
+const CACHE_NAME   = 'bulma-pwa-v8';
 const API_CACHE    = 'api-cache-v1';
 const SYNC_TAG     = 'sync-inventarios';
 const DB_NAME      = 'bulma_sync_db';
@@ -38,6 +38,8 @@ const PRECACHE_EXTERNAL_URLS = [
   'https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
   'https://esm.run/@material/web/all.js',
+  /* jsPDF — necesario para generación de PDF offline */
+  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
 ];
 
 /* ─── Assets pre-cacheados en install ───────────────────────────── */
@@ -59,6 +61,7 @@ const PRECACHE_ASSETS = [
   '/js/reporteMensual.js',
   '/js/requerimiento.js',
   '/js/editar_inventario.js',
+  '/js/pdf_offline.js',
   '/js/pwa_offline.js',
   '/js/offline_login.js',
   '/js/offline_preload.js',

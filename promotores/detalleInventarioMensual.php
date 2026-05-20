@@ -332,17 +332,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 </button>`;
         } else if (pdfBorrado) {
             acciones = `
-                <md-assist-chip class="chip-pdf-off" label="Sin archivo">
-                    <span slot="icon" class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-error);">pdf_off</span>
-                </md-assist-chip>
+                <span class="estado-pill" style="background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);display:inline-flex;align-items:center;gap:4px;">
+                    <span class="material-symbols-outlined" style="font-size:14px;">pdf_off</span>Sin archivo
+                </span>
                 <md-icon-button class="btn-regen" data-id="${encodeURIComponent(inv.ID)}" title="Regenerar PDF">
                     <md-icon>refresh</md-icon>
                 </md-icon-button>`;
         } else {
             acciones = `
-                <md-assist-chip label="Sin PDF" disabled>
-                    <span slot="icon" class="material-symbols-outlined" style="font-size:18px;">do_not_disturb</span>
-                </md-assist-chip>`;
+                <span class="estado-pill" style="background:var(--md-sys-color-surface-variant);color:var(--md-sys-color-on-surface-variant);display:inline-flex;align-items:center;gap:4px;">
+                    <span class="material-symbols-outlined" style="font-size:14px;">do_not_disturb</span>Sin PDF
+                </span>`;
         }
 
         const fila = document.createElement('div');
