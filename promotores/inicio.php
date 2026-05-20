@@ -71,21 +71,27 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
         <div class="app-bar-end">
             <!-- Badge de datos pendientes de sincronizar -->
-            <span id="offline-badge" style="
-                display:none;
-                background:var(--md-sys-color-error,#B3261E);
-                color:#fff;
-                border-radius:50%;
-                font-size:0.7rem;
-                font-weight:700;
-                min-width:18px;
-                height:18px;
-                padding:0 4px;
-                align-items:center;
-                justify-content:center;
-                margin-right:4px;
-                title='Cambios pendientes de sincronizar'
-            " title="Cambios pendientes de sincronizar">0</span>
+            <span id="offline-badge"
+                  role="button" tabindex="0" aria-label="Ver cambios pendientes"
+                  title="Cambios pendientes de sincronizar — toca para ver el detalle"
+                  style="
+                    display:none;
+                    background:var(--md-sys-color-error,#B3261E);
+                    color:#fff;
+                    border-radius:12px;
+                    font-size:0.72rem;
+                    font-weight:700;
+                    min-width:22px;
+                    height:22px;
+                    padding:0 7px;
+                    align-items:center;
+                    justify-content:center;
+                    margin-right:6px;
+                    cursor:pointer;
+                    letter-spacing:0.2px;
+                    box-shadow:0 1px 4px rgba(0,0,0,.3);
+                    flex-shrink:0;
+                  ">0</span>
             <div class="desktop-nav">
 
                 <div style="position: relative;">

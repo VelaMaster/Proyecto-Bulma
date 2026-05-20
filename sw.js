@@ -32,6 +32,14 @@ const CACHE_EXTERNAL_DOMAINS = [
   'cdnjs.cloudflare.com',
 ];
 
+/* ─── URLs externas a precachear en install (fuentes + iconos) ────── */
+const PRECACHE_EXTERNAL_URLS = [
+  'https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap',
+  'https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css',
+  'https://esm.run/@material/web/all.js',
+];
+
 /* ─── Assets pre-cacheados en install ───────────────────────────── */
 const PRECACHE_ASSETS = [
   '/main_md3.css',
@@ -102,6 +110,9 @@ const SYNC_ENDPOINTS = [
   '/promotores/guardarReporteMensual.php',
   '/promotores/guardarRequerimiento.php',
   '/promotores/actualizar_inventario.php',
+  /* PDF: se encolan para que el archivo en servidor también se regenere */
+  '/promotores/generar_pdf_reporte.php',
+  '/promotores/generar_pdf_requerimiento.php',
 ];
 
 /* ════════════════════════════════════════════════════════════════════
@@ -177,10 +188,30 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(PRECACHE_ASSETS))
+      .then(() => {
+        /* Precachear externos en segundo plano — no bloquea el install */
+        precachearExternos();
+      })
       .then(() => self.skipWaiting())
       .catch((err) => console.warn('[SW] Pre-cache parcial:', err))
   );
 });
+
+/* Precachea fuentes/iconos/Material Web sin bloquear el install */
+async function precachearExternos() {
+  let cache;
+  try { cache = await caches.open(CACHE_NAME); } catch { return; }
+  for (const url of PRECACHE_EXTERNAL_URLS) {
+    try {
+      const already = await caches.match(url);
+      if (already) continue; // ya está en caché, no re-descargar
+      const res = await fetch(url, { credentials: 'omit', mode: 'cors' });
+      if (res.ok) await cache.put(url, res);
+    } catch {
+      /* Si falla (sin red o CORS), se ignorará y se cacheará en primera visita */
+    }
+  }
+}
 
 /* ════════════════════════════════════════════════════════════════════
    ACTIVATE — limpiar caches viejos (respetar api-cache-v1)
@@ -409,6 +440,7 @@ async function syncPendingRequests() {
 
   let synced = 0;
   let failed = 0;
+  const syncedItems = []; // para notificación detallada
 
   for (const item of pending) {
     try {
@@ -421,6 +453,7 @@ async function syncPendingRequests() {
       if (response.ok) {
         await deletePendingRequest(item.id);
         synced++;
+        syncedItems.push({ url: item.url, body: item.body, timestamp: item.timestamp });
       } else if (response.status === 401) {
         await deletePendingRequest(item.id);
         notifyClients({ type: 'SYNC_SESSION_EXPIRED', url: item.url });
@@ -435,7 +468,7 @@ async function syncPendingRequests() {
     }
   }
 
-  if (synced > 0) notifyClients({ type: 'SYNC_SUCCESS', count: synced });
+  if (synced > 0) notifyClients({ type: 'SYNC_SUCCESS', count: synced, items: syncedItems });
   if (failed > 0) throw new Error(`${failed} elemento(s) fallaron`);
 }
 
@@ -447,6 +480,15 @@ self.addEventListener('message', async (event) => {
     case 'GET_PENDING_COUNT': {
       const items = await getPendingRequests();
       event.source?.postMessage({ type: 'PENDING_COUNT', count: items.length });
+      break;
+    }
+    case 'GET_PENDING_DETAIL': {
+      const items = await getPendingRequests();
+      event.source?.postMessage({
+        type:  'PENDING_DETAIL',
+        count: items.length,
+        items: items.map(i => ({ url: i.url, body: i.body, timestamp: i.timestamp, retries: i.retries })),
+      });
       break;
     }
     case 'TRIGGER_SYNC':
