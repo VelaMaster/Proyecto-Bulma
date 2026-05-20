@@ -177,13 +177,28 @@ window.addEventListener('offline', () => {
   mostrarBannerOffline();
 });
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   crearBannerOffline();
   asegurarBadge();
   if (!navigator.onLine) mostrarBannerOffline();
 
   /* Actualizar badge de pendientes al cargar */
   actualizarContadorPendientesDesdeDB();
+
+  /* Si hay pendientes Y hay conexión al cargar la página, disparar sync.
+     Cubre el caso donde el SW no disparó por cierre de app o navegación. */
+  if (navigator.onLine) {
+    const count = await contarPendientesDB().catch(() => 0);
+    if (count > 0) {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        await reg.sync.register('sync-inventarios');
+      } catch {}
+      if (navigator.serviceWorker?.controller) {
+        navigator.serviceWorker.controller.postMessage({ type: 'TRIGGER_SYNC' });
+      }
+    }
+  }
 });
 
 /* ════════════════════════════════════════════════════════════════════

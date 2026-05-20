@@ -34,7 +34,7 @@ try {
     $datos = [
         'fecha'          => $inv['FECHA']          ?? '',
         'lecheria'       => $inv['CLAVE_LECHERIA']  ?? '',
-        'tienda'         => $inv['NUM_TIENDA']       ?? '',
+        'tienda'         => $inv['CLAVE_TIENDA']     ?? '',
         'almacen'        => $inv['ALMACEN']          ?? '',
         'municipio'      => $inv['MUNICIPIO']        ?? '',
         'comunidad'      => $inv['COMUNIDAD']        ?? '',

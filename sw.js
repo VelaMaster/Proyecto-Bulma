@@ -18,7 +18,7 @@
 
 'use strict';
 
-const CACHE_NAME   = 'bulma-pwa-v6';
+const CACHE_NAME   = 'bulma-pwa-v7';
 const API_CACHE    = 'api-cache-v1';
 const SYNC_TAG     = 'sync-inventarios';
 const DB_NAME      = 'bulma_sync_db';
@@ -433,7 +433,9 @@ async function handleSyncEndpoint(request) {
 
 /* Guard: evita ejecuciones concurrentes desde múltiples pestañas/eventos */
 let _syncRunning = false;
+let _syncTimeout = null;         // safety valve
 const MAX_RETRIES = 5;
+const SYNC_MAX_MS  = 4 * 60 * 1000; // 4 min — fuerza reset si el SW se cuelga
 
 self.addEventListener('sync', (event) => {
   if (event.tag === SYNC_TAG) event.waitUntil(syncPendingRequests());
@@ -442,6 +444,13 @@ self.addEventListener('sync', (event) => {
 async function syncPendingRequests() {
   if (_syncRunning) return;
   _syncRunning = true;
+
+  /* Safety: si syncPendingRequests no termina en 4 min, liberar el lock */
+  if (_syncTimeout) clearTimeout(_syncTimeout);
+  _syncTimeout = setTimeout(() => {
+    _syncRunning = false;
+    _syncTimeout = null;
+  }, SYNC_MAX_MS);
 
   try {
     const pending = await getPendingRequests();
@@ -537,6 +546,7 @@ async function syncPendingRequests() {
 
   } finally {
     _syncRunning = false;
+    if (_syncTimeout) { clearTimeout(_syncTimeout); _syncTimeout = null; }
   }
 }
 

@@ -332,15 +332,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 </button>`;
         } else if (pdfBorrado) {
             acciones = `
-                <span style="font-size:.72rem;color:var(--md-sys-color-error);display:flex;align-items:center;gap:4px;">
-                    <span class="material-symbols-outlined" style="font-size:15px;">pdf_off</span>PDF eliminado
-                </span>
-                <button class="btn-pdf btn-regen" data-id="${encodeURIComponent(inv.ID)}" title="Regenerar PDF" style="margin-left:4px;">
-                    <span class="material-symbols-outlined" style="font-size:16px;">refresh</span>
-                </button>`;
+                <md-assist-chip class="chip-pdf-off" label="Sin archivo">
+                    <span slot="icon" class="material-symbols-outlined" style="font-size:18px;color:var(--md-sys-color-error);">pdf_off</span>
+                </md-assist-chip>
+                <md-icon-button class="btn-regen" data-id="${encodeURIComponent(inv.ID)}" title="Regenerar PDF">
+                    <md-icon>refresh</md-icon>
+                </md-icon-button>`;
         } else {
-            acciones = `<span style="font-size:.75rem;color:var(--md-sys-color-outline);display:flex;align-items:center;gap:4px;">
-                <span class="material-symbols-outlined" style="font-size:15px;">do_not_disturb</span>Sin PDF</span>`;
+            acciones = `
+                <md-assist-chip label="Sin PDF" disabled>
+                    <span slot="icon" class="material-symbols-outlined" style="font-size:18px;">do_not_disturb</span>
+                </md-assist-chip>`;
         }
 
         const fila = document.createElement('div');
@@ -378,12 +380,10 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', async e => {
                 e.stopPropagation();
                 btn.disabled = true;
-                btn.querySelector('.material-symbols-outlined').textContent = 'hourglass_empty';
                 try {
                     const res  = await fetch(`regenerar_pdf_inventario.php?id=${btn.dataset.id}`);
                     const data = await res.json();
                     if (data.status === 'success') {
-                        // Recargar la fila actualizando el estado
                         inv.pdf_existe = 1;
                         inv.PDF_RUTA   = data.pdf_ruta;
                         fila.replaceWith(crearFila(inv));
@@ -394,7 +394,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch(err) {
                     if (window.PWA) window.PWA.mostrarToast(err.message, 'error');
                     btn.disabled = false;
-                    btn.querySelector('.material-symbols-outlined').textContent = 'refresh';
                 }
             });
         });
