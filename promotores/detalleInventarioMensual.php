@@ -298,21 +298,50 @@ document.addEventListener('DOMContentLoaded', () => {
               })
             : '—';
 
+        // Fecha de última edición (UPDATED_AT o CREATED_AT)
+        const fechaEdicion = inv.UPDATED_AT || inv.CREATED_AT || null;
+        const edicionFmt = fechaEdicion
+            ? new Date(fechaEdicion).toLocaleDateString('es-MX', {
+                day: '2-digit', month: 'short', year: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+              })
+            : null;
+
         const metaTxt = [
             inv.FIN_CAJA    != null ? `Inv. final: ${inv.FIN_CAJA} cajas` : null,
             inv.VENTA_LITROS!= null ? `Venta: ${inv.VENTA_LITROS} L`      : null,
+            edicionFmt ? `Editado: ${edicionFmt}` : null,
         ].filter(Boolean).join('  ·  ');
 
-        // Botones PDF: solo si hay ruta guardada
-        const tienePDF = inv.PDF_RUTA && inv.PDF_RUTA.trim() !== '';
-        const acciones = tienePDF
-            ? `<button class="btn-pdf btn-ver"  data-pdf="${encodeURIComponent(inv.PDF_RUTA)}" title="Ver PDF">
-                   <span class="material-symbols-outlined">visibility</span> Ver
-               </button>
-               <button class="btn-pdf btn-dl"   data-pdf="${encodeURIComponent(inv.PDF_RUTA)}" title="Descargar PDF">
-                   <span class="material-symbols-outlined">download</span>
-               </button>`
-            : `<span style="font-size:.75rem;color:var(--md-sys-color-outline);">Sin PDF</span>`;
+        // ── Acciones PDF — tres estados ─────────────────────────────
+        // 1) PDF en disco → Ver + Descargar
+        // 2) Inventario guardado en BD pero PDF borrado → aviso + Regenerar
+        // 3) Sin PDF_RUTA → nunca se generó
+        const tienePDF    = inv.PDF_RUTA && inv.PDF_RUTA.trim() !== '';
+        const pdfEnDisco  = tienePDF && inv.pdf_existe == 1;
+        const pdfBorrado  = tienePDF && inv.pdf_existe == 0;
+
+        let acciones = '';
+        if (pdfEnDisco) {
+            acciones = `
+                <button class="btn-pdf btn-ver" data-pdf="${encodeURIComponent(inv.PDF_RUTA)}" title="Ver PDF">
+                    <span class="material-symbols-outlined">visibility</span> Ver
+                </button>
+                <button class="btn-pdf btn-dl"  data-pdf="${encodeURIComponent(inv.PDF_RUTA)}" title="Descargar PDF">
+                    <span class="material-symbols-outlined">download</span>
+                </button>`;
+        } else if (pdfBorrado) {
+            acciones = `
+                <span style="font-size:.72rem;color:var(--md-sys-color-error);display:flex;align-items:center;gap:4px;">
+                    <span class="material-symbols-outlined" style="font-size:15px;">pdf_off</span>PDF eliminado
+                </span>
+                <button class="btn-pdf btn-regen" data-id="${encodeURIComponent(inv.ID)}" title="Regenerar PDF" style="margin-left:4px;">
+                    <span class="material-symbols-outlined" style="font-size:16px;">refresh</span>
+                </button>`;
+        } else {
+            acciones = `<span style="font-size:.75rem;color:var(--md-sys-color-outline);display:flex;align-items:center;gap:4px;">
+                <span class="material-symbols-outlined" style="font-size:15px;">do_not_disturb</span>Sin PDF</span>`;
+        }
 
         const fila = document.createElement('div');
         fila.className = 'inv-row';
@@ -328,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="inv-row-actions">${acciones}</div>
         `;
 
-        // Eventos botones PDF
+        // Eventos Ver
         fila.querySelectorAll('.btn-ver').forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
@@ -336,11 +365,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 window.open(`ver_pdf.php?archivo=${encodeURIComponent(archivo)}`, '_blank');
             });
         });
+        // Eventos Descargar
         fila.querySelectorAll('.btn-dl').forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
                 const archivo = decodeURIComponent(btn.dataset.pdf);
                 window.open(`ver_pdf.php?archivo=${encodeURIComponent(archivo)}&dl=1`, '_blank');
+            });
+        });
+        // Evento Regenerar PDF
+        fila.querySelectorAll('.btn-regen').forEach(btn => {
+            btn.addEventListener('click', async e => {
+                e.stopPropagation();
+                btn.disabled = true;
+                btn.querySelector('.material-symbols-outlined').textContent = 'hourglass_empty';
+                try {
+                    const res  = await fetch(`regenerar_pdf_inventario.php?id=${btn.dataset.id}`);
+                    const data = await res.json();
+                    if (data.status === 'success') {
+                        // Recargar la fila actualizando el estado
+                        inv.pdf_existe = 1;
+                        inv.PDF_RUTA   = data.pdf_ruta;
+                        fila.replaceWith(crearFila(inv));
+                        if (window.PWA) window.PWA.mostrarToast('PDF regenerado correctamente.', 'success');
+                    } else {
+                        throw new Error(data.mensaje || 'Error al regenerar');
+                    }
+                } catch(err) {
+                    if (window.PWA) window.PWA.mostrarToast(err.message, 'error');
+                    btn.disabled = false;
+                    btn.querySelector('.material-symbols-outlined').textContent = 'refresh';
+                }
             });
         });
 

@@ -88,7 +88,15 @@ try {
 
     $db->commit();
 
-    // 5. Sincronizamos también INVENTARIO_LEP_SUBSIDIADA para que el flujo
+    // 5. Regenerar PDF en disco con los datos actualizados
+    try {
+        require_once __DIR__ . '/_fn_pdf_inventario.php';
+        generarArchivoInventario($datos);
+    } catch (Throwable $ePDF) {
+        error_log('[actualizar_inventario] PDF no regenerado: ' . $ePDF->getMessage());
+    }
+
+    // 6. Sincronizamos también INVENTARIO_LEP_SUBSIDIADA para que el flujo
     //    (reporte/requerimiento) pueda leer los nuevos valores sin que
     //    Distribución tenga que cargar nada a mano.
     try {

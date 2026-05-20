@@ -30,6 +30,14 @@ try {
             ORDER BY FECHA DESC";
     $stmt = $db->query($sql);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $baseDir = __DIR__ . '/../datos/promotores/';
+    foreach ($rows as &$row) {
+        $ruta = trim($row['PDF_RUTA'] ?? '');
+        $row['pdf_existe'] = ($ruta !== '' && file_exists($baseDir . $ruta)) ? 1 : 0;
+    }
+    unset($row);
+
     array_walk_recursive($rows, function (&$v) {
         if (is_string($v)) $v = mb_convert_encoding($v, 'UTF-8', 'UTF-8');
     });
