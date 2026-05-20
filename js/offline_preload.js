@@ -228,34 +228,35 @@ const OfflinePreload = (() => {
 
     crearUI();
 
-    const pasos = [];
-    let paso = 0;
-
-    function avanzar(mensaje) {
-      paso++;
-      const pct = (paso / pasos.length) * 100;
-      setProgreso(pct, mensaje);
-    }
+    /* ── 0. Pre-cachear páginas PHP principales ────────────────── */
+    setProgreso(2, 'Guardando páginas en caché...');
+    await Promise.all([
+      precargar(`${base}/inicio.php`),
+      precargar(`${base}/generarinventarioMensual.php`),
+      precargar(`${base}/generarreporteMensual.php`),
+      precargar(`${base}/requerimiento.php`),
+      precargar(`${base}/consultarinventarioMensual.php`),
+    ]);
 
     /* ── 1. Lecherías del promotor ─────────────────────────────── */
-    setProgreso(2, 'Cargando tus lecherías...');
+    setProgreso(8, 'Cargando tus lecherías...');
     const lecherias = await precargar(`${base}/mis_lecherias.php`);
     const listaLecherias = Array.isArray(lecherias) ? lecherias : [];
     const ids = listaLecherias.map(l => l.LECHER).filter(Boolean);
 
     /* ── 2. Almacenes y supervisor ─────────────────────────────── */
-    setProgreso(8, 'Descargando almacenes y supervisor...');
+    setProgreso(12, 'Descargando almacenes y supervisor...');
     await Promise.all([
       precargar(`${base}/obtenerAlmacenes.php`),
       precargar(`${base}/obtenerSupervisorAsignado.php`),
     ]);
 
-    /* ── 3. Últimos 3 meses: lecherías por almacén + requerimiento ── */
-    const meses = mesesAtras(2); // [mes actual, mes-1, mes-2]
+    /* ── 3. Últimos 4 meses: lecherías por almacén + requerimiento ── */
+    const meses = mesesAtras(3); // [mes actual, mes-1, mes-2, mes-3]
     let mesIdx = 0;
     for (const { mes, anio } of meses) {
       mesIdx++;
-      setProgreso(10 + (mesIdx / meses.length) * 20,
+      setProgreso(14 + (mesIdx / meses.length) * 16,
         `Cargando datos ${nombreMes(mes)} ${anio}...`);
       await Promise.all([
         precargar(`${base}/obtenerLecheriasPorAlmacen.php?mes_reporte=${mes}&anio_reporte=${anio}`),
@@ -266,7 +267,7 @@ const OfflinePreload = (() => {
     /* ── 3b. Búsqueda inicial de lecherías (inventario mensual) ── */
     await precargar(`${base}/buscarLecheria.php?q=`);
 
-    /* ── 4. Por cada lechería × mes: inventarios y datos previos ─ */
+    /* ── 4. Por cada lechería × mes: inventarios, datos previos y PDFs ─ */
     if (ids.length === 0) {
       setProgreso(90, 'Sin lecherías asignadas');
     } else {
@@ -281,25 +282,36 @@ const OfflinePreload = (() => {
           const calls = [
             precargar(`${base}/obtenerInventarioAnterior.php?lecher=${id}`),
           ];
-          /* Precargar con los mismos params que usa generarinventarioMensual.php:
-             ?clave=X&mes=M&anio=Y  (antes se omitían mes y anio → cache miss) */
           for (const { mes, anio } of meses) {
             calls.push(
               precargar(`${base}/obtener_inventarios_por_lecheria.php?clave=${encodeURIComponent(id)}&mes=${mes}&anio=${anio}`),
               precargar(`${base}/buscar_inventario_guardado.php?lecher=${id}&mes=${mes}&anio=${anio}`)
             );
           }
+          /* Precargar listado de inventarios (incluye PDF_RUTA) */
+          calls.push(
+            precargar(`${base}/listar_inventarios_lecheria.php?clave=${encodeURIComponent(id)}`)
+              .then(async (lista) => {
+                if (!Array.isArray(lista)) return;
+                // Precargar los PDFs de los últimos 4 inventarios de esta lechería
+                const recientes = lista.slice(0, 4);
+                for (const inv of recientes) {
+                  const ruta = inv.PDF_RUTA ?? '';
+                  if (ruta) await precargar(`${base}/ver_pdf.php?archivo=${encodeURIComponent(ruta)}`);
+                }
+              })
+          );
           return calls;
         }));
         idxDone += grupo.length;
         setProgreso(
           30 + (idxDone / totalIds) * 65,
-          `Lechería ${idxDone}/${totalIds} descargada...`
+          `Lechería ${idxDone}/${totalIds} + PDFs descargados...`
         );
       }
     }
 
-    setProgreso(100, `${ids.length} lecherías y 3 meses listos`);
+    setProgreso(100, `${ids.length} lecherías, 4 meses y PDFs listos`);
     finalizarUI(true);
 
     /* Persistir timestamp del último preload */

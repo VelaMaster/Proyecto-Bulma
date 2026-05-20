@@ -1,5 +1,15 @@
 <?php
 session_start();
+
+// Si ya hay sesión activa → ir directo al panel
+if (!empty($_SESSION['usuario']) && !empty($_SESSION['rol'])) {
+    $destino = '/promotores/inicio.php';
+    if ($_SESSION['rol'] === 'supervisor')    $destino = '/supervisor/inicio.php';
+    if ($_SESSION['rol'] === 'distribucion')  $destino = '/distribucion/inicio.php';
+    header("Location: $destino");
+    exit();
+}
+
 require_once 'Database.php';
 $origen_conexion = Database::getEnvName();
 ?>

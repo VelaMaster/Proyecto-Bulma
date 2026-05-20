@@ -1,5 +1,16 @@
 <?php
-// Ya no usamos header("Location: ...") en PHP para que el robot de Google pueda leer todo el código de abajo.
+session_start();
+// Usuario con sesión activa → redirigir directo al panel (Google nunca tiene sesión)
+if (!empty($_SESSION['usuario']) && !empty($_SESSION['rol'])) {
+    $destino = '/promotores/inicio.php';
+    if ($_SESSION['rol'] === 'supervisor')   $destino = '/supervisor/inicio.php';
+    if ($_SESSION['rol'] === 'distribucion') $destino = '/distribucion/inicio.php';
+    header("Location: $destino");
+    exit();
+}
+// Sin sesión → redirigir al login
+header("Location: iniciosesionPromotor.php");
+exit();
 ?>
 <!DOCTYPE html>
 <html lang="es">

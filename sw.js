@@ -74,6 +74,7 @@ const API_ENDPOINTS = [
   'api_requerimiento_dotacion',
   'buscarLecheria',
   'calcularSurtimiento',
+  'ver_pdf',
   'api_supervisor',
   'api_avance_promotores',
   'api_estado_promotor',

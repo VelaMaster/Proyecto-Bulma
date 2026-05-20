@@ -180,6 +180,18 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </div>
         </div>
 
+        <!-- ── Tarjeta de estado offline (renderizada por JS) ── -->
+        <div id="offline-status-card" style="
+            display:none;
+            background: var(--md-sys-color-surface-container, #1e1e2e);
+            border: 1px solid var(--md-sys-color-outline-variant);
+            border-radius: 16px;
+            padding: 14px 20px;
+            margin-top: 12px;
+            font-family: Roboto, sans-serif;
+            font-size: 0.875rem;
+        "></div>
+
         <h3
             style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 16px; margin-bottom: 0;">
             Accesos Rápidos</h3>
@@ -268,14 +280,100 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         if (window.__SESION_PHP__ && window.OfflineLogin) {
             window.OfflineLogin.guardarSesionOffline(window.__SESION_PHP__);
         }
+
+        // ── Tarjeta de estado offline ─────────────────────────────────
+        _renderOfflineStatusCard();
+
         // Precargar datos offline (solo si pasaron >4h desde el último preload)
         if (window.OfflinePreload && navigator.onLine) {
-            // Pequeño delay para no competir con la carga de la página
             setTimeout(() => {
                 window.OfflinePreload.runIfStale('/promotores');
             }, 2500);
         }
     });
+
+    function _renderOfflineStatusCard() {
+        const card = document.getElementById('offline-status-card');
+        if (!card) return;
+
+        let tsRaw = 0, lecherias = 0;
+        try {
+            tsRaw    = parseInt(localStorage.getItem('offline_preload_ts') || '0');
+            lecherias = parseInt(localStorage.getItem('offline_preload_lecherias') || '0');
+        } catch {}
+
+        const ahora     = Date.now();
+        const diffMs    = ahora - tsRaw;
+        const diffH     = diffMs / (1000 * 60 * 60);
+        const sincDate  = tsRaw ? new Date(tsRaw).toLocaleString('es-MX', {
+            day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+        }) : null;
+
+        let icono, color, titulo, subtitulo;
+
+        if (!navigator.onLine) {
+            // ── SIN CONEXIÓN ──
+            if (tsRaw && diffH < 48) {
+                icono    = 'offline_bolt';
+                color    = 'var(--md-sys-color-primary)';
+                titulo   = '✓ Listo para trabajar sin conexión';
+                subtitulo = `${lecherias} lecherías precargadas · Sync: ${sincDate}`;
+            } else {
+                icono    = 'cloud_off';
+                color    = 'var(--md-sys-color-error)';
+                titulo   = 'Sin conexión — datos limitados';
+                subtitulo = tsRaw ? `Último sync: ${sincDate}` : 'Nunca se sincronizó. Conecta a internet primero.';
+            }
+            card.innerHTML = `
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <span class="material-symbols-outlined" style="color:${color};font-size:28px;flex-shrink:0">${icono}</span>
+                    <div>
+                        <div style="font-weight:500;color:var(--md-sys-color-on-surface)">${titulo}</div>
+                        <div style="font-size:0.8rem;opacity:0.7;margin-top:2px">${subtitulo}</div>
+                    </div>
+                </div>`;
+        } else {
+            // ── CON CONEXIÓN ──
+            if (!tsRaw) {
+                icono    = 'cloud_sync';
+                color    = 'var(--md-sys-color-tertiary)';
+                titulo   = 'Datos offline no descargados aún';
+                subtitulo = 'Sincroniza para poder trabajar sin conexión';
+            } else if (diffH > 24) {
+                icono    = 'sync_problem';
+                color    = 'var(--md-sys-color-error)';
+                titulo   = 'Datos desactualizados';
+                subtitulo = `Último sync: ${sincDate} — Se recomienda sincronizar`;
+            } else {
+                icono    = 'cloud_done';
+                color    = 'var(--md-sys-color-tertiary)';
+                titulo   = '✓ Datos offline actualizados';
+                subtitulo = `${lecherias} lecherías · Sync: ${sincDate}`;
+            }
+            card.innerHTML = `
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    <span class="material-symbols-outlined" style="color:${color};font-size:28px;flex-shrink:0">${icono}</span>
+                    <div style="flex:1;min-width:160px">
+                        <div style="font-weight:500;color:var(--md-sys-color-on-surface)">${titulo}</div>
+                        <div style="font-size:0.8rem;opacity:0.7;margin-top:2px">${subtitulo}</div>
+                    </div>
+                    <md-filled-tonal-button id="btnSincAhora" style="flex-shrink:0">
+                        <md-icon slot="icon">sync</md-icon>
+                        Sincronizar ahora
+                    </md-filled-tonal-button>
+                </div>`;
+
+            document.getElementById('btnSincAhora')?.addEventListener('click', async () => {
+                const btn = document.getElementById('btnSincAhora');
+                if (btn) btn.disabled = true;
+                try { localStorage.removeItem('offline_preload_ts'); } catch {}
+                await window.OfflinePreload?.run({ base: '/promotores' });
+                _renderOfflineStatusCard();
+            });
+        }
+
+        card.style.display = 'flex';
+    }
     </script>
     <script>
         function abrirMenu(id) {
