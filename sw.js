@@ -18,7 +18,7 @@
 
 'use strict';
 
-const CACHE_NAME   = 'bulma-pwa-v8';
+const CACHE_NAME   = 'bulma-pwa-v9';
 const API_CACHE    = 'api-cache-v1';
 const SYNC_TAG     = 'sync-inventarios';
 const DB_NAME      = 'bulma_sync_db';
@@ -217,16 +217,64 @@ async function precachearExternos() {
 }
 
 /* ════════════════════════════════════════════════════════════════════
-   ACTIVATE — limpiar caches viejos (respetar api-cache-v1)
+   ACTIVATE — migrar páginas cacheadas, limpiar caches viejos
    ════════════════════════════════════════════════════════════════════ */
 self.addEventListener('activate', (event) => {
-  const keepCaches = [CACHE_NAME, API_CACHE]; // bulma-pwa-v6 + api-cache-v1
   event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(
-        keys.filter((k) => !keepCaches.includes(k)).map((k) => caches.delete(k))
-      ))
-      .then(() => self.clients.claim())
+    (async () => {
+      /* 1. Pedir al navegador que NO evicte nuestros caches (persistencia) */
+      try {
+        if (self.registration?.navigationPreload) {
+          // opcional: habilitar preload de navegación si disponible
+        }
+        // navigator no existe en SW, usar self — la API es en el cliente.
+        // En cambio, en activate podemos al menos marcar la intención
+        // desde el cliente via postMessage tras SW_UPDATED.
+      } catch {}
+
+      /* 2. Migrar páginas PHP cacheadas de versiones anteriores → nueva versión
+            Esto evita que el usuario pierda el caché de páginas al actualizar el SW */
+      const newCache = await caches.open(CACHE_NAME);
+      const allKeys  = await caches.keys();
+      const oldPageCaches = allKeys.filter(
+        (k) => k.startsWith('bulma-pwa-') && k !== CACHE_NAME
+      );
+
+      for (const oldCacheName of oldPageCaches) {
+        try {
+          const oldCache = await caches.open(oldCacheName);
+          const oldKeys  = await oldCache.keys();
+          for (const req of oldKeys) {
+            /* Solo migrar páginas PHP (no assets: CSS/JS/imágenes ya se re-precachean) */
+            if (req.url.endsWith('.php') || req.url.endsWith('/')) {
+              const alreadyCached = await newCache.match(req);
+              if (!alreadyCached) {
+                try {
+                  const res = await oldCache.match(req);
+                  if (res) await newCache.put(req, res);
+                } catch {}
+              }
+            }
+          }
+        } catch {}
+      }
+
+      /* 3. Eliminar caches viejos */
+      const keepCaches = [CACHE_NAME, API_CACHE];
+      await Promise.all(
+        allKeys
+          .filter((k) => !keepCaches.includes(k))
+          .map((k) => caches.delete(k))
+      );
+
+      /* 4. Tomar control de todos los clientes abiertos */
+      await self.clients.claim();
+
+      /* 5. Notificar a todos los clientes que el SW se actualizó
+            → el cliente limpiará el timestamp de offline_preload
+               para forzar una re-descarga de datos API */
+      notifyClients({ type: 'SW_UPDATED', version: CACHE_NAME });
+    })()
   );
 });
 

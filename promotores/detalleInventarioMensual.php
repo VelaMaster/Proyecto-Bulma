@@ -173,6 +173,7 @@ if ($clave === '') {
 
 <script src="../js/temas_md3.js"></script>
 <script src="../js/pwa_offline.js"></script>
+<script src="../js/offline_preload.js"></script>
 <script>
 const CLAVE_LECHERIA = <?= json_encode($clave) ?>;
 

@@ -1062,6 +1062,7 @@ $lecher_get = $_GET['lecher'] ?? '';
     }
     </script>
     <script src="../js/pwa_offline.js"></script>
+    <script src="../js/offline_preload.js"></script>
     <script src="../js/pdf_offline.js"></script>
 </body>
 </html>

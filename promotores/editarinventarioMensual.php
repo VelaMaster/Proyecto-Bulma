@@ -437,6 +437,9 @@ document.addEventListener('click', (e) => {
         document.querySelectorAll('md-menu').forEach(m => m.open = false);
 });
 </script>
+<script src="../js/pwa_offline.js"></script>
+<script src="../js/offline_preload.js"></script>
+<script src="../js/pdf_offline.js"></script>
 
 </body>
 </html>

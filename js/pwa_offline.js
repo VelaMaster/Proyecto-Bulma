@@ -94,6 +94,16 @@ if ('serviceWorker' in navigator) {
         );
         actualizarContadorPendientesDesdeDB();
         break;
+
+      case 'SW_UPDATED':
+        /* El SW se actualizó — limpiar timestamp de preload para forzar
+           re-descarga de datos API en la próxima visita */
+        try { localStorage.removeItem('offline_preload_ts'); } catch {}
+        /* Disparar preload inmediato si hay módulo disponible y hay conexión */
+        if (navigator.onLine && window.OfflinePreload?.runIfStale) {
+          window.OfflinePreload.runIfStale('/promotores').catch(() => {});
+        }
+        break;
     }
   });
 }
@@ -182,6 +192,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   asegurarBadge();
   if (!navigator.onLine) mostrarBannerOffline();
 
+  /* Pedir al navegador que no evicte nuestros caches/IndexedDB */
+  try {
+    if (navigator.storage?.persist) {
+      const granted = await navigator.storage.persist();
+      if (!granted) console.warn('[PWA] Almacenamiento persistente no garantizado — el navegador puede limpiar el caché.');
+    }
+  } catch {}
+
   /* Actualizar badge de pendientes al cargar */
   actualizarContadorPendientesDesdeDB();
 
@@ -198,6 +216,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         navigator.serviceWorker.controller.postMessage({ type: 'TRIGGER_SYNC' });
       }
     }
+  }
+
+  /* Disparar preload si el módulo está cargado y los datos son stale */
+  if (navigator.onLine && window.OfflinePreload?.runIfStale) {
+    window.OfflinePreload.runIfStale('/promotores').catch(() => {});
   }
 });
 

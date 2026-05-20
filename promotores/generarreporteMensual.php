@@ -310,6 +310,7 @@ foreach ($conteo as $fila) {
         });
     </script>
     <script src="../js/pwa_offline.js"></script>
+    <script src="../js/offline_preload.js"></script>
 </body>
 
 </html>
