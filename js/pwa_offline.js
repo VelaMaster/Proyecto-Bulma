@@ -109,7 +109,7 @@ function crearBannerOffline() {
   `;
   banner.innerHTML = `
     <span class="material-symbols-outlined" style="font-size:20px;flex-shrink:0">wifi_off</span>
-    Sin conexión — los cambios se guardan localmente
+    Sin conexión
   `;
   document.body.appendChild(banner);
   _bannerOffline = banner;

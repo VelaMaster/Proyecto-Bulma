@@ -349,10 +349,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(payload),
             });
             const data = await resp.json();
+
+            // ── Guardado en cola offline ─────────────────────────────────
+            if (data.status === 'offline_queued') {
+                notificar('Sin conexión. El requerimiento se sincronizará automáticamente cuando regrese internet.', 'info');
+                return; // no intentar PDF offline
+            }
+
             if (data.status === 'success') {
                 notificar(`Requerimiento guardado (${data.lecherias} lecherías en ${data.almacenes} almacén${data.almacenes===1?'':'es'}).`, 'info');
 
-                // Si el checkbox de PDF está activo, también pedimos el PDF.
                 if (chkGenerarPDF && chkGenerarPDF.checked) {
                     try {
                         const r2 = await fetch('generar_pdf_requerimiento.php', {

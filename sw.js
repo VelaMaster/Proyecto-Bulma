@@ -18,7 +18,7 @@
 
 'use strict';
 
-const CACHE_NAME   = 'bulma-pwa-v2';
+const CACHE_NAME   = 'bulma-pwa-v3';
 const API_CACHE    = 'api-cache-v1';
 const SYNC_TAG     = 'sync-inventarios';
 const DB_NAME      = 'bulma_sync_db';
@@ -52,6 +52,7 @@ const CACHE_PAGES = [
   '/promotores/inicio.php',
   '/promotores/generarinventarioMensual.php',
   '/promotores/consultarinventarioMensual.php',
+  '/promotores/detalleInventarioMensual.php',
   '/promotores/generarreporteMensual.php',
   '/promotores/requerimiento.php',
   '/promotores/editarinventarioMensual.php',
@@ -70,7 +71,6 @@ const API_ENDPOINTS = [
   'obtener_inventarios_por_lecheria',
   'obtener_inventario',
   'listar_inventarios_lecheria',
-  'detalleInventarioMensual',
   'api_requerimiento_dotacion',
   'buscarLecheria',
   'calcularSurtimiento',
@@ -93,12 +93,18 @@ const SYNC_ENDPOINTS = [
    ════════════════════════════════════════════════════════════════════ */
 function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 1);
+    /* Versión 2 — mantiene paridad con offline_login.js que crea offline_session */
+    const req = indexedDB.open(DB_NAME, 2);
     req.onupgradeneeded = (e) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const store = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
         store.createIndex('timestamp', 'timestamp', { unique: false });
+      }
+      /* Store de sesión offline (v2) — creado por offline_login.js pero lo
+         declaramos aquí también para que el upgrade sea idempotente */
+      if (!db.objectStoreNames.contains('offline_session')) {
+        db.createObjectStore('offline_session', { keyPath: 'clave' });
       }
     };
     req.onsuccess  = () => resolve(req.result);
@@ -164,7 +170,7 @@ self.addEventListener('install', (event) => {
    ACTIVATE — limpiar caches viejos (respetar api-cache-v1)
    ════════════════════════════════════════════════════════════════════ */
 self.addEventListener('activate', (event) => {
-  const keepCaches = [CACHE_NAME, API_CACHE];
+  const keepCaches = [CACHE_NAME, API_CACHE]; // bulma-pwa-v3 + api-cache-v1
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(

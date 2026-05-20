@@ -288,17 +288,21 @@ const OfflinePreload = (() => {
               precargar(`${base}/buscar_inventario_guardado.php?lecher=${id}&mes=${mes}&anio=${anio}`)
             );
           }
-          /* Precargar listado de inventarios (incluye PDF_RUTA) */
+          /* Precargar listado de inventarios y sus recursos asociados */
           calls.push(
             precargar(`${base}/listar_inventarios_lecheria.php?clave=${encodeURIComponent(id)}`)
               .then(async (lista) => {
                 if (!Array.isArray(lista)) return;
-                // Precargar los PDFs de los últimos 4 inventarios de esta lechería
                 const recientes = lista.slice(0, 4);
                 for (const inv of recientes) {
+                  // PDF
                   const ruta = inv.PDF_RUTA ?? '';
                   if (ruta) await precargar(`${base}/ver_pdf.php?archivo=${encodeURIComponent(ruta)}`);
+                  // Detalle del inventario por ID (usado en generarInventarioMensual)
+                  if (inv.ID) await precargar(`${base}/obtener_inventario.php?id=${inv.ID}`);
                 }
+                // Página detalleInventarioMensual por clave (HTML page)
+                await precargar(`${base}/detalleInventarioMensual.php?clave=${encodeURIComponent(id)}&nombre=${encodeURIComponent(id)}`);
               })
           );
           return calls;

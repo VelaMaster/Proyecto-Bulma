@@ -370,6 +370,13 @@ lecherias.forEach(lech => {
                 body: JSON.stringify(datos)
             });
             const jsG = await resG.json().catch(() => ({}));
+
+            // ── Guardado en cola offline ─────────────────────────────────
+            if (jsG.status === 'offline_queued') {
+                notificar('Sin conexión. El reporte se sincronizará automáticamente cuando regrese internet.', 'info');
+                return; // no intentar PDF offline
+            }
+
             if (!resG.ok || jsG.status !== 'success') {
                 throw new Error(jsG.mensaje || 'No se pudo guardar el reporte');
             }

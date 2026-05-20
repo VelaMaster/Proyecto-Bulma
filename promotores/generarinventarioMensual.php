@@ -662,7 +662,14 @@ $lecher_get = $_GET['lecher'] ?? '';
         fetch(`obtener_inventario.php?id=${id}`)
             .then(r => r.json())
             .then(res => {
-                if (res.status !== 'success') return;
+                if (res.status !== 'success') {
+                    // Sin caché para este ID → limpiar y usar arrastre del mes anterior
+                    if (res.error || res.offline) {
+                        limpiarTablaLeche();
+                        document.dispatchEvent(new Event('lecheriaSeleccionada'));
+                    }
+                    return;
+                }
                 const d = res.datos;
 
                 // Campos de texto / fecha
