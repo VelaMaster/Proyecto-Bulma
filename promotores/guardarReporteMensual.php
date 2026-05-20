@@ -58,10 +58,27 @@ $ruta = $baseDir . '/' . $nombreArchivo;
 $totalLech = 0;
 foreach ($almacenes as $a) $totalLech += count($a['lecherias'] ?? []);
 
+// ── Auto-generar PDF a disco (reemplaza el anterior si existía) ───
+$pdfGenerado = false;
+$pdfNombre   = null;
+try {
+    require_once __DIR__ . '/_fn_pdf_reporte.php';
+    $slugPDF = preg_replace('/[^A-Za-z0-9]/', '_', $_SESSION['usuario']);
+    $rutaPDF = generarArchivoReporte($datos, $slugPDF);
+    if ($rutaPDF) {
+        $pdfGenerado = true;
+        $pdfNombre   = basename($rutaPDF);
+    }
+} catch (Throwable $e) {
+    // No interrumpir el guardado si falla el PDF
+}
+
 echo json_encode([
-    'status'    => 'success',
-    'mensaje'   => 'Reporte guardado.',
-    'archivo'   => $nombreArchivo,
-    'almacenes' => count($almacenes),
-    'lecherias' => $totalLech,
+    'status'       => 'success',
+    'mensaje'      => 'Reporte guardado' . ($pdfGenerado ? ' y PDF regenerado.' : '.'),
+    'archivo'      => $nombreArchivo,
+    'pdf_generado' => $pdfGenerado,
+    'pdf_nombre'   => $pdfNombre,
+    'almacenes'    => count($almacenes),
+    'lecherias'    => $totalLech,
 ]);

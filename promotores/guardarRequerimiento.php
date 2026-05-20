@@ -136,13 +136,25 @@ try {
         $pdo->commit();
     }
 
+    // ── Auto-generar PDF a disco ──────────────────────────────────
+    $pdfGenerado = false;
+    $pdfNombre   = null;
+    try {
+        require_once __DIR__ . '/_fn_pdf_requerimiento.php';
+        $slugPDF = preg_replace('/[^A-Za-z0-9]/', '_', $_SESSION['usuario']);
+        $rutaPDF = generarArchivoRequerimiento($datos, $slugPDF);
+        if ($rutaPDF) { $pdfGenerado = true; $pdfNombre = basename($rutaPDF); }
+    } catch (Throwable $e) { /* No interrumpir el guardado si falla el PDF */ }
+
     echo json_encode([
-        'status'    => 'success',
-        'mensaje'   => 'Requerimiento guardado.',
-        'archivo'   => $nombreArchivo,
-        'almacenes' => count($almacenes),
-        'lecherias' => $totalLech,
-        'errores'   => $errores,
+        'status'       => 'success',
+        'mensaje'      => 'Requerimiento guardado' . ($pdfGenerado ? ' y PDF regenerado.' : '.'),
+        'archivo'      => $nombreArchivo,
+        'pdf_generado' => $pdfGenerado,
+        'pdf_nombre'   => $pdfNombre,
+        'almacenes'    => count($almacenes),
+        'lecherias'    => $totalLech,
+        'errores'      => $errores,
     ], JSON_UNESCAPED_UNICODE);
 
 } catch (Exception $e) {

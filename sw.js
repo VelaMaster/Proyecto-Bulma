@@ -454,6 +454,27 @@ async function syncPendingRequests() {
         await deletePendingRequest(item.id);
         synced++;
         syncedItems.push({ url: item.url, body: item.body, timestamp: item.timestamp });
+
+        /* Tras sincronizar un inventario, auto-regenerar el PDF del reporte */
+        if (
+          item.url.includes('actualizar_inventario') ||
+          item.url.includes('guardar_inventario')
+        ) {
+          try {
+            const body = JSON.parse(item.body);
+            const mes  = body.mes_periodo  || body.mes_reporte  || body.mes  || null;
+            const anio = body.anio_periodo || body.anio_reporte || body.anio || null;
+            if (mes && anio) {
+              /* No esperamos — fire & forget, no bloqueamos el sync */
+              fetch(self.location.origin + '/promotores/regenerar_reporte_pdf.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mes, anio }),
+                credentials: 'include',
+              }).catch(() => {});
+            }
+          } catch {}
+        }
       } else if (response.status === 401) {
         await deletePendingRequest(item.id);
         notifyClients({ type: 'SYNC_SESSION_EXPIRED', url: item.url });
@@ -475,47 +496,61 @@ async function syncPendingRequests() {
 /* ════════════════════════════════════════════════════════════════════
    MENSAJES desde clientes
    ════════════════════════════════════════════════════════════════════ */
-self.addEventListener('message', async (event) => {
-  switch (event.data?.type) {
-    case 'GET_PENDING_COUNT': {
-      const items = await getPendingRequests();
-      event.source?.postMessage({ type: 'PENDING_COUNT', count: items.length });
-      break;
-    }
-    case 'GET_PENDING_DETAIL': {
-      const items = await getPendingRequests();
-      event.source?.postMessage({
-        type:  'PENDING_DETAIL',
-        count: items.length,
-        items: items.map(i => ({ url: i.url, body: i.body, timestamp: i.timestamp, retries: i.retries })),
-      });
-      break;
-    }
-    case 'TRIGGER_SYNC':
-      try { await self.registration.sync.register(SYNC_TAG); }
-      catch { await syncPendingRequests().catch(() => {}); }
-      break;
-    case 'SKIP_WAITING':
-      self.skipWaiting();
-      break;
-    case 'CLEAR_API_CACHE':
-      await caches.delete(API_CACHE);
-      break;
-    case 'CACHE_API_URLS': {
-      /* Precachear una lista de URLs en api-cache-v1 */
-      const urls = event.data.urls || [];
-      const cache = await caches.open(API_CACHE);
-      let cached = 0;
-      for (const url of urls) {
-        try {
-          const res = await fetch(url, { credentials: 'include' });
-          if (res.ok) { await cache.put(url, res); cached++; }
-        } catch { /* skip URL inaccesible */ }
-      }
-      event.source?.postMessage({ type: 'CACHE_API_DONE', cached, total: urls.length });
-      break;
-    }
+self.addEventListener('message', (event) => {
+  if (!event.data) return;
+
+  /* ── TRIGGER_SYNC: requiere event.waitUntil para que el SW no muera
+        antes de terminar aunque el usuario cambie de pestaña o cierre. ── */
+  if (event.data.type === 'TRIGGER_SYNC') {
+    event.waitUntil(
+      (async () => {
+        /* 1. Registrar Background Sync (funciona aunque la app cierre en Chrome) */
+        try { await self.registration.sync.register(SYNC_TAG); } catch {}
+        /* 2. Ejecutar inmediatamente también — no esperar al evento 'sync' */
+        await syncPendingRequests().catch(() => {});
+      })()
+    );
+    return;
   }
+
+  /* ── Resto de mensajes (no necesitan waitUntil) ──────────────────── */
+  (async () => {
+    switch (event.data.type) {
+      case 'GET_PENDING_COUNT': {
+        const items = await getPendingRequests();
+        event.source?.postMessage({ type: 'PENDING_COUNT', count: items.length });
+        break;
+      }
+      case 'GET_PENDING_DETAIL': {
+        const items = await getPendingRequests();
+        event.source?.postMessage({
+          type:  'PENDING_DETAIL',
+          count: items.length,
+          items: items.map(i => ({ url: i.url, body: i.body, timestamp: i.timestamp, retries: i.retries })),
+        });
+        break;
+      }
+      case 'SKIP_WAITING':
+        self.skipWaiting();
+        break;
+      case 'CLEAR_API_CACHE':
+        await caches.delete(API_CACHE);
+        break;
+      case 'CACHE_API_URLS': {
+        const urls = event.data.urls || [];
+        const cache = await caches.open(API_CACHE);
+        let cached = 0;
+        for (const url of urls) {
+          try {
+            const res = await fetch(url, { credentials: 'include' });
+            if (res.ok) { await cache.put(url, res); cached++; }
+          } catch {}
+        }
+        event.source?.postMessage({ type: 'CACHE_API_DONE', cached, total: urls.length });
+        break;
+      }
+    }
+  })();
 });
 
 async function notifyClients(message) {
