@@ -18,7 +18,7 @@
 
 'use strict';
 
-const CACHE_NAME   = 'bulma-pwa-v5';
+const CACHE_NAME   = 'bulma-pwa-v6';
 const API_CACHE    = 'api-cache-v1';
 const SYNC_TAG     = 'sync-inventarios';
 const DB_NAME      = 'bulma_sync_db';
@@ -217,7 +217,7 @@ async function precachearExternos() {
    ACTIVATE — limpiar caches viejos (respetar api-cache-v1)
    ════════════════════════════════════════════════════════════════════ */
 self.addEventListener('activate', (event) => {
-  const keepCaches = [CACHE_NAME, API_CACHE]; // bulma-pwa-v3 + api-cache-v1
+  const keepCaches = [CACHE_NAME, API_CACHE]; // bulma-pwa-v6 + api-cache-v1
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(
@@ -430,67 +430,114 @@ async function handleSyncEndpoint(request) {
 /* ════════════════════════════════════════════════════════════════════
    BACKGROUND SYNC
    ════════════════════════════════════════════════════════════════════ */
+
+/* Guard: evita ejecuciones concurrentes desde múltiples pestañas/eventos */
+let _syncRunning = false;
+const MAX_RETRIES = 5;
+
 self.addEventListener('sync', (event) => {
   if (event.tag === SYNC_TAG) event.waitUntil(syncPendingRequests());
 });
 
 async function syncPendingRequests() {
-  const pending = await getPendingRequests();
-  if (!pending.length) return;
+  if (_syncRunning) return;
+  _syncRunning = true;
 
-  let synced = 0;
-  let failed = 0;
-  const syncedItems = []; // para notificación detallada
+  try {
+    const pending = await getPendingRequests();
+    if (!pending.length) return;
 
-  for (const item of pending) {
-    try {
-      const response = await fetch(item.url, {
-        method:  item.method || 'POST',
-        headers: Object.assign({ 'Content-Type': 'application/json' }, item.headers || {}),
-        body:    item.body,
-        credentials: 'include',
+    let synced = 0;
+    let failed = 0;
+    const syncedItems = [];
+
+    for (const item of pending) {
+      /* Abandonar items que superaron el límite de reintentos */
+      if ((item.retries || 0) >= MAX_RETRIES) {
+        await deletePendingRequest(item.id);
+        notifyClients({ type: 'SYNC_ABANDONED', url: item.url });
+        continue;
+      }
+
+      /* Progreso en tiempo real hacia el cliente */
+      notifyClients({
+        type:    'SYNC_PROGRESS',
+        current: synced + failed + 1,
+        total:   pending.length,
+        url:     item.url,
       });
-      if (response.ok) {
-        await deletePendingRequest(item.id);
-        synced++;
-        syncedItems.push({ url: item.url, body: item.body, timestamp: item.timestamp });
 
-        /* Tras sincronizar un inventario, auto-regenerar el PDF del reporte */
-        if (
-          item.url.includes('actualizar_inventario') ||
-          item.url.includes('guardar_inventario')
-        ) {
-          try {
-            const body = JSON.parse(item.body);
-            const mes  = body.mes_periodo  || body.mes_reporte  || body.mes  || null;
-            const anio = body.anio_periodo || body.anio_reporte || body.anio || null;
-            if (mes && anio) {
-              /* No esperamos — fire & forget, no bloqueamos el sync */
-              fetch(self.location.origin + '/promotores/regenerar_reporte_pdf.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ mes, anio }),
-                credentials: 'include',
-              }).catch(() => {});
-            }
-          } catch {}
+      try {
+        const response = await fetch(item.url, {
+          method:      item.method || 'POST',
+          headers:     Object.assign({ 'Content-Type': 'application/json' }, item.headers || {}),
+          body:        item.body,
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          await deletePendingRequest(item.id);
+          synced++;
+          syncedItems.push({ url: item.url, body: item.body, timestamp: item.timestamp });
+
+          /* Invalidar caché de listar_pdfs cuando se guarda reporte/requerimiento */
+          if (item.url.includes('guardarReporteMensual') || item.url.includes('guardarRequerimiento')) {
+            try {
+              const apiCache = await caches.open(API_CACHE);
+              const keys = await apiCache.keys();
+              for (const k of keys) {
+                if (k.url.includes('listar_pdfs')) await apiCache.delete(k);
+              }
+            } catch {}
+          }
+
+          /* Tras sincronizar un inventario, auto-regenerar el PDF del reporte */
+          if (item.url.includes('actualizar_inventario') || item.url.includes('guardar_inventario')) {
+            try {
+              const parsed = JSON.parse(item.body);
+              const mes  = parsed.mes_periodo  || parsed.mes_reporte  || parsed.mes  || null;
+              const anio = parsed.anio_periodo || parsed.anio_reporte || parsed.anio || null;
+              if (mes && anio) {
+                fetch(self.location.origin + '/promotores/regenerar_reporte_pdf.php', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ mes, anio }),
+                  credentials: 'include',
+                }).catch(() => {});
+              }
+            } catch {}
+          }
+
+        } else if (response.status === 401) {
+          /* Sesión expirada — eliminar, no tiene caso reintentar */
+          await deletePendingRequest(item.id);
+          notifyClients({ type: 'SYNC_SESSION_EXPIRED', url: item.url });
+
+        } else if (response.status >= 400 && response.status < 500) {
+          /* Error de cliente (4xx) — el servidor rechazará siempre, eliminar */
+          await deletePendingRequest(item.id);
+          failed++;
+
+        } else {
+          /* Error de servidor (5xx) — reintentar en siguiente sync */
+          await incrementRetry(item.id);
+          failed++;
         }
-      } else if (response.status === 401) {
-        await deletePendingRequest(item.id);
-        notifyClients({ type: 'SYNC_SESSION_EXPIRED', url: item.url });
-      } else {
+
+      } catch {
+        /* Error de red — reintentar, pero continuar con el siguiente item */
         await incrementRetry(item.id);
         failed++;
       }
-    } catch {
-      failed++;
-      await incrementRetry(item.id);
-      throw new Error('Sync incompleto');
     }
-  }
 
-  if (synced > 0) notifyClients({ type: 'SYNC_SUCCESS', count: synced, items: syncedItems });
-  if (failed > 0) throw new Error(`${failed} elemento(s) fallaron`);
+    if (synced > 0) notifyClients({ type: 'SYNC_SUCCESS', count: synced, items: syncedItems });
+    /* NO lanzar Error si failed > 0 — evita que Background Sync reintente
+       el evento completo y cause el bucle infinito / congelamiento */
+
+  } finally {
+    _syncRunning = false;
+  }
 }
 
 /* ════════════════════════════════════════════════════════════════════

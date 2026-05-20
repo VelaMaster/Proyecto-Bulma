@@ -80,6 +80,20 @@ if ('serviceWorker' in navigator) {
           8000
         );
         break;
+
+      case 'SYNC_PROGRESS':
+        /* Progreso en tiempo real: actualizar badge con items restantes */
+        actualizarContadorPendientesDesdeDB();
+        break;
+
+      case 'SYNC_ABANDONED':
+        mostrarToast(
+          '⚠️ Un cambio alcanzó el límite de reintentos y fue descartado.',
+          'warning',
+          6000
+        );
+        actualizarContadorPendientesDesdeDB();
+        break;
     }
   });
 }
