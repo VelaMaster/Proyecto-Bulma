@@ -22,6 +22,8 @@ if ($clave === '') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventarios — <?= $nombre ?> - Promotor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -29,9 +31,19 @@ if ($clave === '') {
     <link rel="stylesheet" href="../estilos/generarInventarioMensual.css">
     <link rel="stylesheet" href="../estilos/consultarInventarioMensual.css">
     <link rel="stylesheet" href="../estilos/detalleinventarioMensual.css">
+    <!-- PWA -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#6750A4">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Inventarios">
+    <link rel="apple-touch-icon" href="/imagenes/Logos/icon-192.png">
+    <!-- Preconnect -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://esm.run">
     <script type="importmap">{"imports":{"@material/web/":"https://esm.run/@material/web/"}}</script>
     <script type="module">import '@material/web/all.js';</script>
-
 </head>
 <body>
 <header class="md3-top-app-bar">
@@ -50,31 +62,57 @@ if ($clave === '') {
                 </md-text-button>
                 <md-menu id="menu-inv" anchor="btn-inv">
                     <md-menu-item href="generarinventarioMensual.php">
-                        <div slot="headline">Generar</div><md-icon slot="start">add_circle</md-icon>
-                    </md-menu-item>
-                    <md-menu-item href="editarinventarioMensual.php">
-                        <div slot="headline">Editar</div><md-icon slot="start">edit</md-icon>
+                        <div slot="headline">Generar</div><md-icon slot="start">add_box</md-icon>
                     </md-menu-item>
                     <md-menu-item href="consultarinventarioMensual.php">
                         <div slot="headline">Consultar</div><md-icon slot="start">search</md-icon>
                     </md-menu-item>
                 </md-menu>
             </div>
+            <md-text-button href="generarreporteMensual.php">
+                <md-icon slot="icon">receipt_long</md-icon>Reporte mensual
+            </md-text-button>
+            <md-text-button href="requerimiento.php">
+                <md-icon slot="icon">inventory</md-icon>Requerimiento
+            </md-text-button>
         </div>
-        <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left:8px;">Salir</md-filled-tonal-button>
+        <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left:8px;">
+            <md-icon slot="icon">logout</md-icon>Salir
+        </md-filled-tonal-button>
     </div>
 </header>
 
 <div class="md3-drawer-scrim" id="drawer-scrim" onclick="toggleDrawer()"></div>
 <aside class="md3-drawer" id="mobile-drawer">
-    <div style="padding-top:24px;"></div>
-    <md-list style="background:transparent;">
-        <div class="drawer-section-title">Inventario mensual</div>
-        <md-list-item href="generarinventarioMensual.php"><div slot="headline">Generar</div></md-list-item>
-        <md-list-item href="editarinventarioMensual.php"><div slot="headline">Editar</div></md-list-item>
-        <md-list-item href="consultarinventarioMensual.php"><div slot="headline">Consultar</div></md-list-item>
-        <md-divider style="margin:8px 0;"></md-divider>
-    </md-list>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px 24px;">
+        <span style="font-size:1.25rem;font-weight:500;color:var(--md-sys-color-on-surface);">Menú</span>
+        <md-icon-button onclick="toggleDrawer()"><md-icon>close</md-icon></md-icon-button>
+    </div>
+    <div style="overflow-y:auto;flex-grow:1;">
+        <md-list style="background:transparent;">
+            <md-list-item href="inicio.php" type="button">
+                <div slot="headline">Inicio</div><md-icon slot="start">home</md-icon>
+            </md-list-item>
+            <md-divider style="margin:8px 0;"></md-divider>
+            <div class="drawer-section-title">Inventario mensual</div>
+            <md-list-item href="generarinventarioMensual.php" type="button">
+                <div slot="headline">Generar</div><md-icon slot="start">add_box</md-icon>
+            </md-list-item>
+            <md-list-item href="consultarinventarioMensual.php" type="button">
+                <div slot="headline">Consultar</div><md-icon slot="start">search</md-icon>
+            </md-list-item>
+            <md-divider style="margin:8px 0;"></md-divider>
+            <div class="drawer-section-title">Reporte mensual</div>
+            <md-list-item href="generarreporteMensual.php" type="button">
+                <div slot="headline">Generar</div><md-icon slot="start">receipt_long</md-icon>
+            </md-list-item>
+            <md-divider style="margin:8px 0;"></md-divider>
+            <div class="drawer-section-title">Requerimiento</div>
+            <md-list-item href="requerimiento.php" type="button">
+                <div slot="headline">Generar</div><md-icon slot="start">inventory</md-icon>
+            </md-list-item>
+        </md-list>
+    </div>
 </aside>
 
 <main class="panel-content">
@@ -134,6 +172,7 @@ if ($clave === '') {
 </main>
 
 <script src="../js/temas_md3.js"></script>
+<script src="../js/pwa_offline.js"></script>
 <script>
 const CLAVE_LECHERIA = <?= json_encode($clave) ?>;
 

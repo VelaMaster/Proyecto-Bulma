@@ -12,6 +12,9 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inicio - Promotor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://esm.run">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="../main_md3.css">
@@ -125,6 +128,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
     </header>
 
+    <div class="md3-drawer-scrim" id="drawer-scrim" onclick="toggleDrawer()"></div>
     <aside class="md3-drawer" id="mobile-drawer">
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px 24px;">
             <span style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface);">Menú</span>
@@ -134,6 +138,10 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
         <div style="overflow-y: auto; flex-grow: 1;">
             <md-list style="background: transparent;">
+                <md-list-item href="inicio.php" type="button">
+                    <div slot="headline">Inicio</div>
+                    <md-icon slot="start">home</md-icon>
+                </md-list-item>
                 <md-divider style="margin: 8px 0;"></md-divider>
                 <div class="drawer-section-title">Inventario mensual</div>
                 <md-list-item href="generarinventarioMensual.php" type="button">
@@ -144,16 +152,16 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     <div slot="headline">Consultar</div>
                     <md-icon slot="start">search</md-icon>
                 </md-list-item>
-
                 <md-divider style="margin: 8px 0;"></md-divider>
-
+                <div class="drawer-section-title">Reporte mensual</div>
                 <md-list-item href="generarreporteMensual.php" type="button">
-                    <div slot="headline">Reporte mensual</div>
+                    <div slot="headline">Generar</div>
                     <md-icon slot="start">receipt_long</md-icon>
                 </md-list-item>
-
+                <md-divider style="margin: 8px 0;"></md-divider>
+                <div class="drawer-section-title">Requerimiento</div>
                 <md-list-item href="requerimiento.php" type="button">
-                    <div slot="headline">Requerimiento</div>
+                    <div slot="headline">Generar</div>
                     <md-icon slot="start">inventory</md-icon>
                 </md-list-item>
             </md-list>
@@ -192,25 +200,52 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             font-size: 0.875rem;
         "></div>
 
-        <h3
-            style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 16px; margin-bottom: 0;">
+        <h3 style="font-size:1.25rem;font-weight:500;color:var(--md-sys-color-on-surface);margin-top:16px;margin-bottom:4px;">
             Accesos Rápidos</h3>
+
+        <!-- Inventario Mensual -->
+        <p style="font-size:0.8rem;font-weight:500;color:var(--md-sys-color-primary);text-transform:uppercase;letter-spacing:.08em;margin:8px 0 4px;">
+            Inventario Mensual</p>
         <div class="md3-dashboard-grid">
             <a href="generarinventarioMensual.php" class="md3-action-card">
-                <div class="action-card-icon"
-                    style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
-                    <md-icon>edit</md-icon>
+                <div class="action-card-icon" style="background-color:var(--md-sys-color-primary-container);color:var(--md-sys-color-on-primary-container);">
+                    <md-icon>add_box</md-icon>
                 </div>
-                <h4 class="action-card-title">Editar reporte</h4>
-                <p class="action-card-desc">Edite diferentes campos del reporte o agregue su factura a su inventario mensual.</p>
-                </a>
-
-                <a href="consultarinventarioMensual.php" class="md3-action-card">
+                <h4 class="action-card-title">Inventario Mensual</h4>
+                <p class="action-card-desc">Generar</p>
+            </a>
+            <a href="consultarinventarioMensual.php" class="md3-action-card">
                 <div class="action-card-icon">
                     <md-icon>search</md-icon>
                 </div>
-                <h4 class="action-card-title">Consultar Inventarios</h4>
-                <p class="action-card-desc">Revisa y descarga los inventarios mensuales generados previamente.</p>
+                <h4 class="action-card-title">Inventario Mensual</h4>
+                <p class="action-card-desc">Consultar inventarios guardados previamente.</p>
+            </a>
+        </div>
+
+        <!-- Reporte Mensual -->
+        <p style="font-size:0.8rem;font-weight:500;color:var(--md-sys-color-primary);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 4px;">
+            Reporte Mensual</p>
+        <div class="md3-dashboard-grid">
+            <a href="generarreporteMensual.php" class="md3-action-card">
+                <div class="action-card-icon" style="background-color:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);">
+                    <md-icon>receipt_long</md-icon>
+                </div>
+                <h4 class="action-card-title">Reporte Mensual</h4>
+                <p class="action-card-desc">Generar</p>
+            </a>
+        </div>
+
+        <!-- Requerimiento -->
+        <p style="font-size:0.8rem;font-weight:500;color:var(--md-sys-color-primary);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 4px;">
+            Requerimiento</p>
+        <div class="md3-dashboard-grid">
+            <a href="requerimiento.php" class="md3-action-card">
+                <div class="action-card-icon" style="background-color:var(--md-sys-color-tertiary-container);color:var(--md-sys-color-on-tertiary-container);">
+                    <md-icon>inventory</md-icon>
+                </div>
+                <h4 class="action-card-title">Requerimiento</h4>
+                <p class="action-card-desc">Generar</p>
             </a>
         </div>
 

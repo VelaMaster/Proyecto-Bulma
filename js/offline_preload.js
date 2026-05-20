@@ -243,39 +243,33 @@ const OfflinePreload = (() => {
     const lecherias = await precargar(`${base}/mis_lecherias.php`);
     const listaLecherias = Array.isArray(lecherias) ? lecherias : [];
     const ids = listaLecherias.map(l => l.LECHER).filter(Boolean);
+    /* Mapa LECHER → NOMBRELECH para precargar URL exacta de detalleInventarioMensual */
+    const lechNombres = {};
+    listaLecherias.forEach(l => { if (l.LECHER) lechNombres[l.LECHER] = l.NOMBRELECH ?? ''; });
 
-    /* ── 2. Almacenes y supervisor ─────────────────────────────── */
-    setProgreso(12, 'Descargando almacenes y supervisor...');
+    /* ── 2. Almacenes, supervisor y meses — todo en paralelo ──── */
+    setProgreso(12, 'Descargando almacenes, supervisor y datos por mes...');
+    const meses = mesesAtras(3); // [mes actual, mes-1, mes-2, mes-3]
     await Promise.all([
       precargar(`${base}/obtenerAlmacenes.php`),
       precargar(`${base}/obtenerSupervisorAsignado.php`),
-    ]);
-
-    /* ── 3. Últimos 4 meses: lecherías por almacén + requerimiento ── */
-    const meses = mesesAtras(3); // [mes actual, mes-1, mes-2, mes-3]
-    let mesIdx = 0;
-    for (const { mes, anio } of meses) {
-      mesIdx++;
-      setProgreso(14 + (mesIdx / meses.length) * 16,
-        `Cargando datos ${nombreMes(mes)} ${anio}...`);
-      await Promise.all([
+      precargar(`${base}/buscarLecheria.php?q=`),
+      ...meses.flatMap(({ mes, anio }) => [
         precargar(`${base}/obtenerLecheriasPorAlmacen.php?mes_reporte=${mes}&anio_reporte=${anio}`),
         precargar(`${base}/obtenerLecheriasRequerimiento.php?mes_reporte=${mes}&anio_reporte=${anio}`),
-      ]);
-    }
+      ]),
+    ]);
+    setProgreso(28, 'Datos por mes listos. Cargando lecherías...');
 
-    /* ── 3b. Búsqueda inicial de lecherías (inventario mensual) ── */
-    await precargar(`${base}/buscarLecheria.php?q=`);
-
-    /* ── 4. Por cada lechería × mes: inventarios, datos previos y PDFs ─ */
+    /* ── 3. Por cada lechería × mes: inventarios, datos previos y PDFs ─ */
     if (ids.length === 0) {
       setProgreso(90, 'Sin lecherías asignadas');
     } else {
       const totalIds = ids.length;
       let idxDone = 0;
 
-      /* Procesar en lotes de 3 para no saturar */
-      const lote = 3;
+      /* Procesar en lotes de 5 para mayor velocidad sin saturar */
+      const lote = 5;
       for (let i = 0; i < ids.length; i += lote) {
         const grupo = ids.slice(i, i + lote);
         await Promise.all(grupo.flatMap(id => {
@@ -301,8 +295,8 @@ const OfflinePreload = (() => {
                   // Detalle del inventario por ID (usado en generarInventarioMensual)
                   if (inv.ID) await precargar(`${base}/obtener_inventario.php?id=${inv.ID}`);
                 }
-                // Página detalleInventarioMensual por clave (HTML page)
-                await precargar(`${base}/detalleInventarioMensual.php?clave=${encodeURIComponent(id)}&nombre=${encodeURIComponent(id)}`);
+                // Página detalleInventarioMensual por clave (URL exacta igual a la navegación)
+                await precargar(`${base}/detalleInventarioMensual.php?clave=${encodeURIComponent(id)}&nombre=${encodeURIComponent(lechNombres[id] ?? '')}`);
               })
           );
           return calls;

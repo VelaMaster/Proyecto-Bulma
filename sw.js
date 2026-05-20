@@ -18,7 +18,7 @@
 
 'use strict';
 
-const CACHE_NAME   = 'bulma-pwa-v3';
+const CACHE_NAME   = 'bulma-pwa-v4';
 const API_CACHE    = 'api-cache-v1';
 const SYNC_TAG     = 'sync-inventarios';
 const DB_NAME      = 'bulma_sync_db';
@@ -261,8 +261,9 @@ async function networkFirst(request) {
     }
     return response;
   } catch {
-    /* Sin red → caché → offline.html */
-    const cached = await caches.match(request);
+    /* Sin red → caché (primero exacta, luego ignorando query params) → offline.html */
+    const cached = await caches.match(request)
+               || await caches.match(request, { ignoreSearch: true });
     if (cached) return cached;
     const offline = await caches.match('/offline.html');
     return offline || new Response(
