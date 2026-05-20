@@ -128,6 +128,27 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
     </div>
 
+    <!-- ══ SECCIÓN PDFs ══════════════════════════════════════════════ -->
+    <div class="form-section" id="seccionPDFs" style="margin-bottom:20px;">
+        <div class="section-header" style="cursor:pointer; user-select:none;" onclick="togglePDFs()">
+            <div class="section-badge">
+                <span class="material-symbols-outlined" style="font-size:17px;">picture_as_pdf</span>
+            </div>
+            <h2 class="section-title" style="flex:1;">Mis PDFs generados</h2>
+            <span class="material-symbols-outlined" id="iconoPDFs" style="color:var(--md-sys-color-on-surface-variant); transition:transform .25s;">expand_more</span>
+        </div>
+
+        <div id="panelPDFs" style="display:none; margin-top:12px;">
+            <div id="listaPDFs">
+                <!-- Skeleton mientras carga -->
+                <div style="display:flex; flex-direction:column; gap:8px;" id="skeletonPDFs">
+                    <div class="skeleton" style="height:56px; border-radius:12px;"></div>
+                    <div class="skeleton" style="height:56px; border-radius:12px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- STATS -->
     <div class="stats-row" id="statsRow">
         <!-- se llena con JS -->
@@ -197,6 +218,137 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
 <script src="../js/temas_md3.js"></script>
 <script>
+/* ══ Sección PDFs ══════════════════════════════════════════════════ */
+let _pdfsAbiertos = false;
+let _pdfsYaCargados = false;
+
+function togglePDFs() {
+    const panel  = document.getElementById('panelPDFs');
+    const icono  = document.getElementById('iconoPDFs');
+    _pdfsAbiertos = !_pdfsAbiertos;
+    panel.style.display = _pdfsAbiertos ? 'block' : 'none';
+    icono.style.transform = _pdfsAbiertos ? 'rotate(180deg)' : '';
+    if (_pdfsAbiertos && !_pdfsYaCargados) cargarPDFs();
+}
+
+function cargarPDFs() {
+    _pdfsYaCargados = true;
+    const lista = document.getElementById('listaPDFs');
+
+    fetch('listar_pdfs.php')
+        .then(r => {
+            const offline = r.headers.get('X-Served-From') === 'offline-cache';
+            return r.json().then(d => ({ data: d, offline }));
+        })
+        .then(({ data, offline }) => {
+            renderPDFs(data, offline);
+        })
+        .catch(() => {
+            // Sin conexión y sin caché: intentar desde la caché del SW
+            renderPDFs([], true);
+        });
+}
+
+function renderPDFs(archivos, offline) {
+    const lista = document.getElementById('listaPDFs');
+
+    if (!Array.isArray(archivos) || archivos.length === 0) {
+        lista.innerHTML = `
+            <div style="text-align:center; padding:24px; color:var(--md-sys-color-on-surface-variant);">
+                <span class="material-symbols-outlined" style="font-size:40px; display:block; margin-bottom:8px; opacity:.5;">picture_as_pdf</span>
+                ${offline ? 'Sin conexión y sin PDFs en caché.' : 'Aún no has generado ningún PDF.'}
+            </div>`;
+        return;
+    }
+
+    const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+    lista.innerHTML = (offline ? `
+        <div style="padding:8px 12px 4px; background:var(--md-sys-color-tertiary-container);
+             color:var(--md-sys-color-on-tertiary-container); border-radius:12px; font-size:.82rem;
+             display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+            <span class="material-symbols-outlined" style="font-size:18px;">wifi_off</span>
+            Mostrando PDFs en caché (sin conexión)
+        </div>` : '') +
+        archivos.map(pdf => {
+            const fecha = new Date(pdf.fecha + 'Z');
+            const fechaTxt = isNaN(fecha) ? pdf.fecha :
+                fecha.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
+            const kb = pdf.tamanio ? Math.round(pdf.tamanio / 1024) + ' KB' : '';
+            return `
+            <div style="display:flex; align-items:center; gap:12px; padding:10px 14px;
+                 background:var(--md-sys-color-surface-container); border-radius:12px;
+                 border:1px solid var(--md-sys-color-outline-variant); margin-bottom:8px;">
+                <span class="material-symbols-outlined" style="color:var(--md-sys-color-error); font-size:28px; flex-shrink:0;">picture_as_pdf</span>
+                <div style="flex:1; min-width:0; overflow:hidden;">
+                    <div style="font-size:.9rem; font-weight:500; color:var(--md-sys-color-on-surface);
+                         white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${pdf.nombre}">
+                        ${pdf.tipo}
+                    </div>
+                    <div style="font-size:.78rem; color:var(--md-sys-color-on-surface-variant);">
+                        ${fechaTxt}${kb ? ' · ' + kb : ''}
+                    </div>
+                </div>
+                <div style="display:flex; gap:6px; flex-shrink:0;">
+                    <md-icon-button title="Ver PDF" onclick="abrirPDF('${pdf.url_ver}')">
+                        <md-icon>visibility</md-icon>
+                    </md-icon-button>
+                    <md-icon-button title="Descargar" onclick="descargarPDF('${pdf.url_dl}', '${pdf.nombre}')">
+                        <md-icon>download</md-icon>
+                    </md-icon-button>
+                </div>
+            </div>`;
+        }).join('');
+}
+
+function abrirPDF(url) {
+    // Intentar abrir; si falla (offline sin cache) el service worker devolverá JSON de error
+    const win = window.open(url, '_blank');
+    // Fallback: si el navegador bloquea popups, usar fetch para detectar 404
+    if (!win) {
+        fetch(url)
+            .then(r => {
+                if (!r.ok || r.headers.get('content-type')?.includes('json')) {
+                    mostrarErrorPDF();
+                } else {
+                    window.location.href = url;
+                }
+            })
+            .catch(() => mostrarErrorPDF());
+    }
+}
+
+function descargarPDF(url, nombre) {
+    fetch(url)
+        .then(r => {
+            const ct = r.headers.get('content-type') || '';
+            if (!r.ok || ct.includes('json')) {
+                return r.json().then(d => Promise.reject(d.mensaje || 'Archivo no disponible'));
+            }
+            return r.blob();
+        })
+        .then(blob => {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = nombre;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+        })
+        .catch(msg => {
+            mostrarErrorPDF(typeof msg === 'string' ? msg : null);
+        });
+}
+
+function mostrarErrorPDF(msg) {
+    const m = msg || 'Archivo removido o no disponible. Genera un nuevo PDF cuando tengas conexión.';
+    if (window.PWA?.mostrarToast) {
+        window.PWA.mostrarToast('⚠️ ' + m, 'warning', 5000);
+    } else {
+        alert(m);
+    }
+}
+
 /* ── Menú y drawer ── */
 function abrirMenu(id) {
     document.querySelectorAll('md-menu').forEach(m => { if (m.id !== id) m.open = false; });

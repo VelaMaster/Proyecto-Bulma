@@ -18,17 +18,32 @@
 
 'use strict';
 
-const CACHE_NAME   = 'bulma-pwa-v4';
+const CACHE_NAME   = 'bulma-pwa-v5';
 const API_CACHE    = 'api-cache-v1';
 const SYNC_TAG     = 'sync-inventarios';
 const DB_NAME      = 'bulma_sync_db';
 const STORE_NAME   = 'pending_requests';
+
+/* ─── Dominios externos que se cachean con Cache-First ───────────── */
+const CACHE_EXTERNAL_DOMAINS = [
+  'fonts.googleapis.com',
+  'fonts.gstatic.com',
+  'esm.run',
+  'cdnjs.cloudflare.com',
+];
 
 /* ─── Assets pre-cacheados en install ───────────────────────────── */
 const PRECACHE_ASSETS = [
   '/main_md3.css',
   '/loader_md3.css',
   '/mainprincipal.css',
+  '/estilos/generarreporteMensual.css',
+  '/estilos/consultarInventarioMensual.css',
+  '/estilos/generarInventarioMensual.css',
+  '/estilos/detalleinventarioMensual.css',
+  '/estilos/editarinventarioMensual.css',
+  '/estilos/iniciocards.css',
+  '/estilos/iniciosupervisor.css',
   '/js/temas_md3.js',
   '/js/loader_md3.js',
   '/js/promotores.js',
@@ -78,6 +93,7 @@ const API_ENDPOINTS = [
   'api_supervisor',
   'api_avance_promotores',
   'api_estado_promotor',
+  'listar_pdfs',
 ];
 
 /* ─── POSTs que se encolan si no hay red ─────────────────────────── */
@@ -187,8 +203,13 @@ self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  /* Solo mismo origen */
-  if (url.origin !== self.location.origin) return;
+  /* Recursos externos: Google Fonts, esm.run, cdnjs → Cache-First */
+  if (url.origin !== self.location.origin) {
+    if (req.method === 'GET' && CACHE_EXTERNAL_DOMAINS.some(d => url.hostname.includes(d))) {
+      event.respondWith(cacheFirstExternal(req));
+    }
+    return; // otros externos: no interceptar
+  }
 
   /* POST a sync endpoints → encolar si offline */
   if (req.method === 'POST' && SYNC_ENDPOINTS.some((ep) => url.pathname.includes(ep))) {
@@ -247,6 +268,30 @@ async function cacheFirst(request) {
   }
 }
 
+/* ── Cache-First para recursos externos (Fonts, Material Web) ────── */
+async function cacheFirstExternal(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response.ok || response.type === 'opaque') {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch {
+    const isJS  = request.destination === 'script';
+    const isCSS = request.destination === 'style';
+    return new Response(
+      isJS || isCSS ? '/* offline */' : '',
+      {
+        status: 503,
+        headers: { 'Content-Type': isJS ? 'application/javascript' : isCSS ? 'text/css' : 'text/plain' },
+      }
+    );
+  }
+}
+
 /* ── Network-First (páginas HTML) ───────────────────────────────── */
 async function networkFirst(request) {
   try {
@@ -290,10 +335,10 @@ async function apiNetworkFirst(request) {
   const cache = await caches.open(API_CACHE);
   try {
     const response = await fetch(request);
-    /* Solo cachear respuestas JSON exitosas */
+    /* Cachear respuestas JSON exitosas y PDFs */
     if (response.ok) {
       const ct = response.headers.get('content-type') || '';
-      if (ct.includes('json') || ct.includes('text')) {
+      if (ct.includes('json') || ct.includes('text') || ct.includes('pdf')) {
         cache.put(request, response.clone());
       }
     }
