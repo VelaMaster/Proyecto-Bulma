@@ -189,14 +189,25 @@ async function incrementRetry(id) {
    ════════════════════════════════════════════════════════════════════ */
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_ASSETS))
-      .then(() => {
-        /* Precachear externos en segundo plano — no bloquea el install */
-        precachearExternos();
-      })
-      .then(() => self.skipWaiting())
-      .catch((err) => console.warn('[SW] Pre-cache parcial:', err))
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      /* Cachear cada asset individualmente: si uno falla no rompe el install */
+      const results = await Promise.allSettled(
+        PRECACHE_ASSETS.map((url) =>
+          fetch(url, { cache: 'reload' })
+            .then((r) => { if (r.ok) return cache.put(url, r); })
+            .catch(() => { /* asset no disponible, se omite */ })
+        )
+      );
+      const fallidos = results.filter((r) => r.status === 'rejected').length;
+      if (fallidos) console.warn(`[SW] ${fallidos} assets no cacheados en install.`);
+
+      /* Precachear externos en segundo plano — no bloquea el install */
+      precachearExternos();
+
+      /* SIEMPRE skip waiting para que el nuevo SW active inmediatamente */
+      await self.skipWaiting();
+    })()
   );
 });
 
