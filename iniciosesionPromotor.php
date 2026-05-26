@@ -162,6 +162,12 @@ $origen_conexion = Database::getEnvName();
     <script src="js/loader_md3.js"></script>
     <script src="js/pwa_offline.js"></script>
     <script src="js/offline_login.js"></script>
+    <script>
+    /* Forzar que el SW actualice si hay una versión nueva disponible */
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(reg => reg.update()).catch(() => {});
+    }
+    </script>
     <?php if (isset($_GET['logout'])): ?>
     <script>
     // Limpiar sesión offline al hacer logout

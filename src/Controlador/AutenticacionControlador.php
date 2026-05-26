@@ -24,7 +24,7 @@ class AutenticacionControlador {
                 'lifetime' => $lifetime,
                 'path'     => '/',
                 'httponly' => true,
-                'samesite' => 'Strict',
+                'samesite' => 'Lax',   // Strict rompía la cookie tras redirect en PWA
                 'secure'   => $secure,
             ]);
             ini_set('session.gc_maxlifetime', $lifetime);
@@ -51,15 +51,15 @@ class AutenticacionControlador {
             }
 
             $rutas = [
-                '0' => 'promotores/inicio.php',
-                '1' => 'supervisor/inicio.php',
-                '2' => 'distribucion/inicio.php',
+                '0' => '/promotores/inicio.php',
+                '1' => '/supervisor/inicio.php',
+                '2' => '/distribucion/inicio.php',
             ];
-            $destino = $rutas[$rol] ?? 'iniciosesionPromotor.php';
+            $destino = $rutas[$rol] ?? '/iniciosesionPromotor.php';
             header("Location: " . $destino);
             exit();
         } else {
-            header("Location: iniciosesionPromotor.php?error=1");
+            header("Location: /iniciosesionPromotor.php?error=1");
             exit();
         }
     }

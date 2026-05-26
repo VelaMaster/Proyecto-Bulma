@@ -37,7 +37,7 @@ session_set_cookie_params([
     'lifetime' => $sessionLifetime,
     'path'     => '/',
     'httponly' => true,
-    'samesite' => 'Strict',
+    'samesite' => 'Lax',   // Strict bloqueaba cookies en redirects del SW
     'secure'   => $secure,
 ]);
 ini_set('session.gc_maxlifetime', $sessionLifetime);

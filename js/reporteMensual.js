@@ -161,9 +161,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <th colspan="2">SEGÚN REG. DE<br>RETIRO DE VENTAS</th>
                     <th rowspan="2">No. DE FAM.<br>QUE NO ACUD.</th>
                     <th colspan="2">SOBRES</th>
-                    <th rowspan="2">No. DE DÍAS<br>DE VENTA</th>
-                    <th rowspan="2" class="col-fecha">RECIBIDA<br>FECHA ENTRADA</th>
-                    <th rowspan="2" class="col-fecha">CADUCIDAD<br>LECHE</th>
                     <th rowspan="2" class="col-obs">OBSERVACIONES</th>
                 </tr>
                 <tr class="header-sub">
@@ -181,9 +178,6 @@ document.addEventListener('DOMContentLoaded', () => {
         tr.dataset.lecher = lecheria.LECHER;
         tr.dataset.tipoVenta = lecheria.TIPO_PUNTO_VENTA;
         const precio = precioDeTipoVenta(lecheria.TIPO_PUNTO_VENTA);
-        const mesFmt = String(mesReporte).padStart(2,'0');
-        const fechaEntradaDef = `${anioReporte}-${mesFmt}-15`;
-        const caducidadDef    = `${anioReporte}-12-31`;
 
         tr.innerHTML = `
             <td><input type="text"   class="cell-input" name="punto_venta[]"    value="${lecheria.LECHER}" readonly></td>
@@ -206,9 +200,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <td><input type="number" class="cell-input" name="familias_no_acud[]" value="0"></td>
             <td><input type="number" class="cell-input" name="sobres_rotos[]"    value="0"></td>
             <td><input type="number" class="cell-input" name="sobres_falt[]"     value="0"></td>
-            <td><input type="number" class="cell-input" name="dias_venta[]"      value="24"></td>
-            <td><input type="date"   class="cell-input" name="fecha_entrada[]"   value="${fechaEntradaDef}"></td>
-            <td><input type="date"   class="cell-input" name="caducidad[]"       value="${caducidadDef}"></td>
             <td><input type="text"   class="cell-input" name="observaciones[]"   value=""></td>
         `;
         return tr;
@@ -248,8 +239,7 @@ lecherias.forEach(lech => {
                 fila.querySelector('input[name="retiro_cajas[]"]').value       = lech.retiro_cajas || 0;
                 fila.querySelector('input[name="retiro_sobres[]"]').value      = lech.retiro_sobres || 0;
                 
-                if (lech.fecha_entrada) fila.querySelector('input[name="fecha_entrada[]"]').value = lech.fecha_entrada;
-                if (lech.caducidad)     fila.querySelector('input[name="caducidad[]"]').value     = lech.caducidad;
+                // fecha_entrada y caducidad eliminadas del formulario
             } else {
                 ['inv_ini_cajas','inv_ini_sobres','dot_recibida_cajas','dot_vend_cajas','dot_vend_sobres','retiro_cajas','retiro_sobres'].forEach(n => {
                     const i = fila.querySelector(`input[name="${n}[]"]`);
@@ -421,6 +411,7 @@ lecherias.forEach(lech => {
             const lecherias = [];
             filas.forEach(f => {
                 const v = (n) => f.querySelector(`input[name="${n}[]"]`)?.value ?? '';
+                const obs = v('observaciones').trim();
                 lecherias.push({
                     punto_venta:        v('punto_venta'),
                     clave_tienda:       v('clave_tienda'),
@@ -440,10 +431,7 @@ lecherias.forEach(lech => {
                     familias_no_acud:   v('familias_no_acud'),
                     sobres_rotos:       v('sobres_rotos'),
                     sobres_falt:        v('sobres_falt'),
-                    dias_venta:         v('dias_venta'),
-                    fecha_entrada:      v('fecha_entrada'),
-                    caducidad:          v('caducidad'),
-                    observaciones:      v('observaciones')
+                    observaciones:      obs || 'x'
                 });
             });
             almacenes.push({ almacen: b.dataset.almacen, lecherias });

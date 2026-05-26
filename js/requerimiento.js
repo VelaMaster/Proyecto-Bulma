@@ -207,9 +207,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 fila.querySelector('input[name="ventas[]"]').value      = `${lech.venta_cajas} -- ${lech.venta_sobres}`;
                 fila.querySelector('input[name="inv_final[]"]').value   = `${lech.fin_cajas} -- ${lech.fin_sobres}`;
 
-                fila.querySelector('input[name="req_ms_anterior[]"]').value = dotTeorica;
-                fila.querySelector('input[name="vms[]"]').value             = dotTeorica;
-                fila.querySelector('input[name="req_actual[]"]').value      = dotTeorica;
+                // ── Cálculo inteligente basado en meses anteriores ─────────
+                // VMS: ventas reales del mes base (no teórico)
+                const vmsReal = parseInt(lech.venta_cajas) || 0;
+                // Si sobró inventario al final, el requerimiento se reduce en esa diferencia
+                const finCajasReal = parseInt(lech.fin_cajas) || 0;
+                const reqInteligente = Math.max(0, dotTeorica - finCajasReal);
+
+                fila.querySelector('input[name="req_ms_anterior[]"]').value = reqInteligente;
+                fila.querySelector('input[name="vms[]"]').value             = vmsReal;
+                fila.querySelector('input[name="req_actual[]"]').value      = reqInteligente;
             } else {
                 ['inv_inicial','surtimiento','ventas','req_ms_anterior','vms','req_actual'].forEach(n => {
                     const i = fila.querySelector(`input[name="${n}[]"]`);

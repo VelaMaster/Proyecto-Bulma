@@ -79,10 +79,7 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
         ['FAM. NO ACUD.',             13],
         ['SOB. ROTOS',                10],
         ['SOB. FALT.',                10],
-        ['DIAS VENTA',                11],
-        ['FECHA ENTRADA',             17],
-        ['CADUCIDAD',                 16],
-        ['OBSERVACIONES',             25],
+        ['OBSERVACIONES',             36],
     ];
 
     foreach ($almacenes as $bloque) {
@@ -136,10 +133,7 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
                 $l['familias_no_acud']   ?? '',
                 $l['sobres_rotos']       ?? '',
                 $l['sobres_falt']        ?? '',
-                $l['dias_venta']         ?? '',
-                _rep_fmtFecha($l['fecha_entrada'] ?? ''),
-                _rep_fmtFecha($l['caducidad']     ?? ''),
-                $l['observaciones']      ?? '',
+                ($l['observaciones'] !== '' && $l['observaciones'] !== null) ? $l['observaciones'] : 'x',
             ];
             foreach ($cols as $i => $c) $pdf->Cell($c[1], 6, $d_fn((string)$vals[$i]), 1, 0, 'C');
             $pdf->Ln();

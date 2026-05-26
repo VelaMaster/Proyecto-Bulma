@@ -62,7 +62,7 @@ class RecuerdameServicio
             'expires'  => $expiry,
             'path'     => '/',
             'httponly' => true,
-            'samesite' => 'Strict',
+            'samesite' => 'Lax',
             'secure'   => $secure,
         ]);
     }

@@ -18,7 +18,7 @@
 
 'use strict';
 
-const CACHE_NAME   = 'bulma-pwa-v9';
+const CACHE_NAME   = 'bulma-pwa-v10';
 const API_CACHE    = 'api-cache-v1';
 const SYNC_TAG     = 'sync-inventarios';
 const DB_NAME      = 'bulma_sync_db';
@@ -281,6 +281,13 @@ self.addEventListener('activate', (event) => {
 /* ════════════════════════════════════════════════════════════════════
    FETCH — interceptar peticiones
    ════════════════════════════════════════════════════════════════════ */
+/* ─── Rutas de autenticación que el SW jamás debe interceptar ────── */
+const AUTH_BYPASS = [
+  '/login_proceso.php',
+  '/cerrar_sesion.php',
+  '/cerrar_sesionsupervisor.php',
+];
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   const url = new URL(req.url);
@@ -293,9 +300,20 @@ self.addEventListener('fetch', (event) => {
     return; // otros externos: no interceptar
   }
 
+  /* Auth (login / logout): dejar que el navegador maneje el redirect
+     y la cookie de sesión de forma nativa, sin interferencia del SW */
+  if (AUTH_BYPASS.some((ep) => url.pathname.includes(ep))) {
+    return; // no llamar event.respondWith → el browser lo maneja solo
+  }
+
   /* POST a sync endpoints → encolar si offline */
   if (req.method === 'POST' && SYNC_ENDPOINTS.some((ep) => url.pathname.includes(ep))) {
     event.respondWith(handleSyncEndpoint(req));
+    return;
+  }
+
+  /* Cualquier otro POST (no es sync ni auth) → pasar directo a la red */
+  if (req.method === 'POST') {
     return;
   }
 
