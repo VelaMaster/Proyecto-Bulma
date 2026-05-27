@@ -17,7 +17,7 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
     require_once __DIR__ . '/../fpdf/fpdf.php';
 
     // ── Helpers locales ────────────────────────────────────────────
-    $d_fn = function($s) { return utf8_decode((string)($s ?? '')); };
+    $d_fn = function($s) { return mb_convert_encoding((string)($s ?? ''), 'ISO-8859-1', 'UTF-8'); };
 
     if (!function_exists('_rep_fmtFecha')) {
         function _rep_fmtFecha($iso) {
@@ -198,7 +198,6 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
     $nombreArchivo = sprintf('Reporte_%04d_%02d_%s.pdf', $anio, $mes, $slugUsr);
     $rutaCompleta  = $baseDir . '/' . $nombreArchivo;
 
-    if (ob_get_length()) ob_end_clean();
     $pdf->Output('F', $rutaCompleta);
 
     return file_exists($rutaCompleta) ? $rutaCompleta : false;

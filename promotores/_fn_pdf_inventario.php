@@ -16,7 +16,7 @@ function generarArchivoInventario(array $datos): string|false
 {
     require_once __DIR__ . '/../fpdf/fpdf.php';
 
-    $d = function($str) { return utf8_decode($str ?? ''); };
+    $d = function($str) { return mb_convert_encoding((string)($str ?? ''), 'ISO-8859-1', 'UTF-8'); };
 
     function _inv_smartCell($pdf, $w, $h, $text, $border = 0, $ln = 0,
                              $align = 'L', $style = '', $baseSize = 9, $minSize = 6) {

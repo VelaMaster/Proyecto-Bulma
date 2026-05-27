@@ -11,7 +11,7 @@ function generarArchivoRequerimiento(array $datos, string $slugUsr): string|fals
 {
     require_once __DIR__ . '/../fpdf/fpdf.php';
 
-    $d_fn = function($s) { return utf8_decode((string)($s ?? '')); };
+    $d_fn = function($s) { return mb_convert_encoding((string)($s ?? ''), 'ISO-8859-1', 'UTF-8'); };
 
     if (!function_exists('_req_fechaLargaDDM')) {
         function _req_fechaLargaDDM($iso) {
@@ -168,7 +168,6 @@ function generarArchivoRequerimiento(array $datos, string $slugUsr): string|fals
     $nombreArchivo = sprintf('Requerimiento_%04d_%02d_%s.pdf', $anioDestino, $mesDestino, $slugUsr);
     $rutaCompleta  = $baseDir . '/' . $nombreArchivo;
 
-    if (ob_get_length()) ob_end_clean();
     $pdf->Output('F', $rutaCompleta);
 
     return file_exists($rutaCompleta) ? $rutaCompleta : false;

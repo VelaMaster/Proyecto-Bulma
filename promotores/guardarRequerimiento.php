@@ -126,11 +126,13 @@ $archivo = sprintf('req_%04d_%02d_%s.json', $anioBase, $mesBase, $slug);
 
 // ── 3. PDF ────────────────────────────────────────────────────────
 $pdfGenerado = false; $pdfNombre = null;
+ob_start();
 try {
     require_once __DIR__ . '/_fn_pdf_requerimiento.php';
     $ruta = generarArchivoRequerimiento($datos, $slug);
     if ($ruta) { $pdfGenerado = true; $pdfNombre = basename($ruta); }
 } catch (Throwable $e) {}
+ob_end_clean();
 
 echo json_encode([
     'status'       => 'success',
