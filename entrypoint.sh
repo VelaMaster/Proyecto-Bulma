@@ -4,8 +4,11 @@
 
 set -e
 
-# Crear directorio de tokens de sesión si no existe
+# Crear directorios necesarios si no existen
 mkdir -p /var/www/html/datos/sesiones
+mkdir -p /var/www/html/datos/promotores/requerimientos
+mkdir -p /var/www/html/datos/promotores/reportes
+mkdir -p /var/www/html/datos/promotores/pdfs
 
 # Dar permisos de escritura a www-data (uid 33 en Debian/Apache)
 chown -R www-data:www-data /var/www/html/datos

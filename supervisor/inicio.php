@@ -79,12 +79,10 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     </md-menu>
                 </div>
 
-                                <div style="position: relative;">
-                    <md-text-button id="btn-prom" onclick="abrirMenu('menu-prom')">
-                        Reporte mensual de la operacion
-                        <md-icon slot="icon">arrow_drop_down</md-icon>
-                    </md-text-button>
-                </div>
+                                <md-text-button href="reporte_mensual.php">
+                    <md-icon slot="icon">bar_chart</md-icon>
+                    Reporte Mensual
+                </md-text-button>
             </div>
 
             <md-filled-tonal-button href="../cerrar_sesionsupervisor.php" style="margin-left: 16px;">
@@ -134,6 +132,14 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <md-list-item href="listaPromotores.php" type="button">
                     <div slot="headline">Ver Mis Promotores</div>
                     <md-icon slot="start">group</md-icon>
+                </md-list-item>
+
+                <md-divider style="margin: 8px 0;"></md-divider>
+
+                <div class="drawer-section-title">Reporte Mensual</div>
+                <md-list-item href="reporte_mensual.php" type="button">
+                    <div slot="headline">Ver Reporte Mensual</div>
+                    <md-icon slot="start">bar_chart</md-icon>
                 </md-list-item>
             </md-list>
         </div>

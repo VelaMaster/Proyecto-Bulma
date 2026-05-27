@@ -4,10 +4,11 @@ FROM php:8.2-apache
 RUN apt-get update && apt-get install -y \
     libfbclient2 \
     firebird-dev \
+    libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalamos la extensión PDO para Firebird
-RUN docker-php-ext-install pdo_firebird
+# Instalamos extensiones PDO: Firebird + SQLite
+RUN docker-php-ext-install pdo_firebird pdo_sqlite
 
 # Activamos rewrite para las rutas de tu app
 RUN a2enmod rewrite

@@ -212,6 +212,29 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </div>
         </div>
 
+        <!-- Barra de exportación -->
+        <div class="md3-card filtros-card" id="exportBar" style="display:none; background:color-mix(in srgb,var(--md-sys-color-secondary-container) 40%,transparent);">
+            <md-icon style="color:var(--md-sys-color-secondary);">filter_list</md-icon>
+            <span style="font-size:0.85rem;font-weight:500;color:var(--md-sys-color-on-surface-variant);">Filtrar exportación:</span>
+
+            <select id="exportSupSelect" class="md3-input" style="margin:0;cursor:pointer;min-width:180px;">
+                <option value="0">Todos los supervisores</option>
+            </select>
+
+            <select id="exportAlmSelect" class="md3-input" style="margin:0;cursor:pointer;min-width:160px;">
+                <option value="">Todos los almacenes</option>
+            </select>
+
+            <span style="flex-grow:1;"></span>
+
+            <md-outlined-button id="btnExportExcel">
+                <md-icon slot="icon">table_view</md-icon> Excel (.csv)
+            </md-outlined-button>
+            <md-filled-button id="btnExportPDF">
+                <md-icon slot="icon">picture_as_pdf</md-icon> PDF
+            </md-filled-button>
+        </div>
+
         <!-- Resumen -->
         <div class="md3-card" id="resumenCard" style="display:none; margin-bottom:16px;">
             <h3 style="margin:0 0 12px; font-size:1rem; font-weight:500;">
@@ -362,7 +385,47 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             document.getElementById('resumenCard').style.display   = 'block';
         }
 
+        let ultimaData = null;
+
+        function actualizarFiltrosExport(data) {
+            const supSelect = document.getElementById('exportSupSelect');
+            const almSelect = document.getElementById('exportAlmSelect');
+
+            // Reconstruir supervisores
+            const supActual = supSelect.value;
+            supSelect.innerHTML = '<option value="0">Todos los supervisores</option>';
+            data.supervisores.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.id;
+                opt.textContent = s.nombre;
+                supSelect.appendChild(opt);
+            });
+            supSelect.value = supActual;
+
+            // Reconstruir almacenes según supervisor seleccionado
+            function poblarAlmacenes() {
+                const supId = parseInt(supSelect.value) || 0;
+                const almActual = almSelect.value;
+                almSelect.innerHTML = '<option value="">Todos los almacenes</option>';
+                const sups = supId ? data.supervisores.filter(s => s.id === supId) : data.supervisores;
+                const almSet = new Set();
+                sups.forEach(s => s.almacenes.forEach(a => almSet.add(a.almacen)));
+                almSet.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a;
+                    opt.textContent = a;
+                    almSelect.appendChild(opt);
+                });
+                if (almSet.has(almActual)) almSelect.value = almActual;
+            }
+            poblarAlmacenes();
+            supSelect.onchange = poblarAlmacenes;
+
+            document.getElementById('exportBar').style.display = 'flex';
+        }
+
         function pintar(data) {
+            ultimaData = data;
             if (!data.supervisores || data.supervisores.length === 0) {
                 contenedor.innerHTML = `
                     <div class="md3-card" style="text-align:center; padding:24px; color:var(--md-sys-color-on-surface-variant);">
@@ -380,6 +443,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             totalLechEl.textContent    = `(${data.total_capturadas}/${data.total_lecherias} capturadas)`;
             grandTotal.style.display   = 'flex';
             pintarResumen({ ...data.resumen, capturadas: data.total_capturadas });
+            actualizarFiltrosExport(data);
         }
 
         async function cargar() {
@@ -406,6 +470,24 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         function toggleDrawer() {
             document.getElementById('mobile-drawer').classList.toggle('open');
         }
+
+        function exportParams() {
+            const mes  = selMes.value;
+            const anio = inputAnio.value;
+            const sup  = document.getElementById('exportSupSelect')?.value || '0';
+            const alm  = encodeURIComponent(document.getElementById('exportAlmSelect')?.value || '');
+            return `mes=${mes}&anio=${anio}&precio=${precioActivo}&supervisor_id=${sup}&almacen=${alm}`;
+        }
+
+        document.getElementById('btnExportExcel').addEventListener('click', () => {
+            if (!ultimaData) return;
+            window.location.href = `exportar_excel.php?${exportParams()}`;
+        });
+
+        document.getElementById('btnExportPDF').addEventListener('click', () => {
+            if (!ultimaData) return;
+            window.open(`exportar_pdf.php?${exportParams()}`, '_blank');
+        });
 
         cargar();
     </script>
