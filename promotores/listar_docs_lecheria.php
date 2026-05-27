@@ -30,24 +30,28 @@ try {
     $db      = DatabaseSQLite::getInstance();
     $slugUsr = preg_replace('/[^A-Za-z0-9]/', '_', $_SESSION['usuario']);
 
+    $meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+              'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
     if ($tipo === 'reporte') {
+        // Deduplicar por (mes, anio) — un PDF cubre todos los registros del mes
         $stmt = $db->prepare("
-            SELECT mes, anio, fecha_captura, periodo_inicio, periodo_fin,
-                   promotor, supervisor
+            SELECT mes, anio, MAX(fecha_captura) AS fecha_captura,
+                   periodo_inicio, periodo_fin, MAX(pdf_nombre) AS pdf_nombre
             FROM reporte_mensual_lecher
             WHERE clave_lecheria = ?
+            GROUP BY mes, anio
             ORDER BY anio DESC, mes DESC
         ");
         $stmt->execute([$clave]);
         $rows = $stmt->fetchAll();
 
-        $meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
         $resultado = [];
         $dirPdf    = __DIR__ . '/../datos/promotores/reportes_pdf/';
         foreach ($rows as $r) {
-            $nombre    = sprintf('Reporte_%04d_%02d_%s.pdf', $r['anio'], $r['mes'], $slugUsr);
+            // Prioridad: pdf_nombre guardado en BD; fallback: construir por convención
+            $nombre = $r['pdf_nombre']
+                ?? sprintf('Reporte_%04d_%02d_%s.pdf', $r['anio'], $r['mes'], $slugUsr);
             $pdfExiste = file_exists($dirPdf . $nombre);
             $resultado[] = [
                 'mes'          => $r['mes'],
@@ -65,8 +69,8 @@ try {
 
     } else { // requerimiento
         $stmt = $db->prepare("
-            SELECT mes_base, anio_base, fecha_captura,
-                   familias, beneficiarios, req_actual
+            SELECT mes_base, anio_base, mes_destino, anio_destino,
+                   fecha_captura, familias, beneficiarios, req_actual, pdf_nombre
             FROM requerimiento_dotacion
             WHERE clave_lecheria = ?
             ORDER BY anio_base DESC, mes_base DESC
@@ -74,14 +78,17 @@ try {
         $stmt->execute([$clave]);
         $rows = $stmt->fetchAll();
 
-        $meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
-                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
         $resultado = [];
         $dirPdf    = __DIR__ . '/../datos/promotores/requerimientos_pdf/';
         foreach ($rows as $r) {
-            $nombre    = sprintf('Requerimiento_%04d_%02d_%s.pdf', $r['anio_base'], $r['mes_base'], $slugUsr);
-            $pdfExiste = file_exists($dirPdf . $nombre);
+            // Prioridad: pdf_nombre guardado en BD
+            // Fallback: construir usando mes_destino/anio_destino (como los nombra _fn_pdf_requerimiento)
+            $nombre = $r['pdf_nombre'];
+            if (!$nombre && $r['anio_destino'] && $r['mes_destino']) {
+                $nombre = sprintf('Requerimiento_%04d_%02d_%s.pdf',
+                    $r['anio_destino'], $r['mes_destino'], $slugUsr);
+            }
+            $pdfExiste = $nombre ? file_exists($dirPdf . $nombre) : false;
             $resultado[] = [
                 'mes'          => $r['mes_base'],
                 'anio'         => $r['anio_base'],

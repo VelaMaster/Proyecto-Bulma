@@ -96,6 +96,14 @@ class DatabaseSQLite
             CREATE INDEX IF NOT EXISTS idx_req_promotor
                 ON requerimiento_dotacion (promotor);
         ");
+
+        // Migraciones idempotentes: agregar columnas nuevas si no existen
+        foreach ([
+            "ALTER TABLE reporte_mensual_lecher  ADD COLUMN pdf_nombre TEXT",
+            "ALTER TABLE requerimiento_dotacion  ADD COLUMN pdf_nombre TEXT",
+        ] as $alter) {
+            try { $pdo->exec($alter); } catch (\Throwable $e) { /* columna ya existe */ }
+        }
     }
 
     /** Ruta al archivo .db (útil para backups) */

@@ -126,13 +126,24 @@ $archivo = sprintf('req_%04d_%02d_%s.json', $anioBase, $mesBase, $slug);
 
 // ── 3. PDF ────────────────────────────────────────────────────────
 $pdfGenerado = false; $pdfNombre = null;
-ob_start();
+$nivelOb = ob_get_level();
+@ob_start();
 try {
     require_once __DIR__ . '/_fn_pdf_requerimiento.php';
     $ruta = generarArchivoRequerimiento($datos, $slug);
     if ($ruta) { $pdfGenerado = true; $pdfNombre = basename($ruta); }
 } catch (Throwable $e) {}
-ob_end_clean();
+while (ob_get_level() > $nivelOb) @ob_end_clean();
+
+// ── 4. Guardar pdf_nombre en SQLite (para que listar_docs_lecheria lo encuentre) ──
+if ($pdfNombre) {
+    try {
+        $db->exec("UPDATE requerimiento_dotacion
+                   SET pdf_nombre = " . $db->quote($pdfNombre) . "
+                   WHERE mes_base = $mesBase AND anio_base = $anioBase
+                     AND usuario_captura = " . $db->quote($usuario));
+    } catch (Throwable $e) { /* no crítico */ }
+}
 
 echo json_encode([
     'status'       => 'success',

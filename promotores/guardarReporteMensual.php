@@ -140,13 +140,24 @@ $archivo = sprintf('reporte_%04d_%02d_%s.json', $anio, $mes, $slug);
 
 // ── 3. PDF ────────────────────────────────────────────────────────
 $pdfGenerado = false; $pdfNombre = null;
-ob_start();
+$nivelOb = ob_get_level();
+@ob_start();
 try {
     require_once __DIR__ . '/_fn_pdf_reporte.php';
     $ruta = generarArchivoReporte($datos, $slug);
     if ($ruta) { $pdfGenerado = true; $pdfNombre = basename($ruta); }
 } catch (Throwable $e) {}
-ob_end_clean();
+while (ob_get_level() > $nivelOb) @ob_end_clean();
+
+// ── 4. Guardar pdf_nombre en SQLite ───────────────────────────────
+if ($pdfNombre) {
+    try {
+        $db->exec("UPDATE reporte_mensual_lecher
+                   SET pdf_nombre = " . $db->quote($pdfNombre) . "
+                   WHERE mes = $mes AND anio = $anio
+                     AND usuario_captura = " . $db->quote($usuario));
+    } catch (Throwable $e) { /* no crítico */ }
+}
 
 echo json_encode([
     'status'       => 'success',
