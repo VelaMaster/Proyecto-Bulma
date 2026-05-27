@@ -7,8 +7,12 @@ RUN apt-get update && apt-get install -y \
     libsqlite3-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalamos extensiones PDO: Firebird + SQLite
-RUN docker-php-ext-install pdo_firebird pdo_sqlite
+# Firebird PDO (necesita compilación)
+RUN docker-php-ext-install pdo_firebird
+
+# SQLite PDO — en php:8.2-apache el .so ya existe compilado; solo hay que habilitarlo.
+# Si por algún motivo no existe, el fallback lo compila desde libsqlite3-dev.
+RUN docker-php-ext-enable pdo_sqlite 2>/dev/null || docker-php-ext-install pdo_sqlite
 
 # Activamos rewrite para las rutas de tu app
 RUN a2enmod rewrite

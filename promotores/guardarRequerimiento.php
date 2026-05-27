@@ -1,5 +1,21 @@
 <?php
+ob_start();
 require_once __DIR__ . '/../includes/session_guard.php';
+
+register_shutdown_function(function () {
+    $err = error_get_last();
+    if ($err && in_array($err['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        ob_end_clean();
+        http_response_code(500);
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode([
+            'status'  => 'error',
+            'mensaje' => 'Error fatal PHP: ' . $err['message'] . ' en ' . $err['file'] . ':' . $err['line'],
+        ]);
+    }
+});
+
+ob_end_clean();
 header('Content-Type: application/json; charset=utf-8');
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
