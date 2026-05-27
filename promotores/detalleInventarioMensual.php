@@ -134,17 +134,23 @@ if ($clave === '') {
         </div>
     </div>
 
-    <!-- Sección de inventarios -->
-    <div class="form-section">
-        <div class="section-header">
-            <div class="section-badge">
-                <span class="material-symbols-outlined" style="font-size:17px;">description</span>
-            </div>
-            <h2 class="section-title">Inventarios mensuales</h2>
-        </div>
+    <!-- Tabs de tipo de documento -->
+    <div class="anio-tabs" id="tipoTabs" style="margin-bottom:4px;">
+        <button class="anio-tab active" data-tipo="inventario">
+            <span class="material-symbols-outlined" style="font-size:15px;vertical-align:-3px;">description</span>
+            Inventarios
+        </button>
+        <button class="anio-tab" data-tipo="reporte">
+            <span class="material-symbols-outlined" style="font-size:15px;vertical-align:-3px;">receipt_long</span>
+            Reportes
+        </button>
+        <button class="anio-tab" data-tipo="requerimiento">
+            <span class="material-symbols-outlined" style="font-size:15px;vertical-align:-3px;">inventory</span>
+            Requerimientos
+        </button>
     </div>
 
-    <!-- Tabs de año -->
+    <!-- Tabs de año (solo visible en inventarios) -->
     <div class="anio-tabs" id="anioTabs">
         <button class="anio-tab active" data-anio="">Todos</button>
         <!-- años se agregan dinámicamente -->
@@ -193,86 +199,149 @@ document.addEventListener('click', e => {
 document.addEventListener('DOMContentLoaded', () => {
     const invList  = document.getElementById('invList');
     const anioTabs = document.getElementById('anioTabs');
-    let todosInv   = [];
+    const tipoTabs = document.getElementById('tipoTabs');
+    let tipoActivo = 'inventario';
     let anioActivo = '';
 
-    /* ── cargar inventarios ── */
+    /* ── Tabs de tipo ── */
+    tipoTabs.addEventListener('click', e => {
+        const btn = e.target.closest('.anio-tab[data-tipo]');
+        if (!btn) return;
+        tipoTabs.querySelectorAll('.anio-tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        tipoActivo = btn.dataset.tipo;
+        // Mostrar/ocultar tabs de año (solo aplican a inventarios)
+        anioTabs.style.display = tipoActivo === 'inventario' ? '' : 'none';
+        if (tipoActivo === 'inventario') {
+            cargarInventarios(anioActivo);
+        } else {
+            cargarDocs(tipoActivo);
+        }
+    });
+
+    /* ── Inventarios ── */
     cargarInventarios('');
 
     function cargarInventarios(anio) {
         anioActivo = anio;
-        invList.innerHTML = `
-            <div class="inv-row" style="pointer-events:none;">
-                <div class="inv-row-icon skeleton" style="width:42px;height:42px;border-radius:10px;"></div>
-                <div class="inv-row-info">
-                    <div class="skeleton" style="height:12px;width:50%;border-radius:6px;margin-bottom:8px;"></div>
-                    <div class="skeleton" style="height:10px;width:70%;border-radius:6px;"></div>
-                </div>
-            </div>`;
-
+        mostrarSkeleton();
         const params = new URLSearchParams({ clave: CLAVE_LECHERIA });
         if (anio) params.append('anio', anio);
 
         fetch('listar_inventarios_lecheria.php?' + params.toString())
             .then(r => r.json())
             .then(rows => {
-                if (!Array.isArray(rows)) {
-                    invList.innerHTML = `<div class="empty-state">
-                        <span class="material-symbols-outlined">error</span>
-                        <p>Error al cargar inventarios.</p></div>`;
-                    return;
-                }
-
-                todosInv = rows;
-
-                // Construir tabs de año la primera vez (sin filtro activo)
+                if (!Array.isArray(rows)) { mostrarError('Error al cargar inventarios.'); return; }
                 if (anio === '') construirAnioTabs(rows);
-
-                renderInv(rows);
+                renderInvRows(rows);
             })
-            .catch(() => {
-                invList.innerHTML = `<div class="empty-state">
-                    <span class="material-symbols-outlined">wifi_off</span>
-                    <p>Error de conexión.</p></div>`;
-            });
+            .catch(() => mostrarError('Error de conexión.'));
     }
 
-    /* ── construir tabs de año ── */
     function construirAnioTabs(rows) {
         const anios = [...new Set(
-            rows
-                .filter(r => r.FECHA)
-                .map(r => r.FECHA.substring(0, 4))
+            rows.filter(r => r.FECHA).map(r => r.FECHA.substring(0, 4))
         )].sort((a, b) => b - a);
 
-        // quitar tabs anteriores salvo "Todos"
         anioTabs.querySelectorAll('[data-anio]:not([data-anio=""])').forEach(t => t.remove());
-
         anios.forEach(a => {
             const btn = document.createElement('button');
-            btn.className  = 'anio-tab';
+            btn.className    = 'anio-tab';
             btn.dataset.anio = a;
             btn.textContent  = a;
-            btn.addEventListener('click', () => activarTab(btn, a));
             anioTabs.appendChild(btn);
         });
     }
 
-    /* ── activar tab ── */
     anioTabs.addEventListener('click', e => {
-        const btn = e.target.closest('.anio-tab');
+        const btn = e.target.closest('.anio-tab[data-anio]');
         if (!btn) return;
-        activarTab(btn, btn.dataset.anio);
-    });
-
-    function activarTab(btn, anio) {
         anioTabs.querySelectorAll('.anio-tab').forEach(t => t.classList.remove('active'));
         btn.classList.add('active');
-        cargarInventarios(anio);
+        cargarInventarios(btn.dataset.anio);
+    });
+
+    /* ── Reportes / Requerimientos ── */
+    function cargarDocs(tipo) {
+        mostrarSkeleton();
+        fetch(`listar_docs_lecheria.php?clave=${encodeURIComponent(CLAVE_LECHERIA)}&tipo=${tipo}`)
+            .then(r => r.json())
+            .then(rows => {
+                if (!Array.isArray(rows)) { mostrarError('Error al cargar documentos.'); return; }
+                renderDocRows(rows, tipo);
+            })
+            .catch(() => mostrarError('Error de conexión.'));
     }
 
-    /* ── render de filas ── */
-    function renderInv(rows) {
+    function renderDocRows(rows, tipo) {
+        if (rows.length === 0) {
+            const label = tipo === 'reporte' ? 'reportes' : 'requerimientos';
+            invList.innerHTML = `<div class="empty-state">
+                <span class="material-symbols-outlined">inventory_2</span>
+                <p>No hay ${label} registrados para esta lechería.</p>
+            </div>`;
+            return;
+        }
+        invList.innerHTML = '';
+        rows.forEach(doc => invList.appendChild(crearFilaDoc(doc, tipo)));
+    }
+
+    function crearFilaDoc(doc, tipo) {
+        const iconName = tipo === 'reporte' ? 'receipt_long' : 'inventory';
+        const meta = tipo === 'reporte'
+            ? [doc.periodo_ini && doc.periodo_fin ? `${doc.periodo_ini} — ${doc.periodo_fin}` : null]
+            : [
+                doc.familias    != null ? `Familias: ${doc.familias}`       : null,
+                doc.req_actual  != null ? `Req. actual: ${doc.req_actual}`  : null,
+              ];
+        const metaTxt = meta.filter(Boolean).join('  ·  ');
+
+        let acciones = '';
+        if (doc.pdf_existe) {
+            acciones = `
+                <button class="btn-pdf btn-ver" data-url="${encodeURIComponent(doc.pdf_url)}" title="Ver PDF">
+                    <span class="material-symbols-outlined">visibility</span> Ver
+                </button>
+                <button class="btn-pdf btn-dl" data-url="${encodeURIComponent(doc.pdf_url)}" title="Descargar PDF">
+                    <span class="material-symbols-outlined">download</span>
+                </button>`;
+        } else {
+            acciones = `
+                <span class="estado-pill" style="background:var(--md-sys-color-surface-variant);color:var(--md-sys-color-on-surface-variant);display:inline-flex;align-items:center;gap:4px;">
+                    <span class="material-symbols-outlined" style="font-size:14px;">block</span>Sin archivo
+                </span>`;
+        }
+
+        const fila = document.createElement('div');
+        fila.className = 'inv-row';
+        fila.innerHTML = `
+            <div class="inv-row-icon icon-guardado">
+                <span class="material-symbols-outlined">${iconName}</span>
+            </div>
+            <div class="inv-row-info">
+                <div class="inv-row-fecha">${doc.label ?? '—'}</div>
+                ${metaTxt ? `<div class="inv-row-meta">${metaTxt}</div>` : ''}
+            </div>
+            <div class="inv-row-actions">${acciones}</div>
+        `;
+
+        fila.querySelectorAll('.btn-ver').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                window.open(decodeURIComponent(btn.dataset.url), '_blank');
+            });
+        });
+        fila.querySelectorAll('.btn-dl').forEach(btn => {
+            btn.addEventListener('click', e => {
+                e.stopPropagation();
+                window.open(decodeURIComponent(btn.dataset.url) + '&dl=1', '_blank');
+            });
+        });
+        return fila;
+    }
+
+    /* ── Inventarios: render ── */
+    function renderInvRows(rows) {
         if (rows.length === 0) {
             invList.innerHTML = `<div class="empty-state">
                 <span class="material-symbols-outlined">inventory_2</span>
@@ -280,47 +349,36 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>`;
             return;
         }
-
         invList.innerHTML = '';
-        rows.forEach(inv => {
-            invList.appendChild(crearFila(inv));
-        });
+        rows.forEach(inv => invList.appendChild(crearFilaInv(inv)));
     }
 
-    function crearFila(inv) {
+    function crearFilaInv(inv) {
         const esEditado = (inv.ESTADO ?? '').toLowerCase() === 'editado';
-        const iconCls   = esEditado ? 'icon-editado'  : 'icon-guardado';
-        const pillCls   = esEditado ? 'pill-editado'  : 'pill-guardado';
+        const iconCls   = esEditado ? 'icon-editado' : 'icon-guardado';
+        const pillCls   = esEditado ? 'pill-editado' : 'pill-guardado';
         const iconName  = esEditado ? 'edit_document' : 'description';
 
         const fechaFmt = inv.FECHA
-            ? new Date(inv.FECHA + 'T12:00:00').toLocaleDateString('es-MX', {
-                day: '2-digit', month: 'long', year: 'numeric'
-              })
+            ? new Date(inv.FECHA + 'T12:00:00').toLocaleDateString('es-MX',
+                { day: '2-digit', month: 'long', year: 'numeric' })
             : '—';
 
-        // Fecha de última edición (UPDATED_AT o CREATED_AT)
         const fechaEdicion = inv.UPDATED_AT || inv.CREATED_AT || null;
         const edicionFmt = fechaEdicion
-            ? new Date(fechaEdicion).toLocaleDateString('es-MX', {
-                day: '2-digit', month: 'short', year: 'numeric',
-                hour: '2-digit', minute: '2-digit'
-              })
+            ? new Date(fechaEdicion).toLocaleDateString('es-MX',
+                { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
             : null;
 
         const metaTxt = [
-            inv.FIN_CAJA    != null ? `Inv. final: ${inv.FIN_CAJA} cajas` : null,
-            inv.VENTA_LITROS!= null ? `Venta: ${inv.VENTA_LITROS} L`      : null,
-            edicionFmt ? `Editado: ${edicionFmt}` : null,
+            inv.FIN_CAJA     != null ? `Inv. final: ${inv.FIN_CAJA} cajas` : null,
+            inv.VENTA_LITROS != null ? `Venta: ${inv.VENTA_LITROS} L`      : null,
+            edicionFmt       ? `Editado: ${edicionFmt}`                    : null,
         ].filter(Boolean).join('  ·  ');
 
-        // ── Acciones PDF — tres estados ─────────────────────────────
-        // 1) PDF en disco → Ver + Descargar
-        // 2) Inventario guardado en BD pero PDF borrado → aviso + Regenerar
-        // 3) Sin PDF_RUTA → nunca se generó
-        const tienePDF    = inv.PDF_RUTA && inv.PDF_RUTA.trim() !== '';
-        const pdfEnDisco  = tienePDF && inv.pdf_existe == 1;
-        const pdfBorrado  = tienePDF && inv.pdf_existe == 0;
+        const tienePDF   = inv.PDF_RUTA && inv.PDF_RUTA.trim() !== '';
+        const pdfEnDisco = tienePDF && inv.pdf_existe == 1;
+        const pdfBorrado = tienePDF && inv.pdf_existe == 0;
 
         let acciones = '';
         if (pdfEnDisco) {
@@ -328,13 +386,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="btn-pdf btn-ver" data-pdf="${encodeURIComponent(inv.PDF_RUTA)}" title="Ver PDF">
                     <span class="material-symbols-outlined">visibility</span> Ver
                 </button>
-                <button class="btn-pdf btn-dl"  data-pdf="${encodeURIComponent(inv.PDF_RUTA)}" title="Descargar PDF">
+                <button class="btn-pdf btn-dl" data-pdf="${encodeURIComponent(inv.PDF_RUTA)}" title="Descargar PDF">
                     <span class="material-symbols-outlined">download</span>
                 </button>`;
         } else if (pdfBorrado) {
             acciones = `
                 <span class="estado-pill" style="background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);display:inline-flex;align-items:center;gap:4px;">
-                    <span class="material-symbols-outlined" style="font-size:14px;">pdf_off</span>Sin archivo
+                    <span class="material-symbols-outlined" style="font-size:14px;">block</span>Sin archivo
                 </span>
                 <md-icon-button class="btn-regen" data-id="${encodeURIComponent(inv.ID)}" title="Regenerar PDF">
                     <md-icon>refresh</md-icon>
@@ -342,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             acciones = `
                 <span class="estado-pill" style="background:var(--md-sys-color-surface-variant);color:var(--md-sys-color-on-surface-variant);display:inline-flex;align-items:center;gap:4px;">
-                    <span class="material-symbols-outlined" style="font-size:14px;">do_not_disturb</span>Sin PDF
+                    <span class="material-symbols-outlined" style="font-size:14px;">block</span>Sin PDF
                 </span>`;
         }
 
@@ -360,23 +418,18 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="inv-row-actions">${acciones}</div>
         `;
 
-        // Eventos Ver
         fila.querySelectorAll('.btn-ver').forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
-                const archivo = decodeURIComponent(btn.dataset.pdf);
-                window.open(`ver_pdf.php?archivo=${encodeURIComponent(archivo)}`, '_blank');
+                window.open(`ver_pdf.php?archivo=${btn.dataset.pdf}`, '_blank');
             });
         });
-        // Eventos Descargar
         fila.querySelectorAll('.btn-dl').forEach(btn => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
-                const archivo = decodeURIComponent(btn.dataset.pdf);
-                window.open(`ver_pdf.php?archivo=${encodeURIComponent(archivo)}&dl=1`, '_blank');
+                window.open(`ver_pdf.php?archivo=${btn.dataset.pdf}&dl=1`, '_blank');
             });
         });
-        // Evento Regenerar PDF
         fila.querySelectorAll('.btn-regen').forEach(btn => {
             btn.addEventListener('click', async e => {
                 e.stopPropagation();
@@ -387,7 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (data.status === 'success') {
                         inv.pdf_existe = 1;
                         inv.PDF_RUTA   = data.pdf_ruta;
-                        fila.replaceWith(crearFila(inv));
+                        fila.replaceWith(crearFilaInv(inv));
                         if (window.PWA) window.PWA.mostrarToast('PDF regenerado correctamente.', 'success');
                     } else {
                         throw new Error(data.mensaje || 'Error al regenerar');
@@ -398,8 +451,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
         return fila;
+    }
+
+    /* ── Helpers ── */
+    function mostrarSkeleton() {
+        invList.innerHTML = `
+            <div class="inv-row" style="pointer-events:none;">
+                <div class="inv-row-icon skeleton" style="width:42px;height:42px;border-radius:10px;"></div>
+                <div class="inv-row-info">
+                    <div class="skeleton" style="height:12px;width:50%;border-radius:6px;margin-bottom:8px;"></div>
+                    <div class="skeleton" style="height:10px;width:70%;border-radius:6px;"></div>
+                </div>
+            </div>`;
+    }
+    function mostrarError(msg) {
+        invList.innerHTML = `<div class="empty-state">
+            <span class="material-symbols-outlined">wifi_off</span>
+            <p>${msg}</p></div>`;
     }
 });
 </script>

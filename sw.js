@@ -18,7 +18,7 @@
 
 'use strict';
 
-const CACHE_NAME   = 'bulma-pwa-v10';
+const CACHE_NAME   = 'bulma-pwa-v11';
 const API_CACHE    = 'api-cache-v1';
 const SYNC_TAG     = 'sync-inventarios';
 const DB_NAME      = 'bulma_sync_db';
@@ -99,6 +99,7 @@ const API_ENDPOINTS = [
   'listar_inventarios_lecheria',
   'api_requerimiento_dotacion',
   'obtenerReporteMensual',
+  'listar_docs_lecheria',
   'buscarLecheria',
   'calcularSurtimiento',
   'ver_pdf',

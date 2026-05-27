@@ -108,8 +108,13 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
         $pdf->Cell(0, 4, $d_fn($periodoTxt), 0, 1, 'L');
         $pdf->Ln(1);
 
+        // Centrar la tabla horizontalmente en la página
+        $totalAncho = array_sum(array_column($cols, 1));
+        $xIni = ($pdf->GetPageWidth() - $totalAncho) / 2;
+
         $pdf->SetFont('Arial', 'B', 6);
         $pdf->SetFillColor(220, 220, 220);
+        $pdf->SetX($xIni);
         foreach ($cols as $c) $pdf->Cell($c[1], 9, $d_fn($c[0]), 1, 0, 'C', true);
         $pdf->Ln();
 
@@ -135,6 +140,7 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
                 $l['sobres_falt']        ?? '',
                 ($l['observaciones'] !== '' && $l['observaciones'] !== null) ? $l['observaciones'] : 'x',
             ];
+            $pdf->SetX($xIni);
             foreach ($cols as $i => $c) $pdf->Cell($c[1], 6, $d_fn((string)$vals[$i]), 1, 0, 'C');
             $pdf->Ln();
         }
@@ -142,6 +148,7 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
         // Filas vacías hasta 17
         $faltan = max(0, 17 - count($lecherias));
         for ($i = 0; $i < $faltan; $i++) {
+            $pdf->SetX($xIni);
             foreach ($cols as $c) $pdf->Cell($c[1], 6, '', 1, 0);
             $pdf->Ln();
         }

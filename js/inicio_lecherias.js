@@ -5,12 +5,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTitulo = document.getElementById('modalOpcionesTitulo');
     const btnCerrar = document.getElementById('btnCerrarModalOpciones');
     
-    const btnGenerar = document.getElementById('btnIrGenerar');
-    const btnEditar = document.getElementById('btnIrEditar');
+    const btnGenerar   = document.getElementById('btnIrGenerar');
     const btnConsultar = document.getElementById('btnIrConsultar');
-    
-    let todasLecherias = [];
-    let lecheriaSeleccionada = ''; // Esta es la variable buena
+
+    let todasLecherias       = [];
+    let lecheriaSeleccionada = '';
+    let nombreSeleccionado   = '';
     /* ════════════════════════════════════════════════════════
        1. CARGAR LECHERÍAS
     ════════════════════════════════════════════════════════ */
@@ -140,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     ════════════════════════════════════════════════════════ */
     function abrirModalOpciones(clave, nombre) {
         lecheriaSeleccionada = clave;
+        nombreSeleccionado   = nombre;
         modalTitulo.textContent = `#${clave} - ${nombre}`;
         modalOpciones.classList.add('open');
     }
@@ -156,10 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     btnGenerar.addEventListener('click', () => {
         window.location.href = `generarinventarioMensual.php?lecher=${lecheriaSeleccionada}`;
     });
-    btnEditar.addEventListener('click', () => {
-        window.location.href = `editarinventarioMensual.php?lecher=${lecheriaSeleccionada}`;
-    });
     btnConsultar.addEventListener('click', () => {
-        window.location.href = `consultarinventarioMensual.php?lecher=${lecheriaSeleccionada}`;
+        window.location.href = `detalleInventarioMensual.php?clave=${encodeURIComponent(lecheriaSeleccionada)}&nombre=${encodeURIComponent(nombreSeleccionado)}`;
     });
 });
