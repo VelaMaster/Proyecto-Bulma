@@ -431,6 +431,7 @@ const jsG = await resG.json().catch(async () => {
     console.error('[guardar] Respuesta no-JSON del servidor (status', resG.status, '):', txt.slice(0, 400));
     return {};
 });
+console.warn('[debug] HTTP:', resG.status, '| jsG:', JSON.stringify(jsG));
 
             // ── Guardado en cola offline ─────────────────────────────────
             if (jsG.status === 'offline_queued') {
