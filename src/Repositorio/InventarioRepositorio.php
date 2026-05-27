@@ -24,12 +24,14 @@ class InventarioRepositorio
     }
 
     /**
-     * Devuelve los litros finales del mes ANTERIOR al periodo indicado.
-     * Busca primero en INVENTARIOS_MENSUALES (captura del promotor),
-     * luego en INVENTARIO_LEP_SUBSIDIADA (tabla de distribución).
-     * Retorna float con los litros, o 0 si no hay registro.
+     * Devuelve los litros finales (FIN_LITROS) del mes ANTERIOR al periodo indicado,
+     * EXCLUSIVAMENTE desde INVENTARIOS_MENSUALES (captura propia del promotor).
+     *
+     * La cadena es: FIN del mes N → INV_INI del mes N+1.
+     * Si no existe registro del mes anterior en INVENTARIOS_MENSUALES retorna null.
+     * El llamador debe tratar null como "falta inventario previo".
      */
-    public function obtenerInventarioFinalMesAnterior(string $lecher, int $mes_actual, int $anio_actual): float
+    public function obtenerInventarioFinalMesAnterior(string $lecher, int $mes_actual, int $anio_actual): ?float
     {
         $mes_ant  = $mes_actual - 1;
         $anio_ant = $anio_actual;
@@ -38,35 +40,34 @@ class InventarioRepositorio
             $anio_ant = $anio_actual - 1;
         }
 
-        $lecher_q = "'" . str_replace("'", "''", $lecher) . "'";
+        $lecher_q   = "'" . str_replace("'", "''", $lecher) . "'";
+        $lecher_q00 = "'" . str_replace("'", "''", $lecher . '00') . "'";
 
-        // 1. Intentar en INVENTARIOS_MENSUALES (captura del promotor)
-        $sql1 = "SELECT FIRST 1 FIN_LITROS
-                 FROM INVENTARIOS_MENSUALES
-                 WHERE CLAVE_LECHERIA IN ($lecher_q, " . "'" . str_replace("'", "''", $lecher . '00') . "'" . ")
-                   AND MES_PERIODO  = $mes_ant
-                   AND ANIO_PERIODO = $anio_ant";
+        $sql = "SELECT FIRST 1 FIN_LITROS
+                FROM INVENTARIOS_MENSUALES
+                WHERE CLAVE_LECHERIA IN ($lecher_q, $lecher_q00)
+                  AND MES_PERIODO  = $mes_ant
+                  AND ANIO_PERIODO = $anio_ant";
         try {
-            $row = $this->db->query($sql1)->fetch(PDO::FETCH_ASSOC);
+            $row = $this->db->query($sql)->fetch(PDO::FETCH_ASSOC);
             if ($row && $row['FIN_LITROS'] !== null) {
                 return floatval($row['FIN_LITROS']);
             }
         } catch (PDOException $e) { /* continuar */ }
 
-        // 2. Fallback: INVENTARIO_LEP_SUBSIDIADA (tabla de distribución)
-        $sql2 = "SELECT FIRST 1 INVENTARIO_FINAL
-                 FROM INVENTARIO_LEP_SUBSIDIADA
-                 WHERE LECHER      = $lecher_q
-                   AND MES_PERIODO  = $mes_ant
-                   AND ANIO_PERIODO = $anio_ant";
-        try {
-            $row = $this->db->query($sql2)->fetch(PDO::FETCH_ASSOC);
-            if ($row && $row['INVENTARIO_FINAL'] !== null) {
-                return floatval($row['INVENTARIO_FINAL']);
-            }
-        } catch (PDOException $e) { /* continuar */ }
+        // No hay registro del mes anterior en INVENTARIOS_MENSUALES
+        return null;
+    }
 
-        return 0.0;
+    /**
+     * Devuelve el mes y año anterior al periodo indicado (para mensajes al usuario).
+     */
+    public function calcularMesAnterior(int $mes_actual, int $anio_actual): array
+    {
+        $mes_ant  = $mes_actual - 1;
+        $anio_ant = $anio_actual;
+        if ($mes_ant <= 0) { $mes_ant = 12; $anio_ant--; }
+        return ['mes' => $mes_ant, 'anio' => $anio_ant];
     }
 
     private function existeInventarioMes($lecheria, $mes, $anio)

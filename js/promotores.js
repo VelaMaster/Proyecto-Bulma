@@ -342,7 +342,13 @@ document.addEventListener('DOMContentLoaded', () => {
         })
         .then(r => r.json())
         .then(data => {
-            if (data.exito) {
+            if (data.falta_mes_anterior) {
+                // No hay inventario del mes anterior → limpiar campos y avisar
+                invCaja.value = ''; invSobres.value = ''; invLitros.value = '';
+                surtCajas.value = ''; surtLitros.value = '';
+                actualizarAbastoTotal();
+                mostrarNotificacion(data.mensaje, 'error');
+            } else if (data.exito) {
                 let litrosInicialesBDD = 0;
                 if (data.litros_iniciales !== undefined) {
                     litrosInicialesBDD = Math.round(parseFloat(data.litros_iniciales));

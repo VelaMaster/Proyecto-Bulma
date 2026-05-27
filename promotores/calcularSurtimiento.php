@@ -12,15 +12,32 @@ $mes_periodo = intval($datos['mes_periodo']  ?? date('n'));
 $anio_periodo= intval($datos['anio_periodo'] ?? date('Y'));
 
 try {
-    $repo = new InventarioRepositorio();
+    $repo     = new InventarioRepositorio();
     $historial = $repo->obtenerHistorialLecheria($lecher);
+    $meses     = count($historial);
 
-    // 1. Preparación de datos
-    //    Inventario inicial = FIN del mes ANTERIOR al periodo que se va a capturar.
-    //    Se busca primero en INVENTARIOS_MENSUALES, luego en INVENTARIO_LEP_SUBSIDIADA.
-    $meses = count($historial);
-    $litrosIniciales = $repo->obtenerInventarioFinalMesAnterior($lecher, $mes_periodo, $anio_periodo);
-    $cajasIniciales = $litrosIniciales / 72;
+    // 1. Inventario inicial = FIN_LITROS del mes ANTERIOR en INVENTARIOS_MENSUALES.
+    //    Si no existe → avisamos al promotor; los campos iniciales quedan vacíos.
+    $litrosInicialesRaw = $repo->obtenerInventarioFinalMesAnterior($lecher, $mes_periodo, $anio_periodo);
+
+    if ($litrosInicialesRaw === null) {
+        $mesAnt = $repo->calcularMesAnterior($mes_periodo, $anio_periodo);
+        $nombresMeses = ["","Enero","Febrero","Marzo","Abril","Mayo","Junio",
+                         "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+        $nombreMesAnt = $nombresMeses[$mesAnt['mes']] ?? '';
+
+        echo json_encode([
+            'exito'              => false,
+            'falta_mes_anterior' => true,
+            'mes_ant'            => $mesAnt['mes'],
+            'anio_ant'           => $mesAnt['anio'],
+            'mensaje'            => "⚠️ No hay inventario registrado para <strong>{$nombreMesAnt} {$mesAnt['anio']}</strong>.<br>El inventario inicial se dejará en blanco. Captura primero el mes faltante o ingrésalo manualmente.",
+        ]);
+        exit;
+    }
+
+    $litrosIniciales = $litrosInicialesRaw;
+    $cajasIniciales  = $litrosIniciales / 72;
 
     $ventasCajas = [];
     $sobrantesCajas = [];
