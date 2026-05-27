@@ -208,6 +208,17 @@ $lecher_get = $_GET['lecher'] ?? '';
             </md-text-button>
         </div>
 
+        <!-- ══ BANNER: Falta mes anterior (captura manual) ══ -->
+        <div class="edit-banner" id="bannerFaltaAnterior"
+             style="display:none; border-color: var(--md-sys-color-error); background: color-mix(in srgb, var(--md-sys-color-error) 12%, transparent);">
+            <span class="material-symbols-outlined" style="color: var(--md-sys-color-error);">warning</span>
+            <span id="bannerFaltaTexto">
+                Oye, no tienes el mes anterior rellenado. Tu inventario inicial no será correcto
+                porque el inventario final del mes anterior debe ser el inicial de este mes.
+                Captúralo a mano si es necesario.
+            </span>
+        </div>
+
         <!-- ID oculto del inventario en edición (vacío = modo nuevo) -->
         <input type="hidden" id="inventario_id" value="">
 
@@ -578,6 +589,8 @@ $lecher_get = $_GET['lecher'] ?? '';
         inventarioId: null,
         lecheriaActual: null,
         buscandoTimer: null,    // debounce
+        peticionToken: 0,       // invalida respuestas viejas al cambiar periodo
+        faltaMesAnterior: false,// para el banner de "captura sin arrastre"
 
         setNuevo() {
             this.modo = 'nuevo';
@@ -587,6 +600,7 @@ $lecher_get = $_GET['lecher'] ?? '';
             document.getElementById('btnGuardarIcon').textContent = 'save';
             document.getElementById('btnGuardarTexto').textContent = 'Guardar datos';
             mostrarStatusPeriodo('nuevo', 'Inventario nuevo');
+            // El banner de "falta mes anterior" lo decidirá calcularSurtimiento
         },
 
         setEdicion(id, msg) {
@@ -599,6 +613,9 @@ $lecher_get = $_GET['lecher'] ?? '';
             document.getElementById('btnGuardarIcon').textContent = 'update';
             document.getElementById('btnGuardarTexto').textContent = 'Actualizar datos';
             mostrarStatusPeriodo('edicion', 'Modo edición');
+            // En edición el inv_ini viene de BD: ocultar banner y bloquear inputs
+            if (typeof window.mostrarBannerFaltaAnterior === 'function') window.mostrarBannerFaltaAnterior(false);
+            if (typeof window.permitirCapturaInicial    === 'function') window.permitirCapturaInicial(false);
         }
     };
 
@@ -624,8 +641,8 @@ $lecher_get = $_GET['lecher'] ?? '';
     // ══════════════════════════════════════════════════════════
     function verificarInventarioPeriodo() {
         const lecheria = document.getElementById('inputLecheria').value.trim();
-        const mes  = document.getElementById('mes_periodo').value;
-        const anio = document.getElementById('anio_periodo').value;
+        const mes  = parseInt(document.getElementById('mes_periodo').value, 10);
+        const anio = parseInt(document.getElementById('anio_periodo').value, 10);
 
         if (!lecheria || !mes || !anio) {
             ocultarStatusPeriodo();
@@ -633,26 +650,36 @@ $lecher_get = $_GET['lecher'] ?? '';
             return;
         }
 
-        mostrarStatusPeriodo('buscando', 'Verificando periodo...');
+        // Token para invalidar respuestas que lleguen tarde tras cambiar de mes
+        const miToken = ++Estado.peticionToken;
+        mostrarStatusPeriodo('buscando', `Verificando ${mes}/${anio}...`);
 
         fetch(`obtener_inventarios_por_lecheria.php?clave=${encodeURIComponent(lecheria)}&mes=${mes}&anio=${anio}`)
             .then(r => r.json())
             .then(data => {
-                if (Array.isArray(data) && data.length > 0) {
-                    const inv = data[0]; // el más reciente del periodo
+                if (miToken !== Estado.peticionToken) return; // periodo cambió, descartar
+
+                // Filtro defensivo en cliente: solo aceptamos filas cuyo periodo coincida
+                const filasPeriodo = Array.isArray(data)
+                    ? data.filter(d => parseInt(d.MES_PERIODO,10) === mes
+                                    && parseInt(d.ANIO_PERIODO,10) === anio)
+                    : [];
+
+                if (filasPeriodo.length > 0) {
+                    const inv = filasPeriodo[0];
                     Estado.setEdicion(inv.ID,
-                        `Modo edición — ya existe un inventario para este periodo (ID ${inv.ID}). Al guardar se actualizarán los datos y el PDF.`
+                        `Modo edición — ya existe un inventario para ${mes}/${anio} (ID ${inv.ID}). Al guardar se actualizarán los datos y el PDF.`
                     );
                     cargarDatosInventario(inv.ID);
                 } else {
                     Estado.setNuevo();
-                    // Si cambió el periodo/lechería y estábamos en edición → limpiar tabla
                     limpiarTablaLeche();
                     // Relanzar cálculo de inventario inicial desde calcularSurtimiento
                     document.dispatchEvent(new Event('lecheriaSeleccionada'));
                 }
             })
             .catch(() => {
+                if (miToken !== Estado.peticionToken) return;
                 ocultarStatusPeriodo();
                 Estado.setNuevo();
             });

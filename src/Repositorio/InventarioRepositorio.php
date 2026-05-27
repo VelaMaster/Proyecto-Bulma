@@ -269,20 +269,27 @@ class InventarioRepositorio
         }
     }
 
-    public function buscarPorLecheria($clave, $mes = '', $anio = '')
+    public function buscarPorLecheria($clave, $mes = 0, $anio = 0)
     {
         $clave_limpia = str_replace("'", "''", $clave);
+        $mes  = (int)$mes;
+        $anio = (int)$anio;
 
-        $sql = "SELECT ID, FECHA, MUNICIPIO, COMUNIDAD, FIN_CAJA, FIN_LITROS, ESTADO 
-                FROM INVENTARIOS_MENSUALES 
-                WHERE CLAVE_LECHERIA = '$clave_limpia'";
-                
-        if (!empty($mes) && !empty($anio)) {
-            $sql .= " AND ANIO_PERIODO = " . (int)$anio . " AND MES_PERIODO = " . (int)$mes;
+        // El filtro por periodo es OBLIGATORIO. Si no se pasa, devolvemos vacío
+        // para evitar el bug de "trae el último inventario" cuando el usuario
+        // selecciona un mes que no existe.
+        if ($mes < 1 || $mes > 12 || $anio < 2000) {
+            return [];
         }
 
-        $sql .= " ORDER BY ANIO_PERIODO DESC, MES_PERIODO DESC";
-        
+        $sql = "SELECT ID, FECHA, MUNICIPIO, COMUNIDAD, FIN_CAJA, FIN_LITROS, ESTADO,
+                       MES_PERIODO, ANIO_PERIODO
+                FROM INVENTARIOS_MENSUALES
+                WHERE CLAVE_LECHERIA = '$clave_limpia'
+                  AND ANIO_PERIODO = $anio
+                  AND MES_PERIODO  = $mes
+                ORDER BY ID DESC";
+
         try {
             $stmt = $this->db->query($sql);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);

@@ -11,10 +11,14 @@ try {
     require_once __DIR__ . '/../src/Repositorio/InventarioRepositorio.php';
 
     $clave = trim($_GET['clave'] ?? '');
-    $mes   = trim($_GET['mes']   ?? '');   // <-- antes era $fecha
-    $anio  = trim($_GET['anio']  ?? '');   // <-- nuevo
+    $mes   = (int)($_GET['mes']  ?? 0);
+    $anio  = (int)($_GET['anio'] ?? 0);
 
-    if ($clave === '') { echo json_encode([]); exit; }
+    // Validación estricta: sin estos tres datos no buscamos NADA
+    // (evita que el SQL caiga a "trae todos" y devuelva el último inventario).
+    if ($clave === '' || $mes < 1 || $mes > 12 || $anio < 2000) {
+        echo json_encode([]); exit;
+    }
 
     $repositorio = new InventarioRepositorio();
 

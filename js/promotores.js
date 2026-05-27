@@ -343,12 +343,18 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(r => r.json())
         .then(data => {
             if (data.falta_mes_anterior) {
-                // No hay inventario del mes anterior → limpiar campos y avisar
+                // No hay inventario del mes anterior → limpiar campos, desbloquear
+                // captura manual de inventario inicial y mostrar banner persistente.
                 invCaja.value = ''; invSobres.value = ''; invLitros.value = '';
                 surtCajas.value = ''; surtLitros.value = '';
                 actualizarAbastoTotal();
+
+                permitirCapturaInicial(true);
+                mostrarBannerFaltaAnterior(true, data.mes_ant, data.anio_ant);
                 mostrarNotificacion(data.mensaje, 'error');
             } else if (data.exito) {
+                permitirCapturaInicial(false);
+                mostrarBannerFaltaAnterior(false);
                 let litrosInicialesBDD = 0;
                 if (data.litros_iniciales !== undefined) {
                     litrosInicialesBDD = Math.round(parseFloat(data.litros_iniciales));
@@ -415,6 +421,52 @@ document.addEventListener('DOMContentLoaded', () => {
             surtLitros.placeholder = '0';
         });
     });
+
+    // ─── HELPERS: captura manual del inventario inicial ──────────────────────
+    //  Cuando NO existe inventario del mes anterior, el promotor debe poder
+    //  capturar a mano el inventario inicial. Estas funciones desbloquean los
+    //  inputs y muestran el banner explicativo.
+
+    function permitirCapturaInicial(activar) {
+        const ids = ['inv_ini_caja','inv_ini_sobres','inv_ini_litros'];
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            if (activar) {
+                el.removeAttribute('readonly');
+                el.style.background = 'color-mix(in srgb, var(--md-sys-color-error) 8%, transparent)';
+                el.placeholder = 'Captura';
+            } else {
+                el.setAttribute('readonly', 'readonly');
+                el.style.background = '';
+                el.placeholder = '0';
+            }
+        });
+        if (typeof Estado !== 'undefined') Estado.faltaMesAnterior = !!activar;
+    }
+
+    function mostrarBannerFaltaAnterior(mostrar, mesAnt, anioAnt) {
+        const banner = document.getElementById('bannerFaltaAnterior');
+        const txt    = document.getElementById('bannerFaltaTexto');
+        if (!banner) return;
+        if (!mostrar) { banner.style.display = 'none'; return; }
+
+        const nombres = ["","Enero","Febrero","Marzo","Abril","Mayo","Junio",
+                         "Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+        const nombreMes = nombres[parseInt(mesAnt,10)] || '';
+        if (txt && nombreMes) {
+            txt.innerHTML = `Oye, no tienes registrado el inventario de <strong>${nombreMes} ${anioAnt}</strong>.
+                             Tu inventario inicial no será correcto porque el inventario
+                             <strong>final de ${nombreMes}</strong> debería ser el inicial de este mes.
+                             Puedes capturarlo a mano abajo, o registra primero el mes faltante.`;
+        }
+        banner.style.display = 'flex';
+    }
+
+    // Exponer al scope global para que el script de generarinventarioMensual.php
+    // pueda apagar el banner / volver a readonly al cargar un inventario existente.
+    window.permitirCapturaInicial    = permitirCapturaInicial;
+    window.mostrarBannerFaltaAnterior = mostrarBannerFaltaAnterior;
 
     // ─── BLOQUEO DE TECLADO ───────────────────────────────────────────────────
 
