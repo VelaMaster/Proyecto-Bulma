@@ -419,12 +419,18 @@ lecherias.forEach(lech => {
         try {
             btnGuardar.disabled = true;
 
-            const resG = await fetch('guardarReporteMensual.php', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(datos)
-            });
-            const jsG = await resG.json().catch(() => ({}));
+const resG = await fetch('guardarReporteMensual.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(datos)
+});
+// Clonar ANTES de intentar json() para poder leer el texto si falla
+const resGClone = resG.clone();
+const jsG = await resG.json().catch(async () => {
+    const txt = await resGClone.text().catch(() => '<ilegible>');
+    console.error('[guardar] Respuesta no-JSON del servidor (status', resG.status, '):', txt.slice(0, 400));
+    return {};
+});
 
             // ── Guardado en cola offline ─────────────────────────────────
             if (jsG.status === 'offline_queued') {
