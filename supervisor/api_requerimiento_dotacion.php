@@ -26,7 +26,7 @@ require_once __DIR__ . '/../includes/session_guard.php';
 session_write_close();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../Database.php';
-require_once __DIR__ . '/../src/Repositorio/RequerimientoDotacionSchema.php';
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
     echo json_encode(['status' => 'error', 'message' => 'Acceso denegado.']);
@@ -62,24 +62,16 @@ if (abs($precioNum - 4.50) < 0.001) {
 
 try {
     $pdo = Database::getInstance();
-    RequerimientoDotacionSchema::asegurarTabla($pdo);
 
-    // 1) Lecherías del supervisor + LEFT JOIN con su requerimiento
-    //    para el mes/año seleccionados. Una consulta única.
+    // 1) Lecherías del supervisor desde Firebird (sin JOIN a requerimiento)
     $sql = "
         SELECT TRIM(L.LECHER)        AS LECHER,
                TRIM(L.NUM_TIENDA)    AS NUM_TIENDA,
                TRIM(L.ALMACEN_RURAL) AS ALMACEN,
                L.TIPO_PUNTO_VENTA    AS TIPO_PUNTO_VENTA,
-               L.PROMOTOR            AS PROMOTOR_ID,
-               R.REQ_ACTUAL          AS REQ_ACTUAL,
-               R.FECHA_CAPTURA       AS FECHA_CAPTURA
+               L.PROMOTOR            AS PROMOTOR_ID
         FROM LECHERIA L
         JOIN PROMOTOR P ON P.PMT_NUMERO = L.PROMOTOR
-        LEFT JOIN REQUERIMIENTO_DOTACION R
-               ON R.CLAVE_LECHERIA = TRIM(L.LECHER)
-              AND R.MES_BASE  = :mes
-              AND R.ANIO_BASE = :anio
         WHERE P.PMT_ACTIVO = 'S'
           AND COALESCE(L.EN_OPERACION, 0) = 0
           AND EXISTS (
@@ -92,14 +84,31 @@ try {
         ORDER BY TRIM(L.ALMACEN_RURAL), TRIM(L.LECHER)
     ";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([
-        ':mes'    => $mes,
-        ':anio'   => $anio,
-        ':id_sup' => $id_supervisor,
-    ]);
+    $stmt->execute([':id_sup' => $id_supervisor]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 2) Nombre del supervisor.
+    // 2) Requerimientos desde SQLite — mapa clave_lecheria → req_actual
+    $sqlite    = DatabaseSQLite::getInstance();
+    $stmtSQ    = $sqlite->prepare(
+        "SELECT clave_lecheria, req_actual, fecha_captura
+         FROM requerimiento_dotacion
+         WHERE mes_base = :mes AND anio_base = :anio"
+    );
+    $stmtSQ->execute([':mes' => $mes, ':anio' => $anio]);
+    $reqs = [];
+    foreach ($stmtSQ->fetchAll() as $rq) {
+        $reqs[trim((string)$rq['clave_lecheria'])] = $rq;
+    }
+
+    // Enriquecer cada fila de Firebird con el requerimiento de SQLite
+    foreach ($rows as &$r) {
+        $k = trim((string)$r['LECHER']);
+        $r['REQ_ACTUAL']    = isset($reqs[$k]) ? (int)$reqs[$k]['req_actual']    : null;
+        $r['FECHA_CAPTURA'] = isset($reqs[$k]) ?      $reqs[$k]['fecha_captura'] : null;
+    }
+    unset($r);
+
+    // 3) Nombre del supervisor.
     $stmtN = $pdo->prepare("SELECT FIRST 1 NOMBRE FROM USUARIOS_INVENTARIOS
                             WHERE CLAVE_ROL = :id AND ROL = '1'");
     $stmtN->execute([':id' => $id_supervisor]);

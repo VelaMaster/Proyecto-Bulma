@@ -16,7 +16,7 @@ require_once __DIR__ . '/../includes/session_guard.php';
 session_write_close();
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../Database.php';
-require_once __DIR__ . '/../src/Repositorio/RequerimientoDotacionSchema.php';
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'distribucion') {
     echo json_encode(['status' => 'error', 'message' => 'Acceso denegado.']);
@@ -46,9 +46,8 @@ if (abs($precioNum - 4.50) < 0.001) {
 
 try {
     $pdo = Database::getInstance();
-    RequerimientoDotacionSchema::asegurarTabla($pdo);
 
-    // Todos los supervisores activos con sus lecherías
+    // 1) Lecherías desde Firebird con supervisor (sin JOIN a requerimiento)
     $sql = "
         SELECT
             TRIM(L.LECHER)           AS LECHER,
@@ -56,16 +55,10 @@ try {
             TRIM(L.ALMACEN_RURAL)    AS ALMACEN,
             L.TIPO_PUNTO_VENTA       AS TIPO_PUNTO_VENTA,
             L.PROMOTOR               AS PROMOTOR_ID,
-            R.REQ_ACTUAL             AS REQ_ACTUAL,
-            R.FECHA_CAPTURA          AS FECHA_CAPTURA,
             M.ID_SUPERVISOR          AS ID_SUPERVISOR,
             TRIM(U.NOMBRE)           AS SUPERVISOR_NOMBRE
         FROM LECHERIA L
         JOIN PROMOTOR P ON P.PMT_NUMERO = L.PROMOTOR
-        LEFT JOIN REQUERIMIENTO_DOTACION R
-               ON R.CLAVE_LECHERIA = TRIM(L.LECHER)
-              AND R.MES_BASE  = :mes
-              AND R.ANIO_BASE = :anio
         LEFT JOIN MAPEO_SUPERVISOR_LECHERIA M ON TRIM(M.LECHER) = TRIM(L.LECHER)
         LEFT JOIN USUARIOS_INVENTARIOS U
                ON U.CLAVE_ROL = M.ID_SUPERVISOR
@@ -77,8 +70,28 @@ try {
                  TRIM(L.LECHER)
     ";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([':mes' => $mes, ':anio' => $anio]);
+    $stmt->execute();
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // 2) Requerimientos desde SQLite
+    $sqlite = DatabaseSQLite::getInstance();
+    $stmtSQ = $sqlite->prepare(
+        "SELECT clave_lecheria, req_actual FROM requerimiento_dotacion
+         WHERE mes_base = :mes AND anio_base = :anio"
+    );
+    $stmtSQ->execute([':mes' => $mes, ':anio' => $anio]);
+    $reqs = [];
+    foreach ($stmtSQ->fetchAll() as $rq) {
+        $reqs[trim((string)$rq['clave_lecheria'])] = (int)$rq['req_actual'];
+    }
+
+    // Enriquecer con datos de SQLite
+    foreach ($rows as &$r) {
+        $k = trim((string)$r['LECHER']);
+        $r['REQ_ACTUAL']    = isset($reqs[$k]) ? $reqs[$k] : null;
+        $r['FECHA_CAPTURA'] = isset($reqs[$k]) ? 'ok' : null;
+    }
+    unset($r);
 
     // Agrupación por supervisor → almacén
     $supervisores   = [];

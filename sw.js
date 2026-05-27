@@ -98,6 +98,7 @@ const API_ENDPOINTS = [
   'obtener_inventario',
   'listar_inventarios_lecheria',
   'api_requerimiento_dotacion',
+  'obtenerReporteMensual',
   'buscarLecheria',
   'calcularSurtimiento',
   'ver_pdf',

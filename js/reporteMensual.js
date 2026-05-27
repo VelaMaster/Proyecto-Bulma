@@ -314,8 +314,73 @@ lecherias.forEach(lech => {
                     notificar(`Se cargaron ${totalLecherias} lecherías en ${nombresAlmacenes.length} almacén(es).`, 'info');
                 }
                 if (cardEstado) cardEstado.style.display = 'none'; // ya no usamos esa card
+
+                // Restaurar datos del reporte guardado previamente en BD
+                restaurarReporteGuardado(mes, anio);
             })
             .catch(() => notificar('Error al conectar con el servidor.', 'error'));
+    }
+
+    // ──── Restaurar reporte guardado desde BD ────────────────────
+    async function restaurarReporteGuardado(mes, anio) {
+        try {
+            const r = await fetch(`obtenerReporteMensual.php?mes=${mes}&anio=${anio}`);
+            const d = await r.json();
+            if (!d.encontrado || !Array.isArray(d.almacenes)) return;
+
+            // Construir mapa punto_venta → datos guardados
+            const mapa = {};
+            d.almacenes.forEach(alm => {
+                (alm.lecherias || []).forEach(lech => {
+                    mapa[lech.punto_venta] = lech;
+                });
+            });
+
+            // Pre-cargar meta (periodo, promotor, supervisor) si existen
+            if (d.meta) {
+                if (periodoInicio && d.meta.periodo_inicio) periodoInicio.value = d.meta.periodo_inicio;
+                if (periodoFin    && d.meta.periodo_fin)    periodoFin.value    = d.meta.periodo_fin;
+                if (inputSupervisor && d.meta.supervisor)   inputSupervisor.value = d.meta.supervisor;
+                if (nombreSupervisor && d.meta.supervisor)  nombreSupervisor.textContent = d.meta.supervisor.toUpperCase();
+            }
+
+            // Llenar los campos del reporte en cada fila ya renderizada
+            contenedorTablas.querySelectorAll('tbody tr[data-lecher]').forEach(fila => {
+                const clave = fila.dataset.lecher;
+                const g = mapa[clave];
+                if (!g) return;
+
+                const set = (name, val) => {
+                    const inp = fila.querySelector(`input[name="${name}[]"]`);
+                    if (inp && val !== undefined && val !== null) inp.value = val;
+                };
+
+                // Campos que solo vienen del reporte (no del inventario)
+                set('familias_no_acud',  g.familias_no_acud);
+                set('sobres_rotos',      g.sobres_rotos);
+                set('sobres_falt',       g.sobres_falt);
+                set('observaciones',     g.observaciones !== 'x' ? g.observaciones : '');
+
+                // Si el inventario mensual no lo encontró (encontrado=false) pero
+                // hay reporte guardado, también restauramos los campos numéricos
+                if (!fila.classList.contains('inventario-ok')) {
+                    set('inv_ini_cajas',      g.inv_ini_cajas);
+                    set('inv_ini_sobres',     g.inv_ini_sobres);
+                    set('dot_recibida_cajas', g.dot_recibida_cajas);
+                    set('dot_vend_cajas',     g.dot_vend_cajas);
+                    set('dot_vend_sobres',    g.dot_vend_sobres);
+                    set('retiro_cajas',       g.retiro_cajas);
+                    set('retiro_sobres',      g.retiro_sobres);
+                    calcularFila(fila);
+                    set('total_cajas',    g.total_cajas);
+                    set('total_sobres',   g.total_sobres);
+                    set('inv_fin_cajas',  g.inv_fin_cajas);
+                    set('inv_fin_sobres', g.inv_fin_sobres);
+                }
+            });
+
+            notificar(`Reporte de ${d.total_lecherias} lechería(s) restaurado desde base de datos.`, 'info');
+        } catch (_) { /* sin reporte guardado — formulario en blanco */ }
     }
 
     // Recalcular al cambiar inputs en cualquier tabla
