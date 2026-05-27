@@ -200,7 +200,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderDocumentos(data, promotor, mes, anio) {
         // Reporte mensual
         const rep = data.reporte || {};
-        pintarPill(estadoReporte, !!rep.existe, 'Generado', 'No generado');
+        const repLabel = rep.bloqueado ? 'Enviado ✓' : (rep.existe ? 'Borrador' : 'No generado');
+        pintarPill(estadoReporte, !!rep.existe, repLabel, 'No generado');
         if (rep.pdf) {
             btnVerReporte.disabled = false;
             btnVerReporte.onclick = () => window.open(urlVerPDF('rep', promotor, mes, anio), '_blank');
@@ -211,7 +212,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Requerimiento
         const req = data.requerimiento || {};
-        pintarPill(estadoReq, !!req.existe, 'Generado', 'No generado');
+        const reqLabel = req.bloqueado ? 'Enviado ✓' : (req.existe ? 'Borrador' : 'No generado');
+        pintarPill(estadoReq, !!req.existe, reqLabel, 'No generado');
         if (req.pdf) {
             btnVerReq.disabled = false;
             btnVerReq.onclick = () => window.open(urlVerPDF('req', promotor, mes, anio), '_blank');
@@ -225,6 +227,19 @@ document.addEventListener('DOMContentLoaded', () => {
     selPromotor.addEventListener('change', cargarEstado);
     selMes     .addEventListener('change', cargarEstado);
     inpAnio    .addEventListener('change', cargarEstado);
+
+    // Badge solicitudes pendientes
+    fetch('api_solicitudes.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accion: 'contar' })
+    }).then(r => r.json()).then(d => {
+        const badge = document.getElementById('badgeSol');
+        if (badge && d.count > 0) {
+            badge.textContent = d.count;
+            badge.style.display = 'flex';
+        }
+    }).catch(() => {});
 
     // Init
     cargarPromotores();

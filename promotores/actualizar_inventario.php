@@ -37,7 +37,7 @@ $lecheria = $datos['lecheria'] ?? 'X';
 // Tomamos el periodo del payload si viene, si no caemos a la fecha del documento.
 $mes  = !empty($datos['mes_periodo'])  ? (int)$datos['mes_periodo']  : (int)date('m', strtotime($datos['fecha'] ?? 'now'));
 $anio = !empty($datos['anio_periodo']) ? (int)$datos['anio_periodo'] : (int)date('Y', strtotime($datos['fecha'] ?? 'now'));
-$nombreArchivo = "Inventario_{$lecheria}_{$anio}_{$mes}.pdf";
+$nombreArchivo = "Inventario_{$lecheria}_{$anio}_" . sprintf('%02d', $mes) . ".pdf";
 
 try {
     $db = Database::getInstance();

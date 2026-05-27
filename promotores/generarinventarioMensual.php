@@ -32,7 +32,7 @@ $lecher_get = $_GET['lecher'] ?? '';
     <link rel="stylesheet" href="../estilos/editarinventarioMensual.css">
 
     <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
+    <!-- [OFFLINE DESACTIVADO] <link rel="manifest" href="/manifest.json"> -->
     <meta name="theme-color" content="#6750A4">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -882,7 +882,10 @@ $lecher_get = $_GET['lecher'] ?? '';
             btnGuardar.classList.add('is-loading');
 
             try {
-                let guardadoOffline = false;
+                /* [OFFLINE DESACTIVADO] — La app requiere conexión a WiFi.
+                   Se eliminó la lógica de guardado local y PDF offline.
+                   Todo pasa directo al servidor. */
+                const guardadoOffline = false;
 
                 if (Estado.modo === 'edicion' && Estado.inventarioId) {
                     // ── MODO EDICIÓN: actualizar ──
@@ -895,14 +898,10 @@ $lecher_get = $_GET['lecher'] ?? '';
                     });
                     const resultado = await res.json();
 
-                    if (resultado.status === 'offline_queued') {
-                        guardadoOffline = true;
-                        mostrarNotificacion('Sin conexión. Cambios guardados localmente. Se sincronizarán cuando regreses a internet.', 'info');
-                    } else if (resultado.status !== 'success') {
+                    if (resultado.status !== 'success') {
                         throw new Error(resultado.mensaje || 'Error al actualizar en base de datos');
-                    } else {
-                        mostrarNotificacion('Inventario actualizado correctamente.', 'info');
                     }
+                    mostrarNotificacion('Inventario actualizado correctamente.', 'info');
 
                 } else {
                     // ── MODO NUEVO: guardar ──
@@ -915,8 +914,6 @@ $lecher_get = $_GET['lecher'] ?? '';
                             body: JSON.stringify(datos)
                         });
                         const resultado = await res.json();
-
-                        if (resultado.status === 'offline_queued') return 'offline_queued';
 
                         if (resultado.status === 'requiere_confirmacion') {
                             const seguro = await mostrarConfirmacionMD3(resultado.mensaje);
@@ -933,35 +930,12 @@ $lecher_get = $_GET['lecher'] ?? '';
                         return 'success';
                     };
 
-                    const estadoGuardado = await intentarGuardar(datosFormulario);
-                    if (estadoGuardado === 'offline_queued') {
-                        guardadoOffline = true;
-                        mostrarNotificacion('Sin conexión. Inventario guardado localmente. Se sincronizará cuando regreses a internet.', 'info');
-                    } else {
-                        mostrarNotificacion('Datos guardados en la base de datos.', 'info');
-                    }
+                    await intentarGuardar(datosFormulario);
+                    mostrarNotificacion('Datos guardados en la base de datos.', 'info');
                 }
 
-                // ── Generar PDF ───────────────────────────────────────────
-                if (guardadoOffline) {
-                    // Sin conexión: generar PDF local con jsPDF y encolar el del servidor
-                    try {
-                        const blob = await window.generarPDFInventarioOffline(datosFormulario);
-                        const url  = URL.createObjectURL(blob);
-                        window.open(url, '_blank');
-                        mostrarNotificacion('PDF generado localmente (offline). El PDF oficial se creará al sincronizar.', 'info');
-                        setTimeout(() => URL.revokeObjectURL(url), 60000);
-                    } catch (ePDF) {
-                        mostrarNotificacion('No se pudo generar el PDF offline: ' + ePDF.message, 'error');
-                    }
-                    // Encolar generación del PDF oficial en el servidor para cuando haya red
-                    fetch('generar_pdf.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(datosFormulario)
-                    }).catch(() => {}); // SW lo guarda en IndexedDB
-                } else {
-                    // Con conexión: PDF del servidor
+                // ── Generar PDF (siempre en servidor) ────────────────────
+                {
                     const resPDF = await fetch('generar_pdf.php', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1061,8 +1035,8 @@ $lecher_get = $_GET['lecher'] ?? '';
         };
     }
     </script>
-    <script src="../js/pwa_offline.js"></script>
-    <script src="../js/offline_preload.js"></script>
-    <script src="../js/pdf_offline.js"></script>
+    <!-- [OFFLINE DESACTIVADO] <script src="../js/pwa_offline.js"></script> -->
+    <!-- [OFFLINE DESACTIVADO] <script src="../js/offline_preload.js"></script> -->
+    <!-- [OFFLINE DESACTIVADO] <script src="../js/pdf_offline.js"></script> -->
 </body>
 </html>

@@ -332,10 +332,13 @@ document.addEventListener('DOMContentLoaded', () => {
         surtCajas.placeholder = 'IA...';
         surtLitros.placeholder = 'IA...';
 
+        const mesPeriodo  = parseInt(document.getElementById('mes_periodo')?.value  || new Date().getMonth() + 1);
+        const anioPeriodo = parseInt(document.getElementById('anio_periodo')?.value || new Date().getFullYear());
+
         fetch('calcularSurtimiento.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ lecher: lecheria, menores, mayores })
+            body: JSON.stringify({ lecher: lecheria, menores, mayores, mes_periodo: mesPeriodo, anio_periodo: anioPeriodo })
         })
         .then(r => r.json())
         .then(data => {

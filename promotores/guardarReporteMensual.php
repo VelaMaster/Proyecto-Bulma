@@ -58,6 +58,18 @@ require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 try {
     $db = DatabaseSQLite::getInstance();
 
+    // Verificar bloqueo: si ya existe un registro bloqueado para este usuario/mes/anio
+    $stmtLock = $db->prepare("SELECT bloqueado FROM reporte_mensual_lecher
+        WHERE usuario_captura = ? AND mes = ? AND anio = ? LIMIT 1");
+    $stmtLock->execute([$usuario, $mes, $anio]);
+    $rowLock = $stmtLock->fetch();
+    if ($rowLock && (int)$rowLock['bloqueado'] === 1) {
+        http_response_code(403);
+        echo json_encode(['status' => 'bloqueado',
+            'mensaje' => 'Este reporte ya fue enviado y está bloqueado. Solicita un cambio al supervisor si necesitas modificarlo.']);
+        exit();
+    }
+
     $sql = "INSERT OR REPLACE INTO reporte_mensual_lecher
             (clave_lecheria, mes, anio,
              almacen, precio,
@@ -119,6 +131,11 @@ try {
         }
     }
     $db->commit();
+
+    // Bloquear inmediatamente tras el primer guardado
+    $db->exec("UPDATE reporte_mensual_lecher SET bloqueado = 1
+               WHERE mes = $mes AND anio = $anio
+                 AND usuario_captura = " . $db->quote($usuario));
 
 } catch (Throwable $e) {
     if (isset($db) && $db->inTransaction()) $db->rollBack();

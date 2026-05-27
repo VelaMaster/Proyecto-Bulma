@@ -419,7 +419,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 </main>
 <script src="../js/temas_md3.js"></script>
 <script src="../js/promotores.js"></script>
-<script src="../js/pdf_offline.js"></script>
+<!-- [OFFLINE DESACTIVADO] <script src="../js/pdf_offline.js"></script> -->
 <script src="../js/editar_inventario.js"></script>
 
 <script>
@@ -437,9 +437,9 @@ document.addEventListener('click', (e) => {
         document.querySelectorAll('md-menu').forEach(m => m.open = false);
 });
 </script>
-<script src="../js/pwa_offline.js"></script>
-<script src="../js/offline_preload.js"></script>
-<script src="../js/pdf_offline.js"></script>
+<!-- [OFFLINE DESACTIVADO] <script src="../js/pwa_offline.js"></script> -->
+<!-- [OFFLINE DESACTIVADO] <script src="../js/offline_preload.js"></script> -->
+<!-- [OFFLINE DESACTIVADO] <script src="../js/pdf_offline.js"></script> -->
 
 </body>
 </html>

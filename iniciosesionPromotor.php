@@ -28,7 +28,7 @@ $origen_conexion = Database::getEnvName();
     <link rel="stylesheet" href="loader_md3.css">
 
     <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
+    <!-- [OFFLINE DESACTIVADO] <link rel="manifest" href="/manifest.json"> -->
     <meta name="theme-color" content="#6750A4">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -160,7 +160,7 @@ $origen_conexion = Database::getEnvName();
 
     <script src="js/temas_md3.js"></script>
     <script src="js/loader_md3.js"></script>
-    <script src="js/pwa_offline.js"></script>
+    <!-- [OFFLINE DESACTIVADO] <script src="js/pwa_offline.js"></script> -->
     <script src="js/offline_login.js"></script>
     <script>
     /* Forzar que el SW actualice si hay una versión nueva disponible */

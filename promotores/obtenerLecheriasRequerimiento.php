@@ -46,25 +46,36 @@ try {
     $stmt->execute();
     $lecherias = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Consulta Blindada a la tabla de inventarios (10 dígitos)
-    $sql_inv = "SELECT INV_INI_CAJA, INV_INI_SOBRES, SURT_CAJAS, 
+    // Fuente principal: INVENTARIOS_MENSUALES (captura del promotor)
+    $sql_inv = "SELECT INV_INI_CAJA, INV_INI_SOBRES, SURT_CAJAS,
                        VENTA_CAJA, VENTA_SOBRES, FIN_CAJA, FIN_SOBRES,
                        HOGARES, MENORES, MAYORES
                 FROM INVENTARIOS_MENSUALES
-                WHERE CLAVE_LECHERIA IN (?, ?) 
-                  AND MES_PERIODO = " . (int)$mes_reporte . " 
+                WHERE CLAVE_LECHERIA IN (?, ?)
+                  AND MES_PERIODO  = " . (int)$mes_reporte . "
                   AND ANIO_PERIODO = " . (int)$anio_reporte;
     $stmt_inv = $pdo->prepare($sql_inv);
+
+    // Fallback: INVENTARIO_LEP_SUBSIDIADA (datos de distribución)
+    $sql_lep = "SELECT SURTIMIENTO AS SURT_CAJAS, VENTA_REAL AS VENTA_LITROS,
+                       INVENTARIO_FINAL AS FIN_LITROS
+                FROM INVENTARIO_LEP_SUBSIDIADA
+                WHERE LECHER      IN (?, ?)
+                  AND MES_PERIODO  = " . (int)$mes_reporte . "
+                  AND ANIO_PERIODO = " . (int)$anio_reporte;
+    $stmt_lep = $pdo->prepare($sql_lep);
 
     foreach ($lecherias as &$lech) {
         $clave_normal = trim($lech['LECHER']);
         $clave_00     = $clave_normal . '00';
 
+        // 1. Intentar en INVENTARIOS_MENSUALES
         $stmt_inv->execute([$clave_normal, $clave_00]);
         $inv = $stmt_inv->fetch(PDO::FETCH_ASSOC);
 
         if ($inv) {
             $lech['encontrado']     = true;
+            $lech['fuente']         = 'inventarios_mensuales';
             $lech['inv_ini_cajas']  = (int)$inv['INV_INI_CAJA'];
             $lech['inv_ini_sobres'] = (int)$inv['INV_INI_SOBRES'];
             $lech['surt_cajas']     = (int)$inv['SURT_CAJAS'];
@@ -72,7 +83,7 @@ try {
             $lech['venta_sobres']   = (int)$inv['VENTA_SOBRES'];
             $lech['fin_cajas']      = (int)$inv['FIN_CAJA'];
             $lech['fin_sobres']     = (int)$inv['FIN_SOBRES'];
-            
+
             // Actualizamos demográficos si el inventario tiene datos más frescos
             if ((int)$inv['HOGARES'] > 0) {
                 $lech['TOTAL_HOGARES'] = (int)$inv['HOGARES'];
@@ -83,7 +94,30 @@ try {
             }
             $lech['TOTAL_RESTO'] = 0;
         } else {
-            $lech['encontrado']  = false;
+            // 2. Fallback: INVENTARIO_LEP_SUBSIDIADA
+            $stmt_lep->execute([$clave_normal, $clave_00]);
+            $lep = $stmt_lep->fetch(PDO::FETCH_ASSOC);
+
+            if ($lep) {
+                $L_X_CAJA   = 72;
+                $L_X_SOBRE  = 2;
+                $finLitros   = (int)$lep['FIN_LITROS'];
+                $ventaLitros = (int)$lep['VENTA_LITROS'];
+                $surtCajas   = (int)$lep['SURT_CAJAS'];
+
+                $lech['encontrado']     = true;
+                $lech['fuente']         = 'lep_subsidiada';
+                $lech['inv_ini_cajas']  = 0;
+                $lech['inv_ini_sobres'] = 0;
+                $lech['surt_cajas']     = $surtCajas;
+                $lech['venta_cajas']    = (int)floor($ventaLitros / $L_X_CAJA);
+                $lech['venta_sobres']   = (int)floor(($ventaLitros % $L_X_CAJA) / $L_X_SOBRE);
+                $lech['fin_cajas']      = (int)floor($finLitros / $L_X_CAJA);
+                $lech['fin_sobres']     = (int)floor(($finLitros % $L_X_CAJA) / $L_X_SOBRE);
+            } else {
+                $lech['encontrado'] = false;
+                $lech['fuente']     = null;
+            }
             $lech['TOTAL_RESTO'] = 0;
         }
     }

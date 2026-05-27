@@ -91,6 +91,16 @@ $promotor_pre = isset($_GET['promotor']) ? (int)$_GET['promotor'] : 0;
                     <md-icon slot="icon">group</md-icon>
                     Promotores
                 </md-text-button>
+
+                <a href="solicitudes.php" id="lnkSolicitudes" style="position:relative;display:inline-flex;align-items:center;gap:6px;
+                    padding:0 12px;height:40px;border-radius:20px;text-decoration:none;
+                    color:var(--md-sys-color-on-surface);font-size:.875rem;font-weight:500;">
+                    <md-icon>inbox</md-icon>Solicitudes
+                    <span id="badgeSol" style="display:none;position:absolute;top:4px;right:4px;
+                        background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
+                        font-size:.7rem;font-weight:700;min-width:18px;height:18px;border-radius:999px;
+                        align-items:center;justify-content:center;padding:0 4px;"></span>
+                </a>
             </div>
 
             <md-filled-tonal-button href="../cerrar_sesionsupervisor.php" style="margin-left: 16px;">

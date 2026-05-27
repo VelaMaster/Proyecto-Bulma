@@ -273,6 +273,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     notificar(`Se cargaron ${totalLecherias} lecherías correctamente.`, 'info');
                 }
+                verificarBloqueoReq(mes, anio);
             })
             .catch(() => notificar('Error al conectar con el servidor.', 'error'));
     }
@@ -289,6 +290,88 @@ document.addEventListener('DOMContentLoaded', () => {
 
     selectMesReporte.addEventListener('change', cargarLecherias);
     inputAnioReporte.addEventListener('change', cargarLecherias);
+
+    // ──── Sistema de bloqueo / solicitud de cambio ────────────────
+    let _bannerBloqueoReq = null;
+
+    async function verificarBloqueoReq(mes, anio) {
+        if (_bannerBloqueoReq) { _bannerBloqueoReq.remove(); _bannerBloqueoReq = null; }
+        btnGuardar.disabled = false;
+        btnGuardar.style.display = '';
+        try {
+            const r = await fetch(`estado_bloqueo.php?tipo=requerimiento&mes=${mes}&anio=${anio}`);
+            const d = await r.json();
+            if (d.bloqueado) mostrarBannerBloqueoReq(+mes, +anio);
+        } catch (_) {}
+    }
+
+    function mostrarBannerBloqueoReq(mes, anio) {
+        btnGuardar.disabled = true;
+        btnGuardar.style.display = 'none';
+        if (_bannerBloqueoReq) _bannerBloqueoReq.remove();
+        _bannerBloqueoReq = document.createElement('div');
+        Object.assign(_bannerBloqueoReq.style, {
+            display:'flex', alignItems:'center', gap:'12px', flexWrap:'wrap',
+            background:'var(--md-sys-color-error-container)',
+            color:'var(--md-sys-color-on-error-container)',
+            padding:'14px 18px', borderRadius:'14px', margin:'12px 0'
+        });
+        _bannerBloqueoReq.innerHTML = `
+            <span class="material-symbols-outlined" style="font-size:22px;">lock</span>
+            <span style="flex:1;font-size:.9rem;font-weight:500;">
+                Este requerimiento ya fue enviado y está bloqueado. Solicita un cambio al supervisor para modificarlo.
+            </span>
+            <button id="btnSolicitarCambioReq" style="background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
+                border:none;border-radius:20px;padding:8px 18px;cursor:pointer;font-weight:600;font-size:.85rem;">
+                Solicitar cambio
+            </button>`;
+        btnGuardar.parentNode.insertBefore(_bannerBloqueoReq, btnGuardar);
+        document.getElementById('btnSolicitarCambioReq')
+            .addEventListener('click', () => abrirModalSolicitudReq('requerimiento', mes, anio));
+    }
+
+    function abrirModalSolicitudReq(tipo, mes, anio) {
+        const primeraLech = contenedorTablas.querySelector('tr[data-lecher]')?.dataset.lecher || '_req_';
+        const back = document.createElement('div');
+        Object.assign(back.style, {
+            position:'fixed', inset:'0', background:'rgba(0,0,0,.5)',
+            display:'flex', alignItems:'center', justifyContent:'center', zIndex:'100001'
+        });
+        back.innerHTML = `
+            <div style="background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface);
+                        padding:24px;border-radius:24px;max-width:440px;width:92%;box-shadow:0 8px 24px rgba(0,0,0,.3);">
+                <h3 style="margin:0 0 8px;font-weight:500;font-size:1.1rem;">Solicitar cambio al supervisor</h3>
+                <p style="margin:0 0 14px;font-size:.85rem;color:var(--md-sys-color-on-surface-variant);">
+                    Describe brevemente qué necesitas corregir en el requerimiento.
+                </p>
+                <textarea id="txtMotivoSolicitudReq" placeholder="Motivo del cambio..."
+                    style="width:100%;height:90px;border-radius:10px;padding:10px;font-size:.9rem;
+                           background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface);
+                           border:1px solid var(--md-sys-color-outline-variant);resize:none;box-sizing:border-box;"></textarea>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+                    <md-text-button class="btn-cancelar">Cancelar</md-text-button>
+                    <md-filled-button class="btn-enviar">Enviar solicitud</md-filled-button>
+                </div>
+            </div>`;
+        document.body.appendChild(back);
+        const cerrar = () => back.remove();
+        back.querySelector('.btn-cancelar').addEventListener('click', cerrar);
+        back.addEventListener('click', e => { if (e.target === back) cerrar(); });
+        back.querySelector('.btn-enviar').addEventListener('click', async () => {
+            const motivo = document.getElementById('txtMotivoSolicitudReq').value.trim();
+            if (!motivo) { document.getElementById('txtMotivoSolicitudReq').style.borderColor='var(--md-sys-color-error)'; return; }
+            try {
+                const r = await fetch('solicitar_cambio.php', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ tipo, clave_lecheria: primeraLech, mes, anio, motivo })
+                });
+                const d = await r.json();
+                cerrar();
+                if (d.success) notificar('Solicitud enviada. El supervisor recibirá una notificación.', 'info');
+                else notificar(d.mensaje || 'No se pudo enviar la solicitud.', 'error');
+            } catch (_) { notificar('Error de conexión.', 'error'); }
+        });
+    }
 
     function recolectarPayload() {
         const mes  = parseInt(selectMesReporte.value);
@@ -357,10 +440,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const data = await resp.json();
 
-            // ── Guardado en cola offline ─────────────────────────────────
+            /* [OFFLINE DESACTIVADO] — La app requiere conexión a WiFi.
             if (data.status === 'offline_queued') {
                 notificar('Sin conexión. El requerimiento se guardó localmente y se sincronizará cuando regrese internet.', 'info');
-                // Si el usuario marcó PDF, también encolarlo — el SW lo intercepta igual
                 if (chkGenerarPDF && chkGenerarPDF.checked) {
                     await fetch('generar_pdf_requerimiento.php', {
                         method:  'POST',
@@ -371,7 +453,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 return;
             }
+            */
 
+            if (data.status === 'bloqueado') {
+                notificar(data.mensaje || 'Requerimiento bloqueado. Solicita un cambio al supervisor.', 'error');
+                const p = recolectarPayload();
+                if (p) mostrarBannerBloqueoReq(p.mes_base, p.anio_base);
+                return;
+            }
             if (data.status === 'success') {
                 notificar(`Requerimiento guardado (${data.lecherias} lecherías en ${data.almacenes} almacén${data.almacenes===1?'':'es'}).`, 'info');
 

@@ -97,10 +97,49 @@ class DatabaseSQLite
                 ON requerimiento_dotacion (promotor);
         ");
 
+        // ── Tablas del supervisor ─────────────────────────────────────
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS requerimiento_supervisor (
+                id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                mes              INTEGER NOT NULL,
+                anio             INTEGER NOT NULL,
+                precio           TEXT    NOT NULL,
+                supervisor_usr   TEXT    NOT NULL,
+                pdf_nombre       TEXT,
+                total_general    INTEGER DEFAULT 0,
+                total_lecherias  INTEGER DEFAULT 0,
+                fecha_captura    TEXT DEFAULT (datetime('now','localtime')),
+                UNIQUE (mes, anio, precio, supervisor_usr)
+            );
+
+            CREATE TABLE IF NOT EXISTS solicitudes_cambio (
+                id               INTEGER PRIMARY KEY AUTOINCREMENT,
+                tipo             TEXT NOT NULL,  -- 'reporte' | 'requerimiento'
+                clave_lecheria   TEXT NOT NULL,
+                mes              INTEGER NOT NULL,
+                anio             INTEGER NOT NULL,
+                promotor_usr     TEXT NOT NULL,
+                supervisor_clave INTEGER,
+                motivo           TEXT,
+                estado           TEXT DEFAULT 'pendiente',  -- pendiente|en_proceso|resuelto|rechazado
+                nota_supervisor  TEXT,
+                fecha_solicitud  TEXT DEFAULT (datetime('now','localtime')),
+                fecha_resolucion TEXT
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_sol_supervisor
+                ON solicitudes_cambio (supervisor_clave, estado);
+
+            CREATE INDEX IF NOT EXISTS idx_sol_promotor
+                ON solicitudes_cambio (promotor_usr, estado);
+        ");
+
         // Migraciones idempotentes: agregar columnas nuevas si no existen
         foreach ([
             "ALTER TABLE reporte_mensual_lecher  ADD COLUMN pdf_nombre TEXT",
             "ALTER TABLE requerimiento_dotacion  ADD COLUMN pdf_nombre TEXT",
+            "ALTER TABLE reporte_mensual_lecher  ADD COLUMN bloqueado  INTEGER DEFAULT 0",
+            "ALTER TABLE requerimiento_dotacion  ADD COLUMN bloqueado  INTEGER DEFAULT 0",
         ] as $alter) {
             try { $pdo->exec($alter); } catch (\Throwable $e) { /* columna ya existe */ }
         }

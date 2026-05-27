@@ -11,8 +11,9 @@
 //
 //  Devuelve el PDF inline. Si no existe, 404.
 // ────────────────────────────────────────────────────────────────────
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 require_once __DIR__ . '/../Database.php';
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
     http_response_code(401);
@@ -94,11 +95,30 @@ try {
         $nombreDescarga = $nombre;
 
     } elseif ($tipo === 'req') {
-        // El PDF del requerimiento se llama con el mes destino (mes+2).
-        $mesDest  = $mes + 2;
-        $anioDest = $anio;
-        while ($mesDest > 12) { $mesDest -= 12; $anioDest++; }
-        $nombre = sprintf('Requerimiento_%04d_%02d_%s.pdf', $anioDest, $mesDest, $slug);
+        // Buscar pdf_nombre en SQLite; fallback a mes_destino/anio_destino; último recurso mes+2
+        $nombre = '';
+        try {
+            $dbSql = DatabaseSQLite::getInstance();
+            $stmtSql = $dbSql->prepare("
+                SELECT pdf_nombre, mes_destino, anio_destino
+                FROM requerimiento_dotacion
+                WHERE promotor = ? AND mes_base = ? AND anio_base = ?
+                ORDER BY fecha_captura DESC LIMIT 1
+            ");
+            $stmtSql->execute([$promotor, $mes, $anio]);
+            $rowSql = $stmtSql->fetch();
+            if ($rowSql && $rowSql['pdf_nombre']) {
+                $nombre = $rowSql['pdf_nombre'];
+            } elseif ($rowSql && $rowSql['mes_destino'] && $rowSql['anio_destino']) {
+                $nombre = sprintf('Requerimiento_%04d_%02d_%s.pdf',
+                    (int)$rowSql['anio_destino'], (int)$rowSql['mes_destino'], $slug);
+            }
+        } catch (Throwable $ignored) {}
+        if (!$nombre) {
+            $mesDest = $mes + 2; $anioDest = $anio;
+            while ($mesDest > 12) { $mesDest -= 12; $anioDest++; }
+            $nombre = sprintf('Requerimiento_%04d_%02d_%s.pdf', $anioDest, $mesDest, $slug);
+        }
         $ruta   = $base . '/requerimientos_pdf/' . $nombre;
         $nombreDescarga = $nombre;
     }

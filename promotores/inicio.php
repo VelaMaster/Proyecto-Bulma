@@ -21,7 +21,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <link rel="stylesheet" href="../estilos/iniciocards.css">
 
     <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
+    <!-- [OFFLINE DESACTIVADO] <link rel="manifest" href="/manifest.json"> -->
     <meta name="theme-color" content="#6750A4">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -124,6 +124,16 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     <md-icon slot="icon">inventory</md-icon>
                     Requerimiento
                 </md-text-button>
+
+                <a href="mis_notificaciones.php" style="position:relative;display:inline-flex;align-items:center;gap:6px;
+                    padding:0 12px;height:40px;border-radius:20px;text-decoration:none;
+                    color:var(--md-sys-color-on-surface);font-size:.875rem;font-weight:500;">
+                    <md-icon>notifications</md-icon>
+                    <span id="badgeNotifProm" style="display:none;position:absolute;top:4px;right:4px;
+                        background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
+                        font-size:.7rem;font-weight:700;min-width:18px;height:18px;border-radius:999px;
+                        align-items:center;justify-content:center;padding:0 4px;"></span>
+                </a>
             </div>
 
             <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left: 16px;">
@@ -312,9 +322,9 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <script src="../js/temas_md3.js"></script>
     <script src="../js/hero_physics.js"></script>
     <script src="../js/inicio_lecherias.js"></script>
-    <script src="../js/pwa_offline.js"></script>
+    <!-- [OFFLINE DESACTIVADO] <script src="../js/pwa_offline.js"></script> -->
     <script src="../js/offline_login.js"></script>
-    <script src="../js/offline_preload.js"></script>
+    <!-- [OFFLINE DESACTIVADO] <script src="../js/offline_preload.js"></script> -->
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         // Guardar sesión en IndexedDB para acceso offline
@@ -325,6 +335,16 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         // ── Tarjeta de estado offline ─────────────────────────────────
         _renderOfflineStatusCard();
 
+        // Badge de notificaciones de solicitudes resueltas
+        fetch('mis_solicitudes.php?accion=contar_nuevas')
+            .then(r => r.json()).then(d => {
+                const badge = document.getElementById('badgeNotifProm');
+                if (badge && d.count > 0) {
+                    badge.textContent = d.count;
+                    badge.style.display = 'flex';
+                }
+            }).catch(() => {});
+
         // Precargar datos offline (solo si pasaron >4h desde el último preload)
         if (window.OfflinePreload && navigator.onLine) {
             setTimeout(() => {
@@ -334,9 +354,12 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     });
 
     function _renderOfflineStatusCard() {
+        /* [OFFLINE DESACTIVADO] — La app requiere conexión a WiFi. */
         const card = document.getElementById('offline-status-card');
-        if (!card) return;
+        if (card) card.style.display = 'none';
+        return;
 
+        /* eslint-disable no-unreachable */
         let tsRaw = 0, lecherias = 0;
         try {
             tsRaw    = parseInt(localStorage.getItem('offline_preload_ts') || '0');

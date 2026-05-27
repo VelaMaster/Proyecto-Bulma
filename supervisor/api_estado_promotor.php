@@ -20,6 +20,7 @@
 require_once __DIR__ . '/../includes/session_guard.php';
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/../Database.php';
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
     echo json_encode(['status' => 'error', 'message' => 'Acceso denegado.']);
@@ -136,15 +137,50 @@ try {
 
     $reqJson = sprintf('req_%04d_%02d_%s.json',     $anio, $mes, $slug);
 
-    // El PDF del requerimiento se nombra con el mes destino (mes_base + 2)
-    $mesDest  = $mes + 2;
-    $anioDest = $anio;
-    while ($mesDest > 12) { $mesDest -= 12; $anioDest++; }
-    $reqPDF = sprintf('Requerimiento_%04d_%02d_%s.pdf', $anioDest, $mesDest, $slug);
+    // Lookup pdf_nombre para requerimiento desde SQLite
+    $reqPDF = null; $mesDest = null; $anioDest = null;
+    try {
+        $dbSql = DatabaseSQLite::getInstance();
+        $stmtReq = $dbSql->prepare("
+            SELECT pdf_nombre, mes_destino, anio_destino
+            FROM requerimiento_dotacion
+            WHERE promotor = ? AND mes_base = ? AND anio_base = ?
+            ORDER BY fecha_captura DESC LIMIT 1
+        ");
+        $stmtReq->execute([$promotor_id, $mes, $anio]);
+        $rowReq = $stmtReq->fetch();
+        if ($rowReq && $rowReq['pdf_nombre']) {
+            $reqPDF   = $rowReq['pdf_nombre'];
+            $mesDest  = (int)($rowReq['mes_destino']  ?? 0);
+            $anioDest = (int)($rowReq['anio_destino'] ?? 0);
+        } elseif ($rowReq && $rowReq['mes_destino']) {
+            $mesDest  = (int)$rowReq['mes_destino'];
+            $anioDest = (int)$rowReq['anio_destino'];
+            $reqPDF   = sprintf('Requerimiento_%04d_%02d_%s.pdf', $anioDest, $mesDest, $slug);
+        }
+    } catch (Throwable $ignored) {}
+    if (!$mesDest) {
+        $mesDest = $mes + 2; $anioDest = $anio;
+        while ($mesDest > 12) { $mesDest -= 12; $anioDest++; }
+        if (!$reqPDF) $reqPDF = sprintf('Requerimiento_%04d_%02d_%s.pdf', $anioDest, $mesDest, $slug);
+    }
+
+    // Reporte mensual: también verificar bloqueado en SQLite
+    $repBloqueado = false; $reqBloqueado = false;
+    try {
+        $dbSql2 = DatabaseSQLite::getInstance();
+        $stmtBlk = $dbSql2->prepare("SELECT MAX(bloqueado) AS b FROM reporte_mensual_lecher WHERE usuario_captura = ? AND mes = ? AND anio = ?");
+        $stmtBlk->execute([$promotor_usuario, $mes, $anio]);
+        $repBloqueado = (bool)($stmtBlk->fetchColumn());
+        $stmtBlk2 = $dbSql2->prepare("SELECT MAX(bloqueado) AS b FROM requerimiento_dotacion WHERE promotor = ? AND mes_base = ? AND anio_base = ?");
+        $stmtBlk2->execute([$promotor_id, $mes, $anio]);
+        $reqBloqueado = (bool)($stmtBlk2->fetchColumn());
+    } catch (Throwable $ignored) {}
 
     $reporte = [
-        'existe' => file_exists($dirReportes . '/' . $repJson),
-        'pdf'    => file_exists($dirReportPDF . '/' . $repPDF) ? $repPDF : null,
+        'existe'    => file_exists($dirReportes . '/' . $repJson),
+        'pdf'       => file_exists($dirReportPDF . '/' . $repPDF) ? $repPDF : null,
+        'bloqueado' => $repBloqueado,
     ];
 
     $requerimiento = [
@@ -152,6 +188,7 @@ try {
         'pdf'         => file_exists($dirReqPDF . '/' . $reqPDF) ? $reqPDF : null,
         'mes_destino' => $mesDest,
         'anio_destino' => $anioDest,
+        'bloqueado'   => $reqBloqueado,
     ];
 
     $resp = [

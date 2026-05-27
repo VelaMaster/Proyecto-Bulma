@@ -19,7 +19,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <link rel="stylesheet" href="../estilos/iniciosupervisor.css">
 
     <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
+    <!-- [OFFLINE DESACTIVADO] <link rel="manifest" href="/manifest.json"> -->
     <meta name="theme-color" content="#6750A4">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -83,6 +83,17 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     <md-icon slot="icon">bar_chart</md-icon>
                     Reporte Mensual
                 </md-text-button>
+
+                <a href="solicitudes.php" style="position:relative;display:inline-flex;align-items:center;gap:6px;
+                    padding:0 12px;height:40px;border-radius:20px;text-decoration:none;
+                    color:var(--md-sys-color-on-surface);font-size:.875rem;font-weight:500;">
+                    <md-icon>inbox</md-icon>
+                    Solicitudes
+                    <span id="badgeSolicitudes" style="display:none;position:absolute;top:4px;right:4px;
+                        background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
+                        font-size:.7rem;font-weight:700;min-width:18px;height:18px;border-radius:999px;
+                        display:none;align-items:center;justify-content:center;padding:0 4px;"></span>
+                </a>
             </div>
 
             <md-filled-tonal-button href="../cerrar_sesionsupervisor.php" style="margin-left: 16px;">
@@ -289,20 +300,30 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         clave_rol: '<?= htmlspecialchars($_SESSION['clave_rol'] ?? '', ENT_QUOTES) ?>',
     };
     </script>
-    <script src="../js/pwa_offline.js"></script>
+    <!-- [OFFLINE DESACTIVADO] <script src="../js/pwa_offline.js"></script> -->
     <script src="../js/offline_login.js"></script>
-    <script src="../js/offline_preload.js"></script>
+    <!-- [OFFLINE DESACTIVADO] <script src="../js/offline_preload.js"></script> -->
     <script>
     document.addEventListener('DOMContentLoaded', () => {
         if (window.__SESION_PHP__ && window.OfflineLogin) {
             window.OfflineLogin.guardarSesionOffline(window.__SESION_PHP__);
         }
-        // Precargar datos del supervisor (apis de avance, etc.)
         if (window.OfflinePreload && navigator.onLine) {
-            setTimeout(() => {
-                window.OfflinePreload.runIfStale('/supervisor');
-            }, 2500);
+            setTimeout(() => { window.OfflinePreload.runIfStale('/supervisor'); }, 2500);
         }
+
+        // Badge de solicitudes pendientes
+        fetch('api_solicitudes.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accion: 'contar' })
+        }).then(r => r.json()).then(d => {
+            const badge = document.getElementById('badgeSolicitudes');
+            if (badge && d.count > 0) {
+                badge.textContent = d.count;
+                badge.style.display = 'flex';
+            }
+        }).catch(() => {});
     });
     </script>
 </body>

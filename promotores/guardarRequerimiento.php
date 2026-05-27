@@ -55,6 +55,18 @@ require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 try {
     $db = DatabaseSQLite::getInstance();
 
+    // Verificar bloqueo
+    $stmtLock = $db->prepare("SELECT bloqueado FROM requerimiento_dotacion
+        WHERE usuario_captura = ? AND mes_base = ? AND anio_base = ? LIMIT 1");
+    $stmtLock->execute([$usuario, $mesBase, $anioBase]);
+    $rowLock = $stmtLock->fetch();
+    if ($rowLock && (int)$rowLock['bloqueado'] === 1) {
+        http_response_code(403);
+        echo json_encode(['status' => 'bloqueado',
+            'mensaje' => 'Este requerimiento ya fue enviado y está bloqueado. Solicita un cambio al supervisor si necesitas modificarlo.']);
+        exit();
+    }
+
     $sql = "INSERT OR REPLACE INTO requerimiento_dotacion
             (clave_lecheria, mes_base, anio_base,
              promotor, mes_destino, anio_destino,
@@ -105,6 +117,11 @@ try {
         }
     }
     $db->commit();
+
+    // Bloquear tras el primer guardado
+    $db->exec("UPDATE requerimiento_dotacion SET bloqueado = 1
+               WHERE mes_base = $mesBase AND anio_base = $anioBase
+                 AND usuario_captura = " . $db->quote($usuario));
 
 } catch (Throwable $e) {
     if (isset($db) && $db->inTransaction()) $db->rollBack();

@@ -5,17 +5,21 @@ require_once __DIR__ . '/../src/Repositorio/InventarioRepositorio.php';
 require_once __DIR__ . '/../src/Servicio/NeuronaLiconsa.php';
 
 $datos = json_decode(file_get_contents('php://input'), true);
-$lecher = $datos['lecher'] ?? '';
-$menores = intval($datos['menores'] ?? 0);
-$mayores = intval($datos['mayores'] ?? 0);
+$lecher      = $datos['lecher']       ?? '';
+$menores     = intval($datos['menores']    ?? 0);
+$mayores     = intval($datos['mayores']    ?? 0);
+$mes_periodo = intval($datos['mes_periodo']  ?? date('n'));
+$anio_periodo= intval($datos['anio_periodo'] ?? date('Y'));
 
 try {
     $repo = new InventarioRepositorio();
     $historial = $repo->obtenerHistorialLecheria($lecher);
 
-    // 1. Preparación de datos (Cajas y Litros iniciales)
+    // 1. Preparación de datos
+    //    Inventario inicial = FIN del mes ANTERIOR al periodo que se va a capturar.
+    //    Se busca primero en INVENTARIOS_MENSUALES, luego en INVENTARIO_LEP_SUBSIDIADA.
     $meses = count($historial);
-    $litrosIniciales = $meses > 0 ? floatval($historial[0]['INVENTARIO_FINAL']) : 0;
+    $litrosIniciales = $repo->obtenerInventarioFinalMesAnterior($lecher, $mes_periodo, $anio_periodo);
     $cajasIniciales = $litrosIniciales / 72;
 
     $ventasCajas = [];

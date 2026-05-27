@@ -26,7 +26,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <script type="module">import '@material/web/all.js';</script>
 
     <!-- PWA -->
-    <link rel="manifest" href="/manifest.json">
+    <!-- [OFFLINE DESACTIVADO] <link rel="manifest" href="/manifest.json"> -->
     <meta name="theme-color" content="#6750A4">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -495,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
-<script src="../js/pwa_offline.js"></script>
-<script src="../js/offline_preload.js"></script>
+<!-- [OFFLINE DESACTIVADO] <script src="../js/pwa_offline.js"></script> -->
+<!-- [OFFLINE DESACTIVADO] <script src="../js/offline_preload.js"></script> -->
 </body>
 </html>

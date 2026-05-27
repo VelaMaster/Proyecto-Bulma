@@ -15,7 +15,7 @@ ob_start();
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
-session_start();
+require_once __DIR__ . '/../includes/session_guard.php';
 require_once __DIR__ . '/../fpdf/fpdf.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
@@ -277,4 +277,20 @@ $rutaCompleta = $baseDir . '/' . $nombreArchivo;
 
 if (ob_get_length()) ob_end_clean();
 $pdf->Output('F', $rutaCompleta);
+
+// ── Guardar metadatos en SQLite ───────────────────────────────────────
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
+try {
+    $totalLecherias = 0;
+    foreach ($datos['almacenes'] as $bloque) {
+        $totalLecherias += count($bloque['lecherias'] ?? []);
+    }
+    $dbSql = DatabaseSQLite::getInstance();
+    $stmtSql = $dbSql->prepare("INSERT OR REPLACE INTO requerimiento_supervisor
+        (mes, anio, precio, supervisor_usr, pdf_nombre, total_general, total_lecherias)
+        VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmtSql->execute([$mes, $anio, $precio, $_SESSION['usuario'],
+                       $nombreArchivo, $totalGeneral, $totalLecherias]);
+} catch (Throwable $eSql) { /* no crítico */ }
+
 $pdf->Output('I', $nombreArchivo);

@@ -315,8 +315,8 @@ lecherias.forEach(lech => {
                 }
                 if (cardEstado) cardEstado.style.display = 'none'; // ya no usamos esa card
 
-                // Restaurar datos del reporte guardado previamente en BD
-                restaurarReporteGuardado(mes, anio);
+                // Restaurar datos + verificar bloqueo
+                restaurarReporteGuardado(mes, anio).then(() => verificarBloqueo(mes, anio));
             })
             .catch(() => notificar('Error al conectar con el servidor.', 'error'));
     }
@@ -396,6 +396,88 @@ lecherias.forEach(lech => {
     selectMesReporte.addEventListener('change', cargarLecherias);
     inputAnioReporte.addEventListener('change', cargarLecherias);
 
+    // ──── Sistema de bloqueo / solicitud de cambio ────────────────
+    let _bannerBloqueo = null;
+
+    async function verificarBloqueo(mes, anio) {
+        if (_bannerBloqueo) { _bannerBloqueo.remove(); _bannerBloqueo = null; }
+        btnGuardar.disabled = false;
+        btnGuardar.style.display = '';
+        try {
+            const r = await fetch(`estado_bloqueo.php?tipo=reporte&mes=${mes}&anio=${anio}`);
+            const d = await r.json();
+            if (d.bloqueado) mostrarBannerBloqueo(+mes, +anio);
+        } catch (_) {}
+    }
+
+    function mostrarBannerBloqueo(mes, anio) {
+        btnGuardar.disabled = true;
+        btnGuardar.style.display = 'none';
+        if (_bannerBloqueo) _bannerBloqueo.remove();
+        _bannerBloqueo = document.createElement('div');
+        Object.assign(_bannerBloqueo.style, {
+            display:'flex', alignItems:'center', gap:'12px', flexWrap:'wrap',
+            background:'var(--md-sys-color-error-container)',
+            color:'var(--md-sys-color-on-error-container)',
+            padding:'14px 18px', borderRadius:'14px', margin:'12px 0'
+        });
+        _bannerBloqueo.innerHTML = `
+            <span class="material-symbols-outlined" style="font-size:22px;">lock</span>
+            <span style="flex:1;font-size:.9rem;font-weight:500;">
+                Este reporte ya fue enviado y está bloqueado. Si necesitas modificarlo, solicita un cambio al supervisor.
+            </span>
+            <button id="btnSolicitarCambioRep" style="background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
+                border:none;border-radius:20px;padding:8px 18px;cursor:pointer;font-weight:600;font-size:.85rem;">
+                Solicitar cambio
+            </button>`;
+        btnGuardar.parentNode.insertBefore(_bannerBloqueo, btnGuardar);
+        document.getElementById('btnSolicitarCambioRep')
+            .addEventListener('click', () => abrirModalSolicitud('reporte', mes, anio));
+    }
+
+    function abrirModalSolicitud(tipo, mes, anio) {
+        const primeraLech = contenedorTablas.querySelector('tr[data-lecher]')?.dataset.lecher || '_reporte_';
+        const back = document.createElement('div');
+        Object.assign(back.style, {
+            position:'fixed', inset:'0', background:'rgba(0,0,0,.5)',
+            display:'flex', alignItems:'center', justifyContent:'center', zIndex:'100001'
+        });
+        back.innerHTML = `
+            <div style="background:var(--md-sys-color-surface-container-high);color:var(--md-sys-color-on-surface);
+                        padding:24px;border-radius:24px;max-width:440px;width:92%;box-shadow:0 8px 24px rgba(0,0,0,.3);">
+                <h3 style="margin:0 0 8px;font-weight:500;font-size:1.1rem;">Solicitar cambio al supervisor</h3>
+                <p style="margin:0 0 14px;font-size:.85rem;color:var(--md-sys-color-on-surface-variant);">
+                    Describe brevemente qué necesitas corregir.
+                </p>
+                <textarea id="txtMotivoSolicitud" placeholder="Motivo del cambio..."
+                    style="width:100%;height:90px;border-radius:10px;padding:10px;font-size:.9rem;
+                           background:var(--md-sys-color-surface-container);color:var(--md-sys-color-on-surface);
+                           border:1px solid var(--md-sys-color-outline-variant);resize:none;box-sizing:border-box;"></textarea>
+                <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+                    <md-text-button class="btn-cancelar">Cancelar</md-text-button>
+                    <md-filled-button class="btn-enviar">Enviar solicitud</md-filled-button>
+                </div>
+            </div>`;
+        document.body.appendChild(back);
+        const cerrar = () => back.remove();
+        back.querySelector('.btn-cancelar').addEventListener('click', cerrar);
+        back.addEventListener('click', e => { if (e.target === back) cerrar(); });
+        back.querySelector('.btn-enviar').addEventListener('click', async () => {
+            const motivo = document.getElementById('txtMotivoSolicitud').value.trim();
+            if (!motivo) { document.getElementById('txtMotivoSolicitud').style.borderColor='var(--md-sys-color-error)'; return; }
+            try {
+                const r = await fetch('solicitar_cambio.php', {
+                    method:'POST', headers:{'Content-Type':'application/json'},
+                    body: JSON.stringify({ tipo, clave_lecheria: primeraLech, mes, anio, motivo })
+                });
+                const d = await r.json();
+                cerrar();
+                if (d.success) notificar('Solicitud enviada. El supervisor recibirá una notificación.', 'info');
+                else notificar(d.mensaje || 'No se pudo enviar la solicitud.', 'error');
+            } catch (_) { notificar('Error de conexión.', 'error'); }
+        });
+    }
+
     // ──── Botón Guardar (con opción PDF) ─────────────────────────
     btnGuardar.addEventListener('click', async () => {
         if (!selectMesReporte.value) {
@@ -433,10 +515,9 @@ const jsG = await resG.json().catch(async () => {
 });
 console.warn('[debug] HTTP:', resG.status, '| jsG:', JSON.stringify(jsG));
 
-            // ── Guardado en cola offline ─────────────────────────────────
+            /* [OFFLINE DESACTIVADO] — La app requiere conexión a WiFi.
             if (jsG.status === 'offline_queued') {
                 notificar('Sin conexión. El reporte se guardó localmente y se sincronizará cuando regrese internet.', 'info');
-                // Si el usuario marcó PDF, también encolarlo — el SW lo intercepta igual
                 if (generarPDF) {
                     await fetch('generar_pdf_reporte.php', {
                         method:  'POST',
@@ -447,7 +528,13 @@ console.warn('[debug] HTTP:', resG.status, '| jsG:', JSON.stringify(jsG));
                 }
                 return;
             }
+            */
 
+            if (jsG.status === 'bloqueado') {
+                notificar(jsG.mensaje || 'Reporte bloqueado. Solicita un cambio al supervisor.', 'error');
+                mostrarBannerBloqueo(+selectMesReporte.value, +inputAnioReporte.value);
+                return;
+            }
             if (!resG.ok || jsG.status !== 'success') {
                 throw new Error(jsG.mensaje || 'No se pudo guardar el reporte');
             }
