@@ -427,20 +427,17 @@ document.addEventListener('DOMContentLoaded', () => {
     //  capturar a mano el inventario inicial. Estas funciones desbloquean los
     //  inputs y muestran el banner explicativo.
 
+    // El inventario inicial NO es editable a mano. Si falta el mes anterior,
+    // simplemente lo dejamos en 0 y el banner explica la situación al promotor.
     function permitirCapturaInicial(activar) {
         const ids = ['inv_ini_caja','inv_ini_sobres','inv_ini_litros'];
         ids.forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
-            if (activar) {
-                el.removeAttribute('readonly');
-                el.style.background = 'color-mix(in srgb, var(--md-sys-color-error) 8%, transparent)';
-                el.placeholder = 'Captura';
-            } else {
-                el.setAttribute('readonly', 'readonly');
-                el.style.background = '';
-                el.placeholder = '0';
-            }
+            el.setAttribute('readonly', 'readonly');
+            el.style.background = '';
+            el.placeholder = '0';
+            if (activar) el.value = 0;  // dejarlo explícito en 0
         });
         if (typeof Estado !== 'undefined') Estado.faltaMesAnterior = !!activar;
     }

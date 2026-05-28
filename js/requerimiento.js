@@ -268,8 +268,27 @@ document.addEventListener('DOMContentLoaded', () => {
                     totalLecherias += grupos[nombre].length;
                 });
 
+                // Banner rojo: faltan inventarios mensuales del mes base
                 if (totalFaltantes > 0) {
-                    notificar(`Se cargaron ${totalLecherias} lecherías. Faltan ${totalFaltantes} inventarios (en rojo).`, 'error');
+                    const banner = document.createElement('div');
+                    Object.assign(banner.style, {
+                        display:'flex', alignItems:'center', gap:'12px',
+                        background:'var(--md-sys-color-error-container)',
+                        color:'var(--md-sys-color-on-error-container)',
+                        border:'1.5px solid var(--md-sys-color-error)',
+                        padding:'14px 18px', borderRadius:'14px', margin:'0 0 16px'
+                    });
+                    banner.innerHTML = `
+                        <span class="material-symbols-outlined" style="color:var(--md-sys-color-error);">error</span>
+                        <span style="flex:1; font-size:.92rem; font-weight:500;">
+                            Aún no se captura el inventario mensual de
+                            <strong>${nombresMeses[+mes]} ${anio}</strong> para
+                            ${totalFaltantes} de ${totalLecherias} lecherías
+                            (filas en rojo). El requerimiento se calcula a partir del
+                            inventario mensual, captúralo primero.
+                        </span>`;
+                    contenedorTablas.insertBefore(banner, contenedorTablas.firstChild);
+                    notificar(`Faltan ${totalFaltantes} inventarios mensuales de ${nombresMeses[+mes]} ${anio}.`, 'error');
                 } else {
                     notificar(`Se cargaron ${totalLecherias} lecherías correctamente.`, 'info');
                 }
