@@ -391,12 +391,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 </button>`;
         } else if (pdfBorrado) {
             acciones = `
-                <span class="estado-pill" style="background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);display:inline-flex;align-items:center;gap:4px;">
+                <span class="estado-pill" style="background:var(--md-sys-color-error-container);color:var(--md-sys-color-on-error-container);display:inline-flex;align-items:center;gap:4px;" title="Edita el inventario para regenerar el PDF">
                     <span class="material-symbols-outlined" style="font-size:14px;">block</span>Sin archivo
-                </span>
-                <md-icon-button class="btn-regen" data-id="${encodeURIComponent(inv.ID)}" title="Regenerar PDF">
-                    <md-icon>refresh</md-icon>
-                </md-icon-button>`;
+                </span>`;
         } else {
             acciones = `
                 <span class="estado-pill" style="background:var(--md-sys-color-surface-variant);color:var(--md-sys-color-on-surface-variant);display:inline-flex;align-items:center;gap:4px;">
@@ -428,27 +425,6 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', e => {
                 e.stopPropagation();
                 window.open(`ver_pdf.php?archivo=${btn.dataset.pdf}&dl=1`, '_blank');
-            });
-        });
-        fila.querySelectorAll('.btn-regen').forEach(btn => {
-            btn.addEventListener('click', async e => {
-                e.stopPropagation();
-                btn.disabled = true;
-                try {
-                    const res  = await fetch(`regenerar_pdf_inventario.php?id=${btn.dataset.id}`);
-                    const data = await res.json();
-                    if (data.status === 'success') {
-                        inv.pdf_existe = 1;
-                        inv.PDF_RUTA   = data.pdf_ruta;
-                        fila.replaceWith(crearFilaInv(inv));
-                        if (window.PWA) window.PWA.mostrarToast('PDF regenerado correctamente.', 'success');
-                    } else {
-                        throw new Error(data.mensaje || 'Error al regenerar');
-                    }
-                } catch(err) {
-                    if (window.PWA) window.PWA.mostrarToast(err.message, 'error');
-                    btn.disabled = false;
-                }
             });
         });
         return fila;

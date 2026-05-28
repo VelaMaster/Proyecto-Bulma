@@ -23,6 +23,7 @@ try {
     $sql = "SELECT FIRST 100
                 ID, CLAVE_LECHERIA, FECHA, MUNICIPIO, COMUNIDAD,
                 ESTADO, PDF_RUTA, CREATED_AT, UPDATED_AT,
+                MES_PERIODO, ANIO_PERIODO,
                 FIN_CAJA, FIN_SOBRES, FIN_LITROS,
                 VENTA_LITROS, ABASTO_LITROS
             FROM INVENTARIOS_MENSUALES
@@ -34,6 +35,19 @@ try {
     $baseDir = __DIR__ . '/../datos/promotores/';
     foreach ($rows as &$row) {
         $ruta = trim($row['PDF_RUTA'] ?? '');
+
+        // Fallback: si PDF_RUTA quedó vacío en BD pero el archivo del mes existe,
+        // reconstruimos el nombre canónico para que la fila muestre "Ver" igual.
+        if ($ruta === '' && !empty($row['MES_PERIODO']) && !empty($row['ANIO_PERIODO'])) {
+            $mes  = sprintf('%02d', (int)$row['MES_PERIODO']);
+            $anio = (int)$row['ANIO_PERIODO'];
+            $rutaCalc = "Inventario_{$row['CLAVE_LECHERIA']}_{$anio}_{$mes}.pdf";
+            if (file_exists($baseDir . $rutaCalc)) {
+                $ruta = $rutaCalc;
+                $row['PDF_RUTA'] = $rutaCalc;
+            }
+        }
+
         $row['pdf_existe'] = ($ruta !== '' && file_exists($baseDir . $ruta)) ? 1 : 0;
     }
     unset($row);
