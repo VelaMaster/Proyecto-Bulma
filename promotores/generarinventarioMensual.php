@@ -942,6 +942,15 @@ $lecher_get = $_GET['lecher'] ?? '';
                         });
                         const resultado = await res.json();
 
+                        if (resultado.status === 'duplicado') {
+                            // Ya existe — cambiamos a modo edición sin recargar
+                            Estado.setEdicion(resultado.id,
+                                `Modo edición — ya existe un inventario para este periodo (ID ${resultado.id}). Al guardar se actualizarán los datos.`
+                            );
+                            cargarDatosInventario(resultado.id);
+                            mostrarNotificacion('Ya existe ese inventario. Se activó el modo edición — revisa los datos y guarda de nuevo.', 'info');
+                            return 'duplicado'; // no continuar con PDF
+                        }
                         if (resultado.status === 'requiere_confirmacion') {
                             const seguro = await mostrarConfirmacionMD3(resultado.mensaje);
                             if (seguro) {
@@ -957,7 +966,8 @@ $lecher_get = $_GET['lecher'] ?? '';
                         return 'success';
                     };
 
-                    await intentarGuardar(datosFormulario);
+                    const resultadoGuardar = await intentarGuardar(datosFormulario);
+                    if (resultadoGuardar === 'duplicado') return; // ya se activó modo edición
                     mostrarNotificacion('Datos guardados en la base de datos.', 'info');
                 }
 

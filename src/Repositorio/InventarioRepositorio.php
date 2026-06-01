@@ -70,6 +70,9 @@ class InventarioRepositorio
         return ['mes' => $mes_ant, 'anio' => $anio_ant];
     }
 
+    /**
+     * Devuelve el ID del inventario si ya existe, o false si no.
+     */
     private function existeInventarioMes($lecheria, $mes, $anio)
     {
         if (empty($lecheria)) return false;
@@ -77,9 +80,6 @@ class InventarioRepositorio
         $mes  = (int)$mes;
         $anio = (int)$anio;
 
-        // Cubrimos también filas legadas donde MES_PERIODO/ANIO_PERIODO
-        // estén en NULL: caemos a EXTRACT() sobre FECHA. Así el INSERT no
-        // se cuela como duplicado por no haber matcheado un NULL.
         $sql = "SELECT FIRST 1 ID FROM INVENTARIOS_MENSUALES
                 WHERE CLAVE_LECHERIA = '$lecheria_limpia'
                   AND (
@@ -89,8 +89,8 @@ class InventarioRepositorio
                          AND EXTRACT(MONTH FROM FECHA) = $mes)
                   )";
 
-        $stmt = $this->db->query($sql);
-        return $stmt->fetch() !== false;
+        $row = $this->db->query($sql)->fetch(PDO::FETCH_ASSOC);
+        return $row ? (int)$row['ID'] : false;
     }
 
     /**
@@ -150,10 +150,15 @@ class InventarioRepositorio
         $anio_actual = !empty($datos['anio_periodo']) ? (int)$datos['anio_periodo'] : (int)date('Y', strtotime($datos['fecha']));
         $mes_actual  = !empty($datos['mes_periodo'])  ? (int)$datos['mes_periodo']  : (int)date('m', strtotime($datos['fecha']));
 
-        // Bloquear duplicados — el JS ya debería haber detectado esto antes de llegar aquí,
-        // pero lo dejamos como red de seguridad en el backend
-        if ($this->existeInventarioMes($lecheria_limpia, $mes_actual, $anio_actual)) {
-            throw new Exception("Ya existe un inventario para esta lechería en este periodo. Recarga la página para activar el modo edición.");
+        // Bloquear duplicados — el JS debería haberlo detectado, pero si llega aquí
+        // devolvemos el ID para que el frontend cambie a modo edición sin recargar.
+        $idExistente = $this->existeInventarioMes($lecheria_limpia, $mes_actual, $anio_actual);
+        if ($idExistente !== false) {
+            return [
+                'status'  => 'duplicado',
+                'id'      => $idExistente,
+                'mensaje' => 'Ya existe un inventario para este periodo. Cambiando a modo edición automáticamente.',
+            ];
         }
 
         // Verificar mes anterior
