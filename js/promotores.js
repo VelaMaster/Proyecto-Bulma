@@ -347,9 +347,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 // captura manual de inventario inicial y mostrar banner persistente.
                 invCaja.value = ''; invSobres.value = ''; invLitros.value = '';
                 surtCajas.value = ''; surtLitros.value = '';
-                actualizarAbastoTotal();
-
-                permitirCapturaInicial(true);
+                permitirCapturaInicial(true); // pone inv_ini = 0 antes de calcular
+                actualizarAbastoTotal();      // recalcula abasto con inv_ini = 0
                 mostrarBannerFaltaAnterior(true, data.mes_ant, data.anio_ant);
                 mostrarNotificacion(data.mensaje, 'error');
             } else if (data.exito) {

@@ -48,12 +48,11 @@ class InventarioRepositorio
                 WHERE CLAVE_LECHERIA IN ($lecher_q, $lecher_q00)
                   AND MES_PERIODO  = $mes_ant
                   AND ANIO_PERIODO = $anio_ant";
-        try {
-            $row = $this->db->query($sql)->fetch(PDO::FETCH_ASSOC);
-            if ($row && $row['FIN_LITROS'] !== null) {
-                return floatval($row['FIN_LITROS']);
-            }
-        } catch (PDOException $e) { /* continuar */ }
+        $row = $this->db->query($sql)->fetch(PDO::FETCH_ASSOC);
+        if ($row) {
+            // FIN_LITROS puede ser 0 (sobran 0 litros) → válido, no es "sin registro"
+            return floatval($row['FIN_LITROS'] ?? 0);
+        }
 
         // No hay registro del mes anterior en INVENTARIOS_MENSUALES
         return null;
