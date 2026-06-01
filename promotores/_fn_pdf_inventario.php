@@ -84,21 +84,24 @@ function generarArchivoInventario(array $datos): string|false
     $pdf->Cell($wT[5], 7, $d('Diferencias'),          1, 0, 'C');
     $pdf->Cell($wT[6], 7, $d('Inventario final mes'), 1, 1, 'C');
 
+    // Helper: muestra '0' si el valor es vacío o null (campos numéricos de la tabla)
+    $n = fn($k) => $d(($datos[$k] !== '' && $datos[$k] !== null) ? $datos[$k] : '0');
+
     $pdf->SetFont('Arial', '', 8);
     $pdf->Cell($wT[0], 6, $d('Cajas'), 1, 0, 'C');
     foreach (['inv_ini_caja','abasto_caja','venta_caja','reg_caja','dif_caja','fin_caja'] as $i => $k)
-        $pdf->Cell($wT[$i+1], 6, $d($datos[$k] ?? ''), 1, 0, 'C');
+        $pdf->Cell($wT[$i+1], 6, $n($k), 1, 0, 'C');
     $pdf->Ln();
 
     $pdf->Cell($wT[0], 6, $d('Sobres'), 1, 0, 'C');
     foreach (['inv_ini_sobres','abasto_sobres','venta_sobres','reg_sobres','dif_sobres','fin_sobres'] as $i => $k)
-        $pdf->Cell($wT[$i+1], 6, $d($datos[$k] ?? ''), 1, 0, 'C');
+        $pdf->Cell($wT[$i+1], 6, $n($k), 1, 0, 'C');
     $pdf->Ln();
 
     $pdf->SetFont('Arial', 'B', 8);
     $pdf->Cell($wT[0], 6, $d('Total litros'), 1, 0, 'C');
     foreach (['inv_ini_litros','abasto_litros','venta_litros','reg_litros','dif_litros','fin_litros'] as $i => $k)
-        $pdf->Cell($wT[$i+1], 6, $d($datos[$k] ?? ''), 1, 0, 'C');
+        $pdf->Cell($wT[$i+1], 6, $n($k), 1, 0, 'C');
     $pdf->Ln();
     $pdf->Ln(3);
 
