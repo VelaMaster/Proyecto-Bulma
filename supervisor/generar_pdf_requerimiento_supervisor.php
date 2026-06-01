@@ -36,13 +36,21 @@ function d($s) { return utf8_decode((string)($s ?? '')); }
 $nombresMeses = ['', 'ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
                      'JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
 
-$mes    = (int)($datos['mes']   ?? 0);
-$anio   = (int)($datos['anio']  ?? 0);
-$precio = $datos['precio']     ?? '6.50';
-$zona   = trim((string)($datos['zona']   ?? ''));
-$esquema= trim((string)($datos['esquema']?? ''));
-$sup    = trim((string)($datos['supervisor'] ?? ($_SESSION['nombre'] ?? '')));
-$mesNombre = $nombresMeses[$mes] ?? '';
+$mes        = (int)($datos['mes']   ?? 0);
+$anio       = (int)($datos['anio']  ?? 0);
+$precio     = $datos['precio']      ?? 'todos';
+$zona       = trim((string)($datos['zona']   ?? ''));
+$esquema    = trim((string)($datos['esquema']?? ''));
+$sup        = trim((string)($datos['supervisor'] ?? ($_SESSION['nombre'] ?? '')));
+$fAlm       = trim((string)($datos['filtro_almacen']      ?? 'Todos'));
+$fDistrib   = trim((string)($datos['filtro_distribuidor'] ?? 'Todos'));
+$mesNombre  = $nombresMeses[$mes] ?? '';
+
+$precioLabel = match(true) {
+    str_contains($precio,'4.50') => '$4.50 / litro',
+    str_contains($precio,'6.50') => '$6.50 / litro',
+    default                      => 'Todos los precios',
+};
 
 // ---- Aplanamos el contenido en una sola lista de "filas a imprimir":
 //      cada almacén abre con un row "header" y cierra con uno "subtotal".
@@ -143,7 +151,18 @@ function dibujarEncabezado($pdf, $logoIzq, $logoDer, $zona, $sup, $esquema, $mes
     $pdf->SetFont('Arial', 'B', 8);
     $pdf->Cell(15, 5, d('PRECIO:'), 0, 0, 'L');
     $pdf->SetFont('Arial', '', 8);
-    $pdf->Cell(0, 5, d('$' . number_format((float)$precio, 2) . '/LITRO'), 'B', 1, 'L');
+    $pdf->Cell(0, 5, d($precioLabel), 'B', 1, 'L');
+
+    // Fila 3: ALMACÉN | DISTRIBUIDOR
+    global $fAlm, $fDistrib;
+    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->Cell(20, 5, d('ALMACÉN:'), 0, 0, 'L');
+    $pdf->SetFont('Arial', '', 8);
+    $pdf->Cell(60, 5, d(strtoupper($fAlm)), 'B', 0, 'L');
+    $pdf->SetFont('Arial', 'B', 8);
+    $pdf->Cell(25, 5, d('DISTRIBUIDOR:'), 0, 0, 'L');
+    $pdf->SetFont('Arial', '', 8);
+    $pdf->Cell(0, 5, d(strtoupper($fDistrib)), 'B', 1, 'L');
 
     $pdf->Ln(2);
 }

@@ -167,7 +167,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
 
         <div class="md3-card filtros-card">
-            <md-outlined-select label="Mes" id="selMes" style="min-width:140px;">
+            <md-outlined-select label="Mes" id="selMes" style="min-width:130px;">
                 <md-select-option value="1"><div slot="headline">Enero</div></md-select-option>
                 <md-select-option value="2"><div slot="headline">Febrero</div></md-select-option>
                 <md-select-option value="3"><div slot="headline">Marzo</div></md-select-option>
@@ -183,12 +183,24 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </md-outlined-select>
 
             <md-outlined-text-field label="Año" id="inputAnio" type="number"
-                value="<?= date('Y') ?>" style="max-width:110px;"></md-outlined-text-field>
+                value="<?= date('Y') ?>" style="max-width:100px;"></md-outlined-text-field>
 
+            <!-- Precio como pills (Todos / $4.50 / $6.50) -->
             <div class="precio-pills" role="tablist" aria-label="Filtro por precio">
-                <button type="button" class="precio-pill-btn active" data-precio="6.50">$6.50 / litro</button>
-                <button type="button" class="precio-pill-btn"        data-precio="4.50">$4.50 / litro</button>
+                <button type="button" class="precio-pill-btn active" data-precio="todos">Todos</button>
+                <button type="button" class="precio-pill-btn" data-precio="6.50">$6.50</button>
+                <button type="button" class="precio-pill-btn" data-precio="4.50">$4.50</button>
             </div>
+
+            <!-- Almacén (se llena dinámicamente) -->
+            <md-outlined-select label="Almacén" id="selAlmacen" style="min-width:150px;">
+                <md-select-option value=""><div slot="headline">Todos</div></md-select-option>
+            </md-outlined-select>
+
+            <!-- Distribuidor / responsable de surtimiento -->
+            <md-outlined-select label="Distribuidor" id="selRessurti" style="min-width:190px;">
+                <md-select-option value=""><div slot="headline">Todos</div></md-select-option>
+            </md-outlined-select>
 
             <span style="flex-grow:1;"></span>
 
@@ -242,6 +254,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <script>
         const selMes        = document.getElementById('selMes');
         const inputAnio     = document.getElementById('inputAnio');
+        const selAlmacen    = document.getElementById('selAlmacen');
+        const selRessurti   = document.getElementById('selRessurti');
         const contenedor    = document.getElementById('contenedorTabla');
         const btnPDF        = document.getElementById('btnGenerarPDF');
         const grandTotal    = document.getElementById('grandTotal');
@@ -250,11 +264,11 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         const warnPromos    = document.getElementById('warnPromos');
         const pills         = document.querySelectorAll('.precio-pill-btn');
 
-        let precioActivo = '6.50';
+        let precioActivo = 'todos';
         let ultimoConsolidado = null;
         const supervisorNombre = <?= json_encode($nombre_usuario, JSON_UNESCAPED_UNICODE) ?>;
 
-        // Default: mes actual
+        // Default: mes actual, pill "Todos" activo
         selMes.value = String(new Date().getMonth() + 1);
 
         pills.forEach(p => p.addEventListener('click', () => {
@@ -263,8 +277,28 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             precioActivo = p.dataset.precio;
             cargar();
         }));
-        selMes.addEventListener('change', cargar);
-        inputAnio.addEventListener('change', cargar);
+        selMes.addEventListener('change', () => { limpiarCatalogos(); cargar(); });
+        inputAnio.addEventListener('change', () => { limpiarCatalogos(); cargar(); });
+        selAlmacen.addEventListener('change', cargar);
+        selRessurti.addEventListener('change', cargar);
+
+        function limpiarCatalogos() {
+            while (selAlmacen.children.length  > 1) selAlmacen.removeChild(selAlmacen.lastChild);
+            while (selRessurti.children.length > 1) selRessurti.removeChild(selRessurti.lastChild);
+        }
+
+        function llenarSelect(sel, items) {
+            const val = sel.value;
+            while (sel.children.length > 1) sel.removeChild(sel.lastChild);
+            items.forEach(it => {
+                const o = document.createElement('md-select-option');
+                o.value = it.value;
+                o.innerHTML = `<div slot="headline">${it.label}</div>`;
+                sel.appendChild(o);
+            });
+            // Restaurar valor si sigue siendo válido
+            if (items.some(i => String(i.value) === String(val))) sel.value = val;
+        }
 
         function skeleton() {
             const placeholder = Array(4).fill(0).map(() => `
@@ -288,24 +322,37 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             return l.num_tienda || '';
         }
 
+        function distribCell(l) {
+            if (l.num_tienda === 'DM') return `<span class="dm-tag">DM</span>`;
+            if (l.ressurti_label) return `<span style="font-size:0.78rem;opacity:.8;">${l.ressurti_label}</span>`;
+            return '—';
+        }
+
         function pintarAlmacen(b) {
+            // ¿Mostrar columna precio? Solo si hay mezcla de precios en la vista
+            const hayMezcla = b.lecherias.some(l => l.precio_label !== b.lecherias[0].precio_label);
             const filas = b.lecherias.map(l => {
+                const precioCol = hayMezcla ? `<td>${l.precio_label || ''}</td>` : '';
                 if (l.capturado) {
-                    return `
-                        <tr>
-                            <td>${l.punto_venta}</td>
-                            <td>${tiendaCell(l)}</td>
-                            <td>${fmtNum(l.requerimiento)}</td>
-                        </tr>`;
-                }
-                return `
-                    <tr class="faltante">
+                    return `<tr>
                         <td>${l.punto_venta}</td>
                         <td>${tiendaCell(l)}</td>
-                        <td><span class="falta-pill">FALTA</span></td>
+                        <td>${distribCell(l)}</td>
+                        ${precioCol}
+                        <td>${fmtNum(l.requerimiento)}</td>
                     </tr>`;
+                }
+                return `<tr class="faltante">
+                    <td>${l.punto_venta}</td>
+                    <td>${tiendaCell(l)}</td>
+                    <td>${distribCell(l)}</td>
+                    ${precioCol}
+                    <td><span class="falta-pill">FALTA</span></td>
+                </tr>`;
             }).join('');
 
+            const precioTh = hayMezcla ? '<th>Precio</th>' : '';
+            const span = hayMezcla ? 3 : 2;
             return `
                 <div class="almacen-card">
                     <div class="almacen-titulo">
@@ -318,13 +365,15 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                             <tr>
                                 <th>Punto de Venta</th>
                                 <th>Tienda</th>
+                                <th>Distribuidor</th>
+                                ${precioTh}
                                 <th>Req.</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${filas}
                             <tr class="subtotal-row">
-                                <td colspan="2" style="text-align:right;">SUBTOTAL =</td>
+                                <td colspan="${span}" style="text-align:right;">SUBTOTAL =</td>
                                 <td>${fmtNum(b.subtotal)}</td>
                             </tr>
                         </tbody>
@@ -347,11 +396,19 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         function pintar(data) {
             ultimoConsolidado = data;
 
+            // Poblar catálogos con lo que devolvió la API
+            if (data.cat_almacenes) {
+                llenarSelect(selAlmacen, data.cat_almacenes.map(a => ({value: a, label: a})));
+            }
+            if (data.cat_ressurti) {
+                llenarSelect(selRessurti, data.cat_ressurti.map(r => ({value: r.value, label: r.label})));
+            }
+
             if (!data.almacenes || data.almacenes.length === 0) {
                 contenedor.innerHTML = `
                     <div class="md3-card" style="text-align:center; padding:24px; color:var(--md-sys-color-on-surface-variant);">
                         <md-icon style="font-size:36px; color:var(--md-sys-color-tertiary);">inbox</md-icon>
-                        <p style="margin-top:8px;">No hay lecherías para ${selMes.options[selMes.selectedIndex].textContent} ${inputAnio.value} con precio $${precioActivo}.</p>
+                        <p style="margin-top:8px;">Sin resultados para los filtros seleccionados.</p>
                     </div>`;
                 grandTotal.style.display = 'none';
                 pintarResumen(data.resumen);
@@ -363,7 +420,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
             totalGeneralEl.textContent = fmtNum(data.total_general);
             totalLechEl.textContent =
-                `(${data.total_capturadas}/${data.total_lecherias} capturadas en este precio)`;
+                `(${data.total_capturadas}/${data.total_lecherias} lecherías)`;
             grandTotal.style.display = 'flex';
 
             pintarResumen(data.resumen);
@@ -377,7 +434,13 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             skeleton();
             grandTotal.style.display = 'none';
             try {
-                const r = await fetch(`api_requerimiento_dotacion.php?mes=${mes}&anio=${anio}&precio=${precioActivo}`);
+                const p = new URLSearchParams({
+                    mes, anio,
+                    precio:   precioActivo,
+                    almacen:  selAlmacen.value,
+                    ressurti: selRessurti.value,
+                });
+                const r = await fetch(`api_requerimiento_dotacion.php?${p}`);
                 const j = await r.json();
                 if (j.status !== 'success') {
                     contenedor.innerHTML = `<p style="color:var(--md-sys-color-error); padding:16px;">${j.message || 'Error al cargar.'}</p>`;
@@ -395,6 +458,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 alert('No hay datos para imprimir aún. Selecciona mes/año y precio primero.');
                 return;
             }
+            const almLabel  = selAlmacen.value  || 'Todos';
+            const respLabel = selRessurti.options[selRessurti.selectedIndex]?.text || 'Todos';
             const payload = {
                 mes:        Number(selMes.value),
                 anio:       Number(inputAnio.value),
@@ -402,6 +467,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 zona:       '',
                 esquema:    '',
                 supervisor: ultimoConsolidado.supervisor?.nombre || supervisorNombre,
+                filtro_almacen:      almLabel,
+                filtro_distribuidor: respLabel,
                 almacenes:  ultimoConsolidado.almacenes,
             };
             const resp = await fetch('generar_pdf_requerimiento_supervisor.php', {

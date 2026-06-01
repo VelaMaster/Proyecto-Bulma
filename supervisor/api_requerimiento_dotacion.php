@@ -38,26 +38,29 @@ if (!$id_supervisor) {
     exit();
 }
 
-$mes    = isset($_GET['mes'])    ? (int)$_GET['mes']    : 0;
-$anio   = isset($_GET['anio'])   ? (int)$_GET['anio']   : 0;
-$precio = isset($_GET['precio']) ? trim($_GET['precio']) : '6.50';
+$mes         = isset($_GET['mes'])        ? (int)$_GET['mes']        : 0;
+$anio        = isset($_GET['anio'])       ? (int)$_GET['anio']       : 0;
+$precio      = isset($_GET['precio'])     ? trim($_GET['precio'])     : 'todos';
+$filtroAlm   = isset($_GET['almacen'])    ? trim($_GET['almacen'])    : '';
+$filtroResp  = isset($_GET['ressurti'])   ? trim($_GET['ressurti'])   : ''; // ''=todos, '1'..'5' o 'dm'
 
 if ($mes < 1 || $mes > 12 || $anio < 2000) {
     echo json_encode(['status' => 'error', 'message' => 'Mes/año inválido.']);
     exit();
 }
 
-// Precio aceptado: 4.50 | 6.50
+// Precio: todos | 4.50 | 6.50
+$precioNum = null;
+$tipoVentaFiltro = null;  // null = sin filtro de precio
+$precioStr = 'todos';
+
 $precioNum = (float)str_replace(['$', ','], ['', '.'], $precio);
 if (abs($precioNum - 4.50) < 0.001) {
-    $precioNum = 4.50;
-    $tipoVentaFiltro = [0];
+    $precioNum = 4.50; $tipoVentaFiltro = [0]; $precioStr = '4.50';
 } elseif (abs($precioNum - 6.50) < 0.001) {
-    $precioNum = 6.50;
-    $tipoVentaFiltro = [1, 2];
+    $precioNum = 6.50; $tipoVentaFiltro = [1, 2]; $precioStr = '6.50';
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'Precio inválido (use 4.50 o 6.50).']);
-    exit();
+    $precioNum = null; $tipoVentaFiltro = null; $precioStr = 'todos';
 }
 
 try {
@@ -69,6 +72,7 @@ try {
                TRIM(L.NUM_TIENDA)    AS NUM_TIENDA,
                TRIM(L.ALMACEN_RURAL) AS ALMACEN,
                L.TIPO_PUNTO_VENTA    AS TIPO_PUNTO_VENTA,
+               L.RESSURTI            AS RESSURTI,
                L.PROMOTOR            AS PROMOTOR_ID
         FROM LECHERIA L
         JOIN PROMOTOR P ON P.PMT_NUMERO = L.PROMOTOR
@@ -115,7 +119,48 @@ try {
     $nombreSup = trim((string)$stmtN->fetchColumn());
     if ($nombreSup === '') $nombreSup = 'Supervisor #' . $id_supervisor;
 
-    // 3) Recorremos: agrupamos por almacén las que pasan el filtro de
+    // 3) Catálogos para los filtros (calculados ANTES de aplicar filtros)
+    $RESSURTI_LABEL = [
+        1 => 'Liconsa',
+        2 => 'Diconsa',
+        3 => 'Inst. responsable',
+        4 => 'Particular (comisionado)',
+        5 => 'Otro',
+    ];
+    $catAlmacenes  = [];
+    $catRessurti   = [];   // [value => label]
+    foreach ($rows as $r) {
+        $alm = strtoupper(trim((string)$r['ALMACEN']));
+        if ($alm !== '' && !in_array($alm, $catAlmacenes)) $catAlmacenes[] = $alm;
+        $tipo = (int)$r['TIPO_PUNTO_VENTA'];
+        // DM se trata como responsable especial
+        if ($tipo === 2) {
+            $catRessurti['dm'] = 'Distribución Mercantil (DM)';
+        } else {
+            $rs = (int)$r['RESSURTI'];
+            if ($rs > 0 && !isset($catRessurti[$rs])) {
+                $catRessurti[$rs] = $RESSURTI_LABEL[$rs] ?? "Responsable $rs";
+            }
+        }
+    }
+    sort($catAlmacenes);
+    ksort($catRessurti);
+
+    // Aplicar filtro de almacén y responsable al dataset
+    if ($filtroAlm !== '') {
+        $rows = array_filter($rows, fn($r) => strtoupper(trim((string)$r['ALMACEN'])) === strtoupper($filtroAlm));
+    }
+    if ($filtroResp !== '') {
+        if ($filtroResp === 'dm') {
+            $rows = array_filter($rows, fn($r) => (int)$r['TIPO_PUNTO_VENTA'] === 2);
+        } else {
+            $frs = (int)$filtroResp;
+            // DM (tipo=2) lo excluimos si el filtro no es DM
+            $rows = array_filter($rows, fn($r) => (int)$r['TIPO_PUNTO_VENTA'] !== 2 && (int)$r['RESSURTI'] === $frs);
+        }
+    }
+
+    // 4) Recorremos: agrupamos por almacén las que pasan el filtro de
     //    precio, y en paralelo armamos un resumen GLOBAL (ambos precios)
     //    para mostrar al final de la página: total promotores, total
     //    lecherías, cuántas $4.50 y cuántas $6.50.
@@ -138,7 +183,7 @@ try {
         elseif ($tipo === 1 || $tipo === 2)  $resumenLech650++;
 
         // Filtro de precio para el detalle por almacén.
-        if (!in_array($tipo, $tipoVentaFiltro, true)) continue;
+        if ($tipoVentaFiltro !== null && !in_array($tipo, $tipoVentaFiltro, true)) continue;
 
         $alm = trim((string)$r['ALMACEN']);
         if ($alm === '') $alm = '(SIN ALMACÉN)';
@@ -162,11 +207,15 @@ try {
         $numTiendaMostrar = ($tipo === 2 || $numTiendaRaw === '10101')
                             ? 'DM' : $numTiendaRaw;
 
+        $rs = (int)$r['RESSURTI'];
         $almacenes[$alm]['lecherias'][] = [
             'punto_venta'      => (string)$r['LECHER'],
             'num_tienda'       => $numTiendaMostrar,
             'num_tienda_raw'   => $numTiendaRaw,
             'tipo_punto_venta' => $tipo,
+            'ressurti'         => $rs,
+            'ressurti_label'   => ($tipo === 2) ? 'DM' : ($RESSURTI_LABEL[$rs] ?? ''),
+            'precio_label'     => ($tipo === 0) ? '$4.50' : '$6.50',
             'requerimiento'    => $req,        // null = FALTA
             'capturado'        => $capturado,
         ];
@@ -184,11 +233,14 @@ try {
     ksort($almacenes);
     $almacenesOut = array_values($almacenes);
 
+    $catRessurtiOut = [];
+    foreach ($catRessurti as $k => $v) $catRessurtiOut[] = ['value' => (string)$k, 'label' => $v];
+
     $resp = [
         'status'     => 'success',
         'mes'        => $mes,
         'anio'       => $anio,
-        'precio'     => number_format($precioNum, 2, '.', ''),
+        'precio'     => $precioStr,
         'supervisor' => [
             'id'     => (int)$id_supervisor,
             'nombre' => $nombreSup,
@@ -202,6 +254,13 @@ try {
             'lecherias_total'   => $resumenLech450 + $resumenLech650,
             'lecherias_450'     => $resumenLech450,
             'lecherias_650'     => $resumenLech650,
+        ],
+        'cat_almacenes'  => $catAlmacenes,
+        'cat_ressurti'   => $catRessurtiOut,
+        'filtros_activos'=> [
+            'almacen'  => $filtroAlm,
+            'ressurti' => $filtroResp,
+            'precio'   => $precioStr,
         ],
     ];
 
