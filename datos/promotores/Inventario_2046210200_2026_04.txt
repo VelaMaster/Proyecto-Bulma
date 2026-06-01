@@ -1,0 +1,62 @@
+                                        INVENTARIO MENSUAL DE LECHE EN POLVO
+Fecha:            2026-04-30             Clave del punto de venta:                 2046210200             Clave de tienda:                  DM
+
+Almacen que surte:            GUADALUPE ETLA                 Municipio:   SANTIAGO HUAJOLOTITL?N              Comunidad:
+                                                                                                                      SANTIAGO HUAJOLOTITLAN
+
+I.- EXISTENCIA DE LECHE.
+                            Inventario Inicial    Abasto total mes    Ventas real mes   Litros Registrados       Diferencias       Inventario final mes
+
+         Cajas                      0                   35                  34                  34                   0                      1
+
+         Sobres                     0                    0                                                           0                      0
+
+     Total litros                   0                  2520               2448                2448                   0                      72
+
+
+1.1.- ¿La venta registrada es igual a la venta real?
+    No               Si
+Señale o describa la causa:
+
+
+    a) Falta de capacitacion                                                     b) Omision del responsable
+
+    c) Resistencia de titulares                                             d) Otros:
+
+
+1.2.- ¿Se vendio leche a personas no incluidas en el libro de retiro?
+    No               Si        Motivo:
+
+
+II.- SURTIMIENTOS.
+            Fecha                         Cajas                  Litros                              Facturas                         Caducidad
+
+         2026-04-30                         35                   2520
+
+
+III.- COBERTURA SOCIAL Y DOTACION ASIGNADA SEGUN PADRON.
+            HOGARES                                  MENORES                              MAYORES                              LITROS AL MES
+
+                  145                                     81                                 147                                   3648
+
+
+IV.- PROBLEMAS DE OPERACION EN EL PUNTO DE VENTA
+    a) Cierre por reubicacion                                                    b) Renuncia o baja responsable
+
+    c) Adeudo del responsable                                               d) Otros:
+
+
+IV.1.- ¿Se puede continuar con la venta de leche?
+    Si               No
+Alternativas de solucion:
+
+
+    a) Propuesta nuevo local                                                     b) Fusion de beneficiarios
+
+    c) Baja del padron                                                      d) Otra:
+
+
+
+
+                 Nombre y firma del Promotor(a) Social                                          Nombre y firma del distribuidor mercantil
+

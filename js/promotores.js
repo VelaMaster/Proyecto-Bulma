@@ -464,6 +464,18 @@ document.addEventListener('DOMContentLoaded', () => {
     window.permitirCapturaInicial    = permitirCapturaInicial;
     window.mostrarBannerFaltaAnterior = mostrarBannerFaltaAnterior;
 
+    // Aplica un inventario inicial (en litros) y recalcula abasto/final.
+    // Usado en modo edición para refrescar el arrastre del mes anterior
+    // (FIN del mes N → INI del mes N+1) aunque el inventario ya exista.
+    window.aplicarInventarioInicialLitros = function (litrosTotales) {
+        const lt = Math.round(parseFloat(litrosTotales) || 0);
+        const fmt = formatearCantidades(lt);
+        invCaja.value   = fmt.cajas;
+        invSobres.value = fmt.sobres;
+        invLitros.value = lt;
+        actualizarAbastoTotal();   // recalcula abasto y, en cascada, el final
+    };
+
     // ─── BLOQUEO DE TECLADO ───────────────────────────────────────────────────
 
     function bloquearCaracteresInvalidos(e) {

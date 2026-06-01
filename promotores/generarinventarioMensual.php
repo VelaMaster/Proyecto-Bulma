@@ -741,8 +741,43 @@ $lecher_get = $_GET['lecher'] ?? '';
                 document.getElementById('surt_caducidad').value = d.SURT_CADUCIDAD?.substring(0, 10) ?? '';
 
                 mostrarNotificacion('Inventario existente cargado para edición.', 'info');
+
+                // Aunque el inventario ya exista, el inventario inicial SIEMPRE
+                // debe ser el inventario final del mes anterior. Si el mes
+                // anterior se capturó/editó después, el valor guardado quedó
+                // desactualizado → lo refrescamos aquí.
+                refrescarInicialDesdeMesAnterior();
             })
             .catch(() => mostrarNotificacion('No se pudo cargar el inventario existente.', 'error'));
+    }
+
+    // ══════════════════════════════════════════════════════════
+    //  REFRESCAR INVENTARIO INICIAL = FINAL DEL MES ANTERIOR
+    //  (en modo edición; el inicial es readonly, nunca se captura a mano)
+    // ══════════════════════════════════════════════════════════
+    function refrescarInicialDesdeMesAnterior() {
+        const lecheria = document.getElementById('inputLecheria').value.trim();
+        const mes  = parseInt(document.getElementById('mes_periodo').value, 10);
+        const anio = parseInt(document.getElementById('anio_periodo').value, 10);
+        const menores = parseInt(document.getElementById('campoMenores').value) || 0;
+        const mayores = parseInt(document.getElementById('campoMayores').value) || 0;
+        if (!lecheria || !mes || !anio) return;
+
+        fetch('calcularSurtimiento.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ lecher: lecheria, menores, mayores, mes_periodo: mes, anio_periodo: anio })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (typeof window.aplicarInventarioInicialLitros !== 'function') return;
+            if (data.falta_mes_anterior) {
+                window.aplicarInventarioInicialLitros(0);   // sin mes anterior → 0
+            } else if (data.exito && data.litros_iniciales !== undefined) {
+                window.aplicarInventarioInicialLitros(data.litros_iniciales);
+            }
+        })
+        .catch(() => {});
     }
 
     // ══════════════════════════════════════════════════════════
