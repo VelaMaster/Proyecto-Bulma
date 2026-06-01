@@ -149,7 +149,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
         <!-- Filtros -->
         <div class="md3-card filtros-card">
-            <md-outlined-select label="Mes" id="selMes" style="min-width:140px;">
+            <md-outlined-select label="Mes" id="selMes" style="min-width:130px;">
                 <?php
                 $meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
                           'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -160,11 +160,30 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 ?>
             </md-outlined-select>
             <md-outlined-text-field label="Año" id="inputAnio" type="number"
-                value="<?= date('Y') ?>" style="max-width:110px;"></md-outlined-text-field>
+                value="<?= date('Y') ?>" style="max-width:100px;"></md-outlined-text-field>
+
+            <md-outlined-select label="Almacén" id="selAlmacen" style="min-width:150px;">
+                <md-select-option value=""><div slot="headline">Todos</div></md-select-option>
+            </md-outlined-select>
+
+            <md-outlined-select label="Promotor" id="selPromotor" style="min-width:170px;">
+                <md-select-option value=""><div slot="headline">Todos</div></md-select-option>
+            </md-outlined-select>
+
+            <md-outlined-select label="Tipo precio" id="selTipo" style="min-width:140px;">
+                <md-select-option value=""><div slot="headline">Todos</div></md-select-option>
+                <md-select-option value="0"><div slot="headline">$4.50</div></md-select-option>
+                <md-select-option value="1"><div slot="headline">$6.50</div></md-select-option>
+                <md-select-option value="2"><div slot="headline">DM (Dist. Mercantil)</div></md-select-option>
+            </md-outlined-select>
+
             <span style="flex-grow:1;"></span>
             <md-outlined-button id="btnExcelRpt">
                 <md-icon slot="icon">download</md-icon> Excel
             </md-outlined-button>
+            <md-filled-tonal-button id="btnPdfRpt">
+                <md-icon slot="icon">picture_as_pdf</md-icon> PDF
+            </md-filled-tonal-button>
         </div>
 
         <!-- Resumen -->
@@ -204,20 +223,62 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <script>
         const selMes      = document.getElementById('selMes');
         const inputAnio   = document.getElementById('inputAnio');
+        const selAlmacen  = document.getElementById('selAlmacen');
+        const selPromotor = document.getElementById('selPromotor');
+        const selTipo     = document.getElementById('selTipo');
         const contenedor  = document.getElementById('contenedorTabla');
         const resumenCard = document.getElementById('resumenCard');
 
+        // Guardamos los catálogos para no perderlos al re-renderizar
+        let catAlmacenes  = [];
+        let catPromotores = [];
+        let lastData      = null;
+
         selMes.value = String(new Date().getMonth() + 1);
 
-        selMes.addEventListener('change', cargar);
-        inputAnio.addEventListener('change', cargar);
+        selMes.addEventListener('change', () => { catAlmacenes=[]; catPromotores=[]; cargar(); });
+        inputAnio.addEventListener('change', () => { catAlmacenes=[]; catPromotores=[]; cargar(); });
+        selAlmacen.addEventListener('change', cargar);
+        selPromotor.addEventListener('change', cargar);
+        selTipo.addEventListener('change', cargar);
 
         document.getElementById('btnExcelRpt').addEventListener('click', () => {
             const mes  = selMes.value;
             const anio = inputAnio.value;
             if (!mes || !anio) return;
-            window.location.href =
-                `exportar_excel_reporte.php?mes=${mes}&anio=${anio}`;
+            const p = new URLSearchParams({mes, anio,
+                almacen: selAlmacen.value,
+                promotor: selPromotor.value,
+                tipo_precio: selTipo.value});
+            window.location.href = `exportar_excel_reporte.php?${p}`;
+        });
+
+        document.getElementById('btnPdfRpt').addEventListener('click', () => {
+            if (!lastData || !lastData.almacenes || lastData.almacenes.length === 0) {
+                alert('No hay datos para generar el PDF.'); return;
+            }
+            const etiquetaTipo = {'':'Todos','0':'$4.50','1':'$6.50','2':'DM'};
+            const payload = {
+                mes: lastData.mes,
+                anio: lastData.anio,
+                supervisor: lastData.supervisor.nombre,
+                filtro_almacen:   selAlmacen.value  || 'Todos',
+                filtro_promotor:  selPromotor.options[selPromotor.selectedIndex]?.text || 'Todos',
+                filtro_tipo:      etiquetaTipo[selTipo.value] ?? 'Todos',
+                almacenes: lastData.almacenes,
+            };
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = 'generar_pdf_reporte_mensual.php';
+            form.target = '_blank';
+            const inp = document.createElement('input');
+            inp.type  = 'hidden';
+            inp.name  = 'datos';
+            inp.value = JSON.stringify(payload);
+            form.appendChild(inp);
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
         });
 
         function fmtNum(n) {
@@ -256,7 +317,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     <td>${fmtNum(l.retiro_cajas)}</td>
                     <td>${fmtNum(l.familias_no_acud)}</td>
                     <td title="${l.observaciones || ''}" class="obs-cell">${l.observaciones || '—'}</td>
-                    <td style="font-size:0.7rem;opacity:.7;">${l.promotor || '—'}</td>
+                    <td style="font-size:0.7rem;opacity:.7;">${l.promotor_nombre || l.promotor || '—'}</td>
                 </tr>`;
             }).join('');
 
@@ -315,18 +376,48 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             resumenCard.style.display = 'block';
         }
 
+        function llenarSelect(sel, opciones, valorActual) {
+            // Conserva la opción "Todos" (primer child) y agrega el resto
+            while (sel.children.length > 1) sel.removeChild(sel.lastChild);
+            opciones.forEach(op => {
+                const o = document.createElement('md-select-option');
+                o.value = op.value;
+                o.innerHTML = `<div slot="headline">${op.label}</div>`;
+                sel.appendChild(o);
+            });
+            if (valorActual) sel.value = valorActual;
+        }
+
         async function cargar() {
             const mes  = selMes.value;
             const anio = inputAnio.value;
             if (!mes || !anio) return;
             skeleton();
             try {
-                const r = await fetch(`api_reporte_mensual_supervisor.php?mes=${mes}&anio=${anio}`);
+                const p = new URLSearchParams({mes, anio,
+                    almacen: selAlmacen.value,
+                    promotor: selPromotor.value,
+                    tipo_precio: selTipo.value});
+                const r = await fetch(`api_reporte_mensual_supervisor.php?${p}`);
                 const j = await r.json();
                 if (j.status !== 'success') {
                     contenedor.innerHTML = `<p style="color:var(--md-sys-color-error);padding:16px;">${j.message}</p>`;
                     return;
                 }
+                lastData = j;
+
+                // Poblar catálogos sólo cuando cambió mes/anio (vienen en la respuesta siempre)
+                if (j.cat_almacenes) {
+                    llenarSelect(selAlmacen,
+                        j.cat_almacenes.map(a => ({value: a, label: a})),
+                        j.filtros_activos.almacen);
+                }
+                if (j.cat_promotores) {
+                    llenarSelect(selPromotor,
+                        j.cat_promotores.map(p => ({value: p.id, label: p.nombre})),
+                        j.filtros_activos.promotor);
+                }
+
                 pintar(j);
             } catch (e) {
                 contenedor.innerHTML = `<p style="color:var(--md-sys-color-error);padding:16px;">Error: ${e.message}</p>`;

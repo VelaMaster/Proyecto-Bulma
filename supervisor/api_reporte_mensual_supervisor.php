@@ -21,8 +21,12 @@ if (!$id_supervisor) {
     exit();
 }
 
-$mes  = isset($_GET['mes'])  ? (int)$_GET['mes']  : 0;
-$anio = isset($_GET['anio']) ? (int)$_GET['anio'] : 0;
+$mes          = isset($_GET['mes'])        ? (int)$_GET['mes']        : 0;
+$anio         = isset($_GET['anio'])       ? (int)$_GET['anio']       : 0;
+$filtroAlm    = isset($_GET['almacen'])    ? trim($_GET['almacen'])    : '';
+$filtroPromot = isset($_GET['promotor'])   ? trim($_GET['promotor'])   : '';
+$filtroTipo   = isset($_GET['tipo_precio'])? $_GET['tipo_precio']      : '';   // '','0','1','2'
+
 if ($mes < 1 || $mes > 12 || $anio < 2000) {
     echo json_encode(['status' => 'error', 'message' => 'Mes/año inválido.']);
     exit();
@@ -36,7 +40,9 @@ try {
         SELECT TRIM(L.LECHER)        AS LECHER,
                TRIM(L.NUM_TIENDA)    AS NUM_TIENDA,
                TRIM(L.ALMACEN_RURAL) AS ALMACEN,
-               L.TIPO_PUNTO_VENTA    AS TIPO_PUNTO_VENTA
+               L.TIPO_PUNTO_VENTA    AS TIPO_PUNTO_VENTA,
+               TRIM(P.PMT_NOMBRE)    AS PROMOTOR_NOMBRE,
+               L.PROMOTOR            AS PROMOTOR_ID
         FROM LECHERIA L
         JOIN PROMOTOR P ON P.PMT_NUMERO = L.PROMOTOR
         WHERE P.PMT_ACTIVO = 'S'
@@ -51,6 +57,30 @@ try {
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':id_sup' => $id_supervisor]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // -- Catálogos para los filtros (todos los valores únicos)
+    $catAlmacenes = [];
+    $catPromotores = [];
+    foreach ($rows as $r) {
+        $alm = strtoupper(trim((string)$r['ALMACEN']));
+        if ($alm && !in_array($alm, $catAlmacenes)) $catAlmacenes[] = $alm;
+        $pKey = (int)$r['PROMOTOR_ID'];
+        $pNom = mb_convert_encoding(trim((string)$r['PROMOTOR_NOMBRE']), 'UTF-8', 'UTF-8,ISO-8859-1,Windows-1252');
+        if ($pKey && !isset($catPromotores[$pKey])) $catPromotores[$pKey] = $pNom;
+    }
+    sort($catAlmacenes);
+    ksort($catPromotores);
+
+    // -- Aplicar filtros al dataset
+    if ($filtroAlm !== '') {
+        $rows = array_filter($rows, fn($r) => strtoupper(trim((string)$r['ALMACEN'])) === strtoupper($filtroAlm));
+    }
+    if ($filtroPromot !== '') {
+        $rows = array_filter($rows, fn($r) => (int)$r['PROMOTOR_ID'] === (int)$filtroPromot);
+    }
+    if ($filtroTipo !== '') {
+        $rows = array_filter($rows, fn($r) => (int)$r['TIPO_PUNTO_VENTA'] === (int)$filtroTipo);
+    }
 
     // 2) Reporte mensual desde SQLite — mapa clave_lecheria → row
     $sqlite = DatabaseSQLite::getInstance();
@@ -105,6 +135,9 @@ try {
             'punto_venta'      => $k,
             'num_tienda'       => $numTiendaMostrar,
             'precio'           => $precio,
+            'tipo_punto_venta' => $tipo,
+            'promotor_id'      => (int)$r['PROMOTOR_ID'],
+            'promotor_nombre'  => mb_convert_encoding(trim((string)$r['PROMOTOR_NOMBRE']), 'UTF-8', 'UTF-8,ISO-8859-1,Windows-1252'),
             'capturado'        => $capturado,
             'inv_ini_cajas'    => $capturado ? (int)$rep['inv_ini_cajas']    : null,
             'inv_ini_sobres'   => $capturado ? (int)$rep['inv_ini_sobres']   : null,
@@ -136,6 +169,11 @@ try {
     ksort($almacenes);
     $almacenesOut = array_values($almacenes);
 
+    $promotoresOut = [];
+    foreach ($catPromotores as $id => $nom) {
+        $promotoresOut[] = ['id' => $id, 'nombre' => $nom];
+    }
+
     $resp = [
         'status'           => 'success',
         'mes'              => $mes,
@@ -144,6 +182,13 @@ try {
         'almacenes'        => $almacenesOut,
         'total_lecherias'  => $totalLech,
         'total_capturadas' => $totalCapt,
+        'cat_almacenes'    => $catAlmacenes,
+        'cat_promotores'   => $promotoresOut,
+        'filtros_activos'  => [
+            'almacen'    => $filtroAlm,
+            'promotor'   => $filtroPromot,
+            'tipo_precio'=> $filtroTipo,
+        ],
     ];
 
     array_walk_recursive($resp, function (&$v) {

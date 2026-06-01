@@ -74,11 +74,20 @@ class InventarioRepositorio
     {
         if (empty($lecheria)) return false;
         $lecheria_limpia = str_replace("'", "''", $lecheria);
+        $mes  = (int)$mes;
+        $anio = (int)$anio;
 
-        $sql = "SELECT ID FROM INVENTARIOS_MENSUALES 
-                WHERE CLAVE_LECHERIA = '$lecheria_limpia' 
-                AND ANIO_PERIODO = $anio 
-                AND MES_PERIODO = $mes";
+        // Cubrimos también filas legadas donde MES_PERIODO/ANIO_PERIODO
+        // estén en NULL: caemos a EXTRACT() sobre FECHA. Así el INSERT no
+        // se cuela como duplicado por no haber matcheado un NULL.
+        $sql = "SELECT FIRST 1 ID FROM INVENTARIOS_MENSUALES
+                WHERE CLAVE_LECHERIA = '$lecheria_limpia'
+                  AND (
+                        (ANIO_PERIODO = $anio AND MES_PERIODO = $mes)
+                     OR (FECHA IS NOT NULL
+                         AND EXTRACT(YEAR  FROM FECHA) = $anio
+                         AND EXTRACT(MONTH FROM FECHA) = $mes)
+                  )";
 
         $stmt = $this->db->query($sql);
         return $stmt->fetch() !== false;

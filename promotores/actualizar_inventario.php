@@ -34,15 +34,28 @@ $n = function ($val) {
 };
 
 $lecheria = $datos['lecheria'] ?? 'X';
-// Tomamos el periodo del payload si viene, si no caemos a la fecha del documento.
-$mes  = !empty($datos['mes_periodo'])  ? (int)$datos['mes_periodo']  : (int)date('m', strtotime($datos['fecha'] ?? 'now'));
-$anio = !empty($datos['anio_periodo']) ? (int)$datos['anio_periodo'] : (int)date('Y', strtotime($datos['fecha'] ?? 'now'));
+// La FECHA es la fuente de verdad del periodo. Si difiere de mes_periodo/anio_periodo,
+// los re-alineamos para no dejar la fila con periodo inconsistente (eso era lo que
+// permitía colar duplicados del mismo mes).
+$mes  = (int)date('m', strtotime($datos['fecha'] ?? 'now'));
+$anio = (int)date('Y', strtotime($datos['fecha'] ?? 'now'));
+$datos['mes_periodo']  = $mes;
+$datos['anio_periodo'] = $anio;
 $nombreArchivo = "Inventario_{$lecheria}_{$anio}_" . sprintf('%02d', $mes) . ".pdf";
 
 try {
     $db = Database::getInstance();
-    
+
     $id = (int)$datos['inventario_id'];
+
+    // Guardamos el PDF_RUTA anterior para detectar si la edición cambió de mes
+    // (FECHA distinta) y en tal caso borrar el archivo viejo en disco.
+    $rutaPrev = '';
+    try {
+        $stmtPrev = $db->query("SELECT PDF_RUTA FROM INVENTARIOS_MENSUALES WHERE ID = $id");
+        $rowPrev  = $stmtPrev->fetch(PDO::FETCH_ASSOC);
+        $rutaPrev = trim($rowPrev['PDF_RUTA'] ?? '');
+    } catch (Throwable $e) { /* no crítico */ }
 
     // 3. ARMAMOS EL UPDATE GIGANTE EN TEXTO PLANO
     $sql = "UPDATE INVENTARIOS_MENSUALES SET
@@ -78,6 +91,8 @@ try {
         FIN_LITROS     = " . $n($datos['fin_litros']) . ",
 
         PDF_RUTA       = " . $q($nombreArchivo, 255) . ",
+        MES_PERIODO    = $mes,
+        ANIO_PERIODO   = $anio,
         ESTADO         = 'editado'
         WHERE ID = $id";
 
@@ -88,9 +103,15 @@ try {
 
     $db->commit();
 
-    // 5. Regenerar PDF en disco con los datos actualizados
+    // 5. Regenerar PDF en disco con los datos actualizados.
+    //    Si la edición cambió la FECHA a otro mes, el nombre del archivo cambia;
+    //    borramos el viejo para no dejar PDFs huérfanos en /datos/promotores.
     try {
         require_once __DIR__ . '/_fn_pdf_inventario.php';
+        if ($rutaPrev !== '' && $rutaPrev !== $nombreArchivo) {
+            $rutaPrevAbs = __DIR__ . '/../datos/promotores/' . $rutaPrev;
+            if (is_file($rutaPrevAbs)) @unlink($rutaPrevAbs);
+        }
         generarArchivoInventario($datos);
     } catch (Throwable $ePDF) {
         error_log('[actualizar_inventario] PDF no regenerado: ' . $ePDF->getMessage());

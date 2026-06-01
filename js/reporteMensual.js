@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const nombreSupervisor  = document.getElementById('nombreSupervisor');
     const inputSupervisor   = document.getElementById('supervisor');
 
-    // Carga el supervisor asignado al promotor (no se escribe a mano).
     fetch('obtenerSupervisorAsignado.php')
         .then(r => r.json())
         .then(d => {
