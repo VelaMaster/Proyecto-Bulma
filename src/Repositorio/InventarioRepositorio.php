@@ -12,14 +12,45 @@ class InventarioRepositorio
         $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     }
 
+    /**
+     * Genera la lista SQL de claves candidatas para una lechería, tolerando
+     * el sufijo "00" en cualquier sentido y espacios. Devuelve algo como:
+     *   '2000610400','20006104','200061040000'
+     * para usar dentro de un IN (...). Así el match de clave es idéntico en
+     * guardar, cargar y arrastrar, sin importar cómo se haya capturado.
+     */
+    private function clavesCandidatas(string $lecher): string
+    {
+        $base = trim($lecher);
+        $sinSufijo = preg_match('/00$/', $base) ? substr($base, 0, -2) : $base;
+
+        $cands = array_unique(array_filter([
+            $base,
+            $sinSufijo,
+            $sinSufijo . '00',
+        ], fn($v) => $v !== ''));
+
+        return implode(',', array_map(
+            fn($c) => "'" . str_replace("'", "''", $c) . "'",
+            $cands
+        ));
+    }
+
+    /**
+     * Historial de la lechería SOLO desde INVENTARIOS_MENSUALES (captura del
+     * promotor). NO se usa INVENTARIO_LEP_SUBSIDIADA para rellenar datos.
+     * Se devuelven las mismas claves que antes (VENTA_REAL / INVENTARIO_FINAL)
+     * para no romper a quien consume este método (la Neurona).
+     */
     public function obtenerHistorialLecheria($lecher)
     {
-        $sql = "SELECT VENTA_REAL, INVENTARIO_FINAL
-                FROM INVENTARIO_LEP_SUBSIDIADA
-                WHERE LECHER = :lecher
+        $inList = $this->clavesCandidatas($lecher);
+
+        $sql = "SELECT VENTA_LITROS AS VENTA_REAL, FIN_LITROS AS INVENTARIO_FINAL
+                FROM INVENTARIOS_MENSUALES
+                WHERE TRIM(CLAVE_LECHERIA) IN ($inList)
                 ORDER BY ANIO_PERIODO DESC, MES_PERIODO DESC";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':lecher' => $lecher]);
+        $stmt = $this->db->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -40,12 +71,11 @@ class InventarioRepositorio
             $anio_ant = $anio_actual - 1;
         }
 
-        $lecher_q   = "'" . str_replace("'", "''", $lecher) . "'";
-        $lecher_q00 = "'" . str_replace("'", "''", $lecher . '00') . "'";
+        $inList = $this->clavesCandidatas($lecher);
 
         $sql = "SELECT FIRST 1 FIN_LITROS
                 FROM INVENTARIOS_MENSUALES
-                WHERE CLAVE_LECHERIA IN ($lecher_q, $lecher_q00)
+                WHERE TRIM(CLAVE_LECHERIA) IN ($inList)
                   AND MES_PERIODO  = $mes_ant
                   AND ANIO_PERIODO = $anio_ant";
         $row = $this->db->query($sql)->fetch(PDO::FETCH_ASSOC);
@@ -75,12 +105,12 @@ class InventarioRepositorio
     private function existeInventarioMes($lecheria, $mes, $anio)
     {
         if (empty($lecheria)) return false;
-        $lecheria_limpia = str_replace("'", "''", $lecheria);
         $mes  = (int)$mes;
         $anio = (int)$anio;
+        $inList = $this->clavesCandidatas($lecheria);
 
         $sql = "SELECT FIRST 1 ID FROM INVENTARIOS_MENSUALES
-                WHERE CLAVE_LECHERIA = '$lecheria_limpia'
+                WHERE TRIM(CLAVE_LECHERIA) IN ($inList)
                   AND (
                         (ANIO_PERIODO = $anio AND MES_PERIODO = $mes)
                      OR (FECHA IS NOT NULL
@@ -284,7 +314,6 @@ class InventarioRepositorio
 
     public function buscarPorLecheria($clave, $mes = 0, $anio = 0)
     {
-        $clave_limpia = str_replace("'", "''", $clave);
         $mes  = (int)$mes;
         $anio = (int)$anio;
 
@@ -295,10 +324,12 @@ class InventarioRepositorio
             return [];
         }
 
+        $inList = $this->clavesCandidatas($clave);
+
         $sql = "SELECT ID, FECHA, MUNICIPIO, COMUNIDAD, FIN_CAJA, FIN_LITROS, ESTADO,
                        MES_PERIODO, ANIO_PERIODO
                 FROM INVENTARIOS_MENSUALES
-                WHERE CLAVE_LECHERIA = '$clave_limpia'
+                WHERE TRIM(CLAVE_LECHERIA) IN ($inList)
                   AND ANIO_PERIODO = $anio
                   AND MES_PERIODO  = $mes
                 ORDER BY ID DESC";

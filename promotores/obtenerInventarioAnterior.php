@@ -16,20 +16,23 @@ if (empty($lecher)) {
     exit();
 }
 try {
-    $sql = "SELECT FIRST 1 INVENTARIO_FINAL, MES_PERIODO, ANIO_PERIODO 
-            FROM INVENTARIO_LEP_SUBSIDIADA 
-            WHERE LECHER = :lecher 
+    // SOLO INVENTARIOS_MENSUALES (captura del promotor). El inventario inicial
+    // de un mes = inventario final (FIN_LITROS) del último mes capturado.
+    $lecher_q   = "'" . str_replace("'", "''", $lecher) . "'";
+    $lecher_q00 = "'" . str_replace("'", "''", $lecher . '00') . "'";
+
+    $sql = "SELECT FIRST 1 FIN_LITROS, MES_PERIODO, ANIO_PERIODO
+            FROM INVENTARIOS_MENSUALES
+            WHERE CLAVE_LECHERIA IN ($lecher_q, $lecher_q00)
             ORDER BY ANIO_PERIODO DESC, MES_PERIODO DESC";
-              
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([':lecher' => $lecher]);
-    $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    $resultado = $pdo->query($sql)->fetch(PDO::FETCH_ASSOC);
 
     if ($resultado) {
         echo json_encode([
             'error' => false,
-            'encontrado' => true, 
-            'inventario_inicial' => $resultado['INVENTARIO_FINAL'],
+            'encontrado' => true,
+            'inventario_inicial' => $resultado['FIN_LITROS'],
             'mes_consultado' => $resultado['MES_PERIODO'],
             'anio_consultado' => $resultado['ANIO_PERIODO']
         ]);
