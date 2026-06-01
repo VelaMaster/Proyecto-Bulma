@@ -81,9 +81,8 @@ try {
           AND EXISTS (
                 SELECT 1
                 FROM MAPEO_SUPERVISOR_LECHERIA M
-                JOIN LECHERIA L2 ON M.LECHER = L2.LECHER
                 WHERE M.ID_SUPERVISOR = :id_sup
-                  AND L2.PROMOTOR = L.PROMOTOR
+                  AND TRIM(M.LECHER) = TRIM(L.LECHER)
               )
         ORDER BY TRIM(L.ALMACEN_RURAL), TRIM(L.LECHER)
     ";
