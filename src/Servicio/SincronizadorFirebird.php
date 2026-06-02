@@ -108,10 +108,11 @@ class SincronizadorFirebird
     /* ────────────────────────────────────────────────────────────── */
     private function _syncUsuarios(PDO $fb, PDO $sqlite): int
     {
-        $rows = $fb->query("SELECT USUARIO, CONTRASENA, NOMBRE, ROL, CLAVE_ROL, ACTIVO FROM USUARIOS_INVENTARIOS")
+        // Firebird real no tiene columna ACTIVO. En SQLite la columna existe con DEFAULT 1.
+        $rows = $fb->query("SELECT USUARIO, CONTRASENA, NOMBRE, ROL, CLAVE_ROL FROM USUARIOS_INVENTARIOS")
                    ->fetchAll();
         return $this->_reemplazarTabla($sqlite, 'usuarios_inventarios',
-            ['USUARIO','CONTRASENA','NOMBRE','ROL','CLAVE_ROL','ACTIVO'], $rows);
+            ['USUARIO','CONTRASENA','NOMBRE','ROL','CLAVE_ROL'], $rows);
     }
 
     private function _syncMunicipio(PDO $fb, PDO $sqlite): int
@@ -132,9 +133,11 @@ class SincronizadorFirebird
 
     private function _syncLecheria(PDO $fb, PDO $sqlite): int
     {
+        // LECHERIA en Firebird real no tiene columna SUPERVISOR — la relación
+        // supervisor↔lechería viene por MAPEO_SUPERVISOR_LECHERIA.
         $sql = "SELECT LECHER, NOMBRELECH, EFD_NUMERO, MUN_NUMERO, LOC_NUMERO,
                        NUM_TIENDA, TIPO_PUNTO_VENTA, ALMACEN_RURAL,
-                       PROMOTOR, SUPERVISOR,
+                       PROMOTOR,
                        CC_FAM, CC_BT1, CC_BT2, CC_BT3, CC_BT4, CC_BT5, CC_BT6, CC_BT7,
                        EN_OPERACION
                 FROM LECHERIA WHERE EFD_NUMERO=20";
@@ -142,7 +145,7 @@ class SincronizadorFirebird
         return $this->_reemplazarTabla($sqlite, 'lecheria',
             ['LECHER','NOMBRELECH','EFD_NUMERO','MUN_NUMERO','LOC_NUMERO',
              'NUM_TIENDA','TIPO_PUNTO_VENTA','ALMACEN_RURAL',
-             'PROMOTOR','SUPERVISOR',
+             'PROMOTOR',
              'CC_FAM','CC_BT1','CC_BT2','CC_BT3','CC_BT4','CC_BT5','CC_BT6','CC_BT7',
              'EN_OPERACION'],
             $rows);
