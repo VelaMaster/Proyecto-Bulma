@@ -1,4 +1,5 @@
 <?php
+// MIGRADO a SQLite. CONTAINING/FIRST → LIKE/LIMIT. CAST AS VARCHAR → CAST AS TEXT.
 require_once __DIR__ . '/../includes/session_guard.php';
 header('Content-Type: application/json');
 
@@ -6,24 +7,23 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     echo json_encode([]); exit();
 }
 
-require_once('../conexion.php');
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
+$pdo = DatabaseSQLite::getInstance();
 
 $q = trim($_GET['q'] ?? '');
 if (strlen($q) < 1) { echo json_encode([]); exit; }
 
 try {
-    // CONTAINING es más eficiente que LIKE en Firebird
-    $sql = "SELECT FIRST 10 ID, CLAVE_LECHERIA, FECHA, MUNICIPIO, ESTADO
-            FROM INVENTARIOS_MENSUALES
-            WHERE CLAVE_LECHERIA CONTAINING ?
-               OR CAST(FECHA AS VARCHAR(20)) CONTAINING ?
-            ORDER BY FECHA DESC";
-
+    $sql = "SELECT ID, CLAVE_LECHERIA, FECHA, MUNICIPIO, ESTADO
+            FROM inventarios_mensuales
+            WHERE UPPER(CLAVE_LECHERIA) LIKE ?
+               OR CAST(FECHA AS TEXT)   LIKE ?
+            ORDER BY FECHA DESC
+            LIMIT 10";
     $stmt = $pdo->prepare($sql);
-    $stmt->execute([strtoupper($q), $q]);
-    $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    echo json_encode($resultados);
-
+    $patron = '%' . strtoupper($q) . '%';
+    $stmt->execute([$patron, '%' . $q . '%']);
+    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
 } catch (PDOException $e) {
     echo json_encode([]);
 }

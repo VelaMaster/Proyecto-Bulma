@@ -1,7 +1,6 @@
 <?php
 
 require_once __DIR__ . '/../includes/session_guard.php';
-require_once '../Database.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     header("Location: ../iniciosesionPromotor.php");
@@ -9,7 +8,6 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
 }
 
 $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
-$origen_conexion = Database::getEnvName();
 
 $lecher_get = $_GET['lecher'] ?? '';
 
