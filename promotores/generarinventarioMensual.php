@@ -939,7 +939,7 @@ $lecher_get = $_GET['lecher'] ?? '';
             btnGuardar.classList.add('is-loading');
 
             try {
-                   Se eliminó la lógica de guardado local y PDF offline.
+                /* Se eliminó la lógica de guardado local y PDF offline.
                    Todo pasa directo al servidor. */
                 const guardadoOffline = false;
 
