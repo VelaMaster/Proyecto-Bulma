@@ -49,9 +49,9 @@ $usuarios = $pdo->query("SELECT USUARIO, NOMBRE, ROL, CLAVE_ROL, ACTIVO FROM usu
       <div>
         <label>Rol</label>
         <select name="rol">
-          <option value="promotor">promotor</option>
-          <option value="supervisor">supervisor</option>
-          <option value="distribucion">distribucion</option>
+          <option value="0">0 — promotor</option>
+          <option value="1">1 — supervisor</option>
+          <option value="2">2 — distribucion</option>
         </select>
       </div>
       <div><label>Clave rol</label><input name="clave_rol" type="number"></div>
@@ -68,7 +68,8 @@ $usuarios = $pdo->query("SELECT USUARIO, NOMBRE, ROL, CLAVE_ROL, ACTIVO FROM usu
         <tr data-usuario="<?= htmlspecialchars($u['USUARIO']) ?>">
           <td><code><?= htmlspecialchars($u['USUARIO']) ?></code></td>
           <td><?= htmlspecialchars($u['NOMBRE'] ?? '') ?></td>
-          <td><span class="pill-rol"><?= htmlspecialchars($u['ROL'] ?? '') ?></span></td>
+          <?php $rolLabel = ['0'=>'promotor','1'=>'supervisor','2'=>'distribucion'][$u['ROL']] ?? ($u['ROL'] ?? '?'); ?>
+          <td><span class="pill-rol"><?= htmlspecialchars($rolLabel) ?></span></td>
           <td><?= htmlspecialchars((string)($u['CLAVE_ROL'] ?? '')) ?></td>
           <td><?= $u['ACTIVO'] ? '✔' : '—' ?></td>
           <td style="text-align:right">

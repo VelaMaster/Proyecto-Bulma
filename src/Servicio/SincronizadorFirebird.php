@@ -20,10 +20,13 @@ class SincronizadorFirebird
     public function __construct()
     {
         $this->mapa = [
-            'usuarios_inventarios' => fn($fb, $sqlite) => $this->_syncUsuarios($fb, $sqlite),
-            'municipio'            => fn($fb, $sqlite) => $this->_syncMunicipio($fb, $sqlite),
-            'localidad'            => fn($fb, $sqlite) => $this->_syncLocalidad($fb, $sqlite),
-            'lecheria'             => fn($fb, $sqlite) => $this->_syncLecheria($fb, $sqlite),
+            'usuarios_inventarios'      => fn($fb, $sqlite) => $this->_syncUsuarios($fb, $sqlite),
+            'promotor'                  => fn($fb, $sqlite) => $this->_syncPromotor($fb, $sqlite),
+            'supervisor'                => fn($fb, $sqlite) => $this->_syncSupervisor($fb, $sqlite),
+            'municipio'                 => fn($fb, $sqlite) => $this->_syncMunicipio($fb, $sqlite),
+            'localidad'                 => fn($fb, $sqlite) => $this->_syncLocalidad($fb, $sqlite),
+            'lecheria'                  => fn($fb, $sqlite) => $this->_syncLecheria($fb, $sqlite),
+            'mapeo_supervisor_lecheria' => fn($fb, $sqlite) => $this->_syncMapeo($fb, $sqlite),
         ];
     }
 
@@ -132,15 +135,38 @@ class SincronizadorFirebird
         $sql = "SELECT LECHER, NOMBRELECH, EFD_NUMERO, MUN_NUMERO, LOC_NUMERO,
                        NUM_TIENDA, TIPO_PUNTO_VENTA, ALMACEN_RURAL,
                        PROMOTOR, SUPERVISOR,
-                       CC_FAM, CC_BT1, CC_BT2, CC_BT3, CC_BT4, CC_BT5, CC_BT6, CC_BT7
+                       CC_FAM, CC_BT1, CC_BT2, CC_BT3, CC_BT4, CC_BT5, CC_BT6, CC_BT7,
+                       EN_OPERACION
                 FROM LECHERIA WHERE EFD_NUMERO=20";
         $rows = $fb->query($sql)->fetchAll();
         return $this->_reemplazarTabla($sqlite, 'lecheria',
             ['LECHER','NOMBRELECH','EFD_NUMERO','MUN_NUMERO','LOC_NUMERO',
              'NUM_TIENDA','TIPO_PUNTO_VENTA','ALMACEN_RURAL',
              'PROMOTOR','SUPERVISOR',
-             'CC_FAM','CC_BT1','CC_BT2','CC_BT3','CC_BT4','CC_BT5','CC_BT6','CC_BT7'],
+             'CC_FAM','CC_BT1','CC_BT2','CC_BT3','CC_BT4','CC_BT5','CC_BT6','CC_BT7',
+             'EN_OPERACION'],
             $rows);
+    }
+
+    private function _syncPromotor(PDO $fb, PDO $sqlite): int
+    {
+        $rows = $fb->query("SELECT PMT_NUMERO, PMT_NOMBRE, PMT_ACTIVO FROM PROMOTOR")->fetchAll();
+        return $this->_reemplazarTabla($sqlite, 'promotor',
+            ['PMT_NUMERO','PMT_NOMBRE','PMT_ACTIVO'], $rows);
+    }
+
+    private function _syncSupervisor(PDO $fb, PDO $sqlite): int
+    {
+        $rows = $fb->query("SELECT ID_SUPERVISOR, NOMBRE_SUPERVISOR FROM SUPERVISOR")->fetchAll();
+        return $this->_reemplazarTabla($sqlite, 'supervisor',
+            ['ID_SUPERVISOR','NOMBRE_SUPERVISOR'], $rows);
+    }
+
+    private function _syncMapeo(PDO $fb, PDO $sqlite): int
+    {
+        $rows = $fb->query("SELECT ID_SUPERVISOR, LECHER FROM MAPEO_SUPERVISOR_LECHERIA")->fetchAll();
+        return $this->_reemplazarTabla($sqlite, 'mapeo_supervisor_lecheria',
+            ['ID_SUPERVISOR','LECHER'], $rows);
     }
 
     /** TRUNCATE + INSERT en una transacción. Trim de strings (Firebird suele venir con padding). */

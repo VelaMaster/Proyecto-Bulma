@@ -165,6 +165,7 @@ class DatabaseSQLite
                 CC_BT5             INTEGER DEFAULT 0,
                 CC_BT6             INTEGER DEFAULT 0,
                 CC_BT7             INTEGER DEFAULT 0,
+                EN_OPERACION       INTEGER DEFAULT 0,
                 synced_at          TEXT DEFAULT (datetime('now','localtime'))
             );
 
@@ -200,6 +201,29 @@ class DatabaseSQLite
                 synced_at          TEXT DEFAULT (datetime('now','localtime')),
                 PRIMARY KEY (EFD_NUMERO, MUN_NUMERO, LOC_NUMERO)
             );
+
+            CREATE TABLE IF NOT EXISTS promotor (
+                PMT_NUMERO         INTEGER PRIMARY KEY,
+                PMT_NOMBRE         TEXT,
+                PMT_ACTIVO         TEXT,         -- 'S' | 'N'
+                synced_at          TEXT DEFAULT (datetime('now','localtime'))
+            );
+
+            CREATE TABLE IF NOT EXISTS supervisor (
+                ID_SUPERVISOR      INTEGER PRIMARY KEY,
+                NOMBRE_SUPERVISOR  TEXT,
+                synced_at          TEXT DEFAULT (datetime('now','localtime'))
+            );
+
+            CREATE TABLE IF NOT EXISTS mapeo_supervisor_lecheria (
+                ID_SUPERVISOR      INTEGER NOT NULL,
+                LECHER             INTEGER NOT NULL,
+                synced_at          TEXT DEFAULT (datetime('now','localtime')),
+                PRIMARY KEY (ID_SUPERVISOR, LECHER)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_mapeo_supervisor ON mapeo_supervisor_lecheria (ID_SUPERVISOR);
+            CREATE INDEX IF NOT EXISTS idx_mapeo_lecher     ON mapeo_supervisor_lecheria (LECHER);
         ");
 
         // ── Configuración admin (Firebird) + logs ─────────────────────

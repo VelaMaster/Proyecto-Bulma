@@ -1,36 +1,37 @@
 <?php
 // src/Repositorio/UsuarioRepositorio.php
+// MIGRADO a SQLite (Fase 3). Consultas reescritas para sintaxis SQLite.
+require_once __DIR__ . '/../Database/DatabaseSQLite.php';
 
 class UsuarioRepositorio
 {
-    private $db;
+    private PDO $db;
 
     public function __construct()
     {
-        // Database.php está en la raíz, por eso subimos dos niveles
-        require_once __DIR__ . '/../../Database.php';
-        $this->db = Database::getInstance();
+        $this->db = DatabaseSQLite::getInstance();
     }
 
-    public function buscarPorCredenciales($usuario, $pass, $rol)
+    /**
+     * Busca un usuario por credenciales y rol.
+     * Combina con PROMOTOR / SUPERVISOR para resolver el nombre a mostrar.
+     */
+    public function buscarPorCredenciales(string $usuario, string $pass, string $rol)
     {
-        // Agregamos U.NOMBRE al final del COALESCE
-        $sql = "SELECT U.USUARIO, U.ROL, U.CLAVE_ROL, 
-                   COALESCE(P.PMT_NOMBRE, S.NOMBRE_SUPERVISOR, U.NOMBRE) AS NOMBRE_MOSTRAR 
-            FROM USUARIOS_INVENTARIOS U
-            LEFT JOIN PROMOTOR P ON (U.CLAVE_ROL = P.PMT_NUMERO AND U.ROL = '0')
-            LEFT JOIN SUPERVISOR S ON (U.CLAVE_ROL = S.ID_SUPERVISOR AND U.ROL = '1')
-            WHERE U.USUARIO = :usuario 
-            AND U.CONTRASENA = :pass 
-            AND U.ROL = :rol";
-
+        // ROL en usuarios_inventarios viene tal cual de Firebird: '0' promotor, '1' supervisor, '2' distribución
+        $sql = "SELECT U.USUARIO,
+                       U.ROL,
+                       U.CLAVE_ROL,
+                       COALESCE(P.PMT_NOMBRE, S.NOMBRE_SUPERVISOR, U.NOMBRE) AS NOMBRE_MOSTRAR
+                FROM usuarios_inventarios U
+                LEFT JOIN promotor   P ON U.CLAVE_ROL = P.PMT_NUMERO   AND U.ROL = '0'
+                LEFT JOIN supervisor S ON U.CLAVE_ROL = S.ID_SUPERVISOR AND U.ROL = '1'
+                WHERE U.USUARIO    = :usuario
+                  AND U.CONTRASENA = :pass
+                  AND U.ROL        = :rol";
         try {
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([
-                ':usuario' => $usuario,
-                ':pass'    => $pass,
-                ':rol'     => $rol
-            ]);
+            $stmt->execute([':usuario' => $usuario, ':pass' => $pass, ':rol' => $rol]);
             return $stmt->fetch();
         } catch (PDOException $e) {
             error_log("Error en buscarPorCredenciales: " . $e->getMessage());
@@ -38,68 +39,57 @@ class UsuarioRepositorio
         }
     }
 
-    public function obtenerPromotoresDeSupervisor($id_supervisor)
+    /**
+     * Lista promotores asignados a un supervisor, con sus lecherías activas.
+     * EN_OPERACION = 0 → lechería activa.
+     */
+    public function obtenerPromotoresDeSupervisor(int $id_supervisor)
     {
-        // Identificamos a los promotores del supervisor a partir de
-        // MAPEO_SUPERVISOR_LECHERIA (con que tengan UNA lechería mapeada
-        // basta para considerarlos "su promotor"). Luego listamos TODAS
-        // las lecherías activas del promotor, no nada más las que están
-        // en el mapeo — de lo contrario el conteo del supervisor queda
-        // por debajo del que ve el propio promotor.
         $sql = "
-            SELECT
-                P.PMT_NUMERO,
-                P.PMT_NOMBRE,
-                L.LECHER AS NUMERO_LECHERIA,
-                L.NOMBRELECH AS NOMBRE_LECHERIA
-            FROM PROMOTOR P
-            JOIN LECHERIA L ON L.PROMOTOR = P.PMT_NUMERO
+            SELECT P.PMT_NUMERO,
+                   P.PMT_NOMBRE,
+                   L.LECHER     AS NUMERO_LECHERIA,
+                   L.NOMBRELECH AS NOMBRE_LECHERIA
+            FROM promotor P
+            JOIN lecheria L ON L.PROMOTOR = P.PMT_NUMERO
             WHERE EXISTS (
                     SELECT 1
-                    FROM MAPEO_SUPERVISOR_LECHERIA M
-                    JOIN LECHERIA L2 ON M.LECHER = L2.LECHER
+                    FROM mapeo_supervisor_lecheria M
+                    JOIN lecheria L2 ON M.LECHER = L2.LECHER
                     WHERE M.ID_SUPERVISOR = :id_supervisor
-                      AND L2.PROMOTOR = P.PMT_NUMERO
+                      AND L2.PROMOTOR    = P.PMT_NUMERO
                   )
               AND P.PMT_ACTIVO = 'S'
-              AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
+              AND COALESCE(L.EN_OPERACION, 0) = 0
             ORDER BY P.PMT_NOMBRE, L.LECHER
         ";
 
         try {
             $stmt = $this->db->prepare($sql);
             $stmt->execute([':id_supervisor' => $id_supervisor]);
-            $resultados = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
             $promotores = [];
-
-            // Agrupamos la data
-            foreach ($resultados as $fila) {
-                $id_promotor = $fila['PMT_NUMERO'];
-                
-                if (!isset($promotores[$id_promotor])) {
-                    $promotores[$id_promotor] = [
-                        'id' => $id_promotor,
-                        'nombre' => trim($fila['PMT_NOMBRE']),
+            foreach ($rows as $f) {
+                $id = $f['PMT_NUMERO'];
+                if (!isset($promotores[$id])) {
+                    $promotores[$id] = [
+                        'id' => $id,
+                        'nombre' => trim($f['PMT_NOMBRE'] ?? ''),
                         'cantidad_lecherias' => 0,
-                        'lecherias' => []
+                        'lecherias' => [],
                     ];
                 }
-                
-                $promotores[$id_promotor]['lecherias'][] = [
-                    'numero' => $fila['NUMERO_LECHERIA'],
-                    'nombre' => trim($fila['NOMBRE_LECHERIA'] ?? 'Sin descripción')
+                $promotores[$id]['lecherias'][] = [
+                    'numero' => $f['NUMERO_LECHERIA'],
+                    'nombre' => trim($f['NOMBRE_LECHERIA'] ?? 'Sin descripción'),
                 ];
-                
-                $promotores[$id_promotor]['cantidad_lecherias']++;
+                $promotores[$id]['cantidad_lecherias']++;
             }
-
-            // Devolvemos un array indexado numéricamente
             return array_values($promotores);
-
         } catch (PDOException $e) {
             error_log("Error en obtenerPromotoresDeSupervisor: " . $e->getMessage());
-            return false; // Retornamos false si hay un error en BD
+            return false;
         }
     }
 }
