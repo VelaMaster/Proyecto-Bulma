@@ -228,6 +228,54 @@ class DatabaseSQLite
 
             CREATE INDEX IF NOT EXISTS idx_mapeo_supervisor ON mapeo_supervisor_lecheria (ID_SUPERVISOR);
             CREATE INDEX IF NOT EXISTS idx_mapeo_lecher     ON mapeo_supervisor_lecheria (LECHER);
+
+            -- ── INVENTARIOS_MENSUALES — transaccional, sync MERGE no replace ──
+            CREATE TABLE IF NOT EXISTS inventarios_mensuales (
+                ID                INTEGER PRIMARY KEY AUTOINCREMENT,
+                CLAVE_LECHERIA    TEXT    NOT NULL,
+                MES_PERIODO       INTEGER NOT NULL,
+                ANIO_PERIODO      INTEGER NOT NULL,
+                FECHA             TEXT,
+                CLAVE_TIENDA      TEXT,
+                ALMACEN           TEXT,
+                MUNICIPIO         TEXT,
+                COMUNIDAD         TEXT,
+                PRECIO            TEXT,
+                HOGARES           INTEGER DEFAULT 0,
+                MENORES           INTEGER DEFAULT 0,
+                MAYORES           INTEGER DEFAULT 0,
+                INV_INI_CAJA      INTEGER DEFAULT 0,
+                INV_INI_SOBRES    INTEGER DEFAULT 0,
+                INV_INI_LITROS    INTEGER DEFAULT 0,
+                SURT_CAJAS        INTEGER DEFAULT 0,
+                SURT_LITROS       INTEGER DEFAULT 0,
+                SURT_FECHA        TEXT,
+                SURT_FACTURA      TEXT,
+                SURT_CADUCIDAD    TEXT,
+                ABASTO_CAJA       INTEGER DEFAULT 0,
+                ABASTO_SOBRES     INTEGER DEFAULT 0,
+                ABASTO_LITROS     INTEGER DEFAULT 0,
+                VENTA_CAJA        INTEGER DEFAULT 0,
+                VENTA_SOBRES      INTEGER DEFAULT 0,
+                VENTA_LITROS      INTEGER DEFAULT 0,
+                REG_CAJA          INTEGER DEFAULT 0,
+                REG_SOBRES        INTEGER DEFAULT 0,
+                REG_LITROS        INTEGER DEFAULT 0,
+                DIF_CAJA          INTEGER DEFAULT 0,
+                DIF_SOBRES        INTEGER DEFAULT 0,
+                DIF_LITROS        INTEGER DEFAULT 0,
+                FIN_CAJA          INTEGER DEFAULT 0,
+                FIN_SOBRES        INTEGER DEFAULT 0,
+                FIN_LITROS        INTEGER DEFAULT 0,
+                ESTADO            TEXT,
+                PDF_RUTA          TEXT,
+                USUARIO_CAPTURA   TEXT,
+                FECHA_CAPTURA     TEXT DEFAULT (datetime('now','localtime')),
+                UNIQUE (CLAVE_LECHERIA, MES_PERIODO, ANIO_PERIODO)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_inv_mes ON inventarios_mensuales (MES_PERIODO, ANIO_PERIODO);
+            CREATE INDEX IF NOT EXISTS idx_inv_lecher ON inventarios_mensuales (CLAVE_LECHERIA);
         ");
 
         // ── Configuración admin (Firebird) + logs ─────────────────────

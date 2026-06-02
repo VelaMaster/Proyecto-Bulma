@@ -7,29 +7,33 @@ header('Content-Type: application/json; charset=utf-8');
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     echo json_encode([]); exit();
 }
-require_once __DIR__ . '/../Database.php';
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 $clave = trim($_GET['clave'] ?? '');
 $anio  = trim($_GET['anio']  ?? '');
 if ($clave === '') { echo json_encode([]); exit; }
 try {
-    $db = Database::getInstance();
-    $clave_limpia = str_replace("'", "''", $clave);
-    $where  = "WHERE UPPER(CLAVE_LECHERIA) = UPPER('$clave_limpia')";
+    $db = DatabaseSQLite::getInstance();
+    // SQLite: bind params, ANIO_PERIODO directo (más confiable que parsear FECHA).
+    $where = "WHERE UPPER(CLAVE_LECHERIA) = UPPER(:clave)";
+    $params = [':clave' => $clave];
     if ($anio !== '') {
-        $anio_int = (int)$anio;
-        $where .= " AND EXTRACT(YEAR FROM FECHA) = $anio_int";
+        $where .= " AND ANIO_PERIODO = :anio";
+        $params[':anio'] = (int)$anio;
     }
-    $sql = "SELECT FIRST 100
-                ID, CLAVE_LECHERIA, FECHA, MUNICIPIO, COMUNIDAD,
-                ESTADO, PDF_RUTA, CREATED_AT, UPDATED_AT,
-                MES_PERIODO, ANIO_PERIODO,
-                FIN_CAJA, FIN_SOBRES, FIN_LITROS,
-                VENTA_LITROS, ABASTO_LITROS
-            FROM INVENTARIOS_MENSUALES
+    $sql = "SELECT ID, CLAVE_LECHERIA, FECHA, MUNICIPIO, COMUNIDAD,
+                   ESTADO, PDF_RUTA,
+                   FECHA_CAPTURA AS CREATED_AT,
+                   FECHA_CAPTURA AS UPDATED_AT,
+                   MES_PERIODO, ANIO_PERIODO,
+                   FIN_CAJA, FIN_SOBRES, FIN_LITROS,
+                   VENTA_LITROS, ABASTO_LITROS
+            FROM inventarios_mensuales
             $where
-            ORDER BY FECHA DESC";
-    $stmt = $db->query($sql);
+            ORDER BY FECHA DESC
+            LIMIT 100";
+    $stmt = $db->prepare($sql);
+    $stmt->execute($params);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     $baseDir = __DIR__ . '/../datos/promotores/';

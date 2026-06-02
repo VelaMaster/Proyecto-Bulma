@@ -7,8 +7,8 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     exit();
 }
 
-require_once __DIR__ . '/../Database.php';
-$pdo = Database::getInstance();
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
+$pdo = DatabaseSQLite::getInstance();
 
 $clavePromotor = $_SESSION['clave_promotor'] ?? null;
 if (!$clavePromotor) {
@@ -18,7 +18,7 @@ if (!$clavePromotor) {
 
 try {
     $sql = "SELECT DISTINCT TRIM(ALMACEN_RURAL) AS ALMACEN_RURAL
-            FROM LECHERIA
+            FROM lecheria
             WHERE EFD_NUMERO = 20
               AND PROMOTOR = ?
               AND ALMACEN_RURAL IS NOT NULL

@@ -16,7 +16,7 @@
 require_once __DIR__ . '/../includes/session_guard.php';
 session_write_close();
 header('Content-Type: application/json; charset=utf-8');
-require_once __DIR__ . '/../Database.php';
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     echo json_encode(['status' => 'error', 'message' => 'No autorizado']);
@@ -26,12 +26,12 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
 $usuario = $_SESSION['usuario'];
 
 try {
-    $pdo = Database::getInstance();
+    $pdo = DatabaseSQLite::getInstance();
 
     // 1) Conteo total de lecherías ACTIVAS del promotor.
     $sqlTotal = "SELECT COUNT(*) AS TOTAL
-                 FROM LECHERIA L
-                 INNER JOIN USUARIOS_INVENTARIOS U ON L.PROMOTOR = U.CLAVE_ROL
+                 FROM lecheria L
+                 INNER JOIN usuarios_inventarios U ON L.PROMOTOR = U.CLAVE_ROL
                  WHERE U.USUARIO = :usuario
                    AND L.EFD_NUMERO = 20
                    AND COALESCE(L.EN_OPERACION, 0) = 0";
@@ -42,17 +42,17 @@ try {
     // 2) Por cada supervisor que tiene lecherías de este promotor,
     //    contamos cuántas son. Tomamos el de mayor cobertura.
     $sql = "
-        SELECT FIRST 1
-            M.ID_SUPERVISOR AS ID,
-            COUNT(*)        AS COBERTURA
-        FROM MAPEO_SUPERVISOR_LECHERIA M
-        JOIN LECHERIA L ON L.LECHER = M.LECHER
-        JOIN USUARIOS_INVENTARIOS U ON U.CLAVE_ROL = L.PROMOTOR
+        SELECT M.ID_SUPERVISOR AS ID,
+               COUNT(*)        AS COBERTURA
+        FROM mapeo_supervisor_lecheria M
+        JOIN lecheria L                ON L.LECHER = M.LECHER
+        JOIN usuarios_inventarios U    ON U.CLAVE_ROL = L.PROMOTOR
         WHERE U.USUARIO = :usuario
           AND L.EFD_NUMERO = 20
           AND COALESCE(L.EN_OPERACION, 0) = 0
         GROUP BY M.ID_SUPERVISOR
         ORDER BY COUNT(*) DESC
+        LIMIT 1
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':usuario' => $usuario]);
@@ -71,17 +71,17 @@ try {
     $cobertura = (int)$row['COBERTURA'];
 
     // 3) Nombre del supervisor.
-    //    Buscamos primero en USUARIOS_INVENTARIOS (rol supervisor).
-    $sqlNom = "SELECT FIRST 1 NOMBRE FROM USUARIOS_INVENTARIOS
-               WHERE CLAVE_ROL = :id AND ROL = '1'";
+    //    Buscamos primero en usuarios_inventarios (ROL='1' = supervisor).
+    $sqlNom = "SELECT NOMBRE FROM usuarios_inventarios
+               WHERE CLAVE_ROL = :id AND ROL = '1' LIMIT 1";
     $stmtN = $pdo->prepare($sqlNom);
     $stmtN->execute([':id' => $idSup]);
     $nombre = $stmtN->fetchColumn();
 
-    // Fallback a tabla SUPERVISOR si existe.
+    // Fallback a la tabla supervisor (espejo).
     if (!$nombre) {
         try {
-            $sqlSup = "SELECT FIRST 1 SPV_NOMBRE FROM SUPERVISOR WHERE SPV_NUMERO = :id";
+            $sqlSup = "SELECT NOMBRE_SUPERVISOR FROM supervisor WHERE ID_SUPERVISOR = :id LIMIT 1";
             $stmtS = $pdo->prepare($sqlSup);
             $stmtS->execute([':id' => $idSup]);
             $nombre = $stmtS->fetchColumn();

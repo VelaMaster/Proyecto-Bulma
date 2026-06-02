@@ -14,9 +14,9 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     header("Location: ../iniciosesionPromotor.php");
     exit();
 }
-require_once __DIR__ . '/../Database.php';
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
-$pdo = Database::getInstance();
+$pdo = DatabaseSQLite::getInstance();
 $usuario = $_SESSION['usuario'];
 
 try {
@@ -29,8 +29,8 @@ try {
                 L.EN_OPERACION         AS EN_OPERACION,
                 L.TIPO_PUNTO_VENTA     AS TIPO_PUNTO_VENTA,
                 L.PROMOTOR             AS PROMOTOR
-            FROM LECHERIA L
-            INNER JOIN USUARIOS_INVENTARIOS U ON L.PROMOTOR = U.CLAVE_ROL
+            FROM lecheria L
+            INNER JOIN usuarios_inventarios U ON L.PROMOTOR = U.CLAVE_ROL
             WHERE L.EFD_NUMERO = 20
               AND U.USUARIO = :usuario
             ORDER BY L.NOMBRELECH";
@@ -46,16 +46,14 @@ try {
         $conteoOp[$key] = ($conteoOp[$key] ?? 0) + 1;
     }
 
-    // 3) Lista de columnas de LECHERIA (para sugerir otras "candidato a baja")
-    $sqlCols = "SELECT TRIM(RDB\$FIELD_NAME) AS NOMBRE
-                FROM RDB\$RELATION_FIELDS
-                WHERE RDB\$RELATION_NAME = 'LECHERIA'
-                ORDER BY 1";
+    // 3) Columnas de la tabla lecheria (SQLite: PRAGMA table_info).
     $colsLech = [];
     try {
-        $stCol = $pdo->query($sqlCols);
-        $colsLech = $stCol->fetchAll(PDO::FETCH_COLUMN);
-    } catch (Exception $e) { /* ignoramos si el motor no expone metadata */ }
+        $stCol = $pdo->query("PRAGMA table_info(lecheria)");
+        foreach ($stCol->fetchAll(PDO::FETCH_ASSOC) as $col) {
+            $colsLech[] = $col['name'];
+        }
+    } catch (Exception $e) { /* ignoramos */ }
 
 } catch (Exception $e) {
     $errorMsg = $e->getMessage();

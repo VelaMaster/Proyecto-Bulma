@@ -27,6 +27,7 @@ class SincronizadorFirebird
             'localidad'                 => fn($fb, $sqlite) => $this->_syncLocalidad($fb, $sqlite),
             'lecheria'                  => fn($fb, $sqlite) => $this->_syncLecheria($fb, $sqlite),
             'mapeo_supervisor_lecheria' => fn($fb, $sqlite) => $this->_syncMapeo($fb, $sqlite),
+            'inventarios_mensuales'     => fn($fb, $sqlite) => $this->_syncInventariosMensuales($fb, $sqlite),
         ];
     }
 
@@ -170,6 +171,64 @@ class SincronizadorFirebird
         $rows = $fb->query("SELECT ID_SUPERVISOR, LECHER FROM MAPEO_SUPERVISOR_LECHERIA")->fetchAll();
         return $this->_reemplazarTabla($sqlite, 'mapeo_supervisor_lecheria',
             ['ID_SUPERVISOR','LECHER'], $rows);
+    }
+
+    /**
+     * INVENTARIOS_MENSUALES — tabla transaccional.
+     * Modo MERGE (INSERT OR REPLACE por CLAVE_LECHERIA+MES+ANIO). NO trunca.
+     * Esto importa data legacy de Firebird sin pisar capturas hechas localmente
+     * cuyo (clave, mes, año) no existan en Firebird.
+     */
+    private function _syncInventariosMensuales(PDO $fb, PDO $sqlite): int
+    {
+        $cols = [
+            'CLAVE_LECHERIA','MES_PERIODO','ANIO_PERIODO','FECHA',
+            'CLAVE_TIENDA','ALMACEN','MUNICIPIO','COMUNIDAD','PRECIO',
+            'HOGARES','MENORES','MAYORES',
+            'INV_INI_CAJA','INV_INI_SOBRES','INV_INI_LITROS',
+            'SURT_CAJAS','SURT_LITROS','SURT_FECHA','SURT_FACTURA','SURT_CADUCIDAD',
+            'ABASTO_CAJA','ABASTO_SOBRES','ABASTO_LITROS',
+            'VENTA_CAJA','VENTA_SOBRES','VENTA_LITROS',
+            'REG_CAJA','REG_SOBRES','REG_LITROS',
+            'DIF_CAJA','DIF_SOBRES','DIF_LITROS',
+            'FIN_CAJA','FIN_SOBRES','FIN_LITROS',
+            'ESTADO','PDF_RUTA','USUARIO_CAPTURA',
+        ];
+        $sql  = "SELECT " . implode(',', $cols) . " FROM INVENTARIOS_MENSUALES";
+        $rows = $fb->query($sql)->fetchAll();
+        return $this->_mergeTabla($sqlite, 'inventarios_mensuales', $cols, $rows);
+    }
+
+    /**
+     * MERGE: INSERT OR REPLACE por clave única (no trunca la tabla).
+     * Usado para tablas transaccionales donde no queremos perder filas locales.
+     */
+    private function _mergeTabla(PDO $sqlite, string $tabla, array $cols, array $rows): int
+    {
+        if (empty($rows)) return 0;
+        $sqlite->beginTransaction();
+        try {
+            $placeholders = '(' . rtrim(str_repeat('?,', count($cols)), ',') . ')';
+            $stmt = $sqlite->prepare(
+                "INSERT OR REPLACE INTO $tabla (" . implode(',', $cols) . ") VALUES $placeholders"
+            );
+            $n = 0;
+            foreach ($rows as $r) {
+                $valores = [];
+                foreach ($cols as $c) {
+                    $v = $r[$c] ?? $r[strtoupper($c)] ?? $r[strtolower($c)] ?? null;
+                    if (is_string($v)) $v = trim($v);
+                    $valores[] = $v;
+                }
+                $stmt->execute($valores);
+                $n++;
+            }
+            $sqlite->commit();
+            return $n;
+        } catch (\Throwable $e) {
+            $sqlite->rollBack();
+            throw $e;
+        }
     }
 
     /** TRUNCATE + INSERT en una transacción. Trim de strings (Firebird suele venir con padding). */

@@ -6,27 +6,25 @@ if (!isset($_SESSION['usuario'])) {
     echo json_encode(['error' => true, 'mensaje' => 'No autorizado']); 
     exit();
 }
-require_once __DIR__ . '/../Database.php';
-$pdo = Database::getInstance();
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
+$pdo = DatabaseSQLite::getInstance();
 
 $lecher = $_GET['lecher'] ?? '';
 
 if (empty($lecher)) {
-    echo json_encode(['error' => true, 'mensaje' => 'Falta la clave de la lechería']); 
+    echo json_encode(['error' => true, 'mensaje' => 'Falta la clave de la lechería']);
     exit();
 }
 try {
-    // SOLO INVENTARIOS_MENSUALES (captura del promotor). El inventario inicial
-    // de un mes = inventario final (FIN_LITROS) del último mes capturado.
-    $lecher_q   = "'" . str_replace("'", "''", $lecher) . "'";
-    $lecher_q00 = "'" . str_replace("'", "''", $lecher . '00') . "'";
-
-    $sql = "SELECT FIRST 1 FIN_LITROS, MES_PERIODO, ANIO_PERIODO
-            FROM INVENTARIOS_MENSUALES
-            WHERE CLAVE_LECHERIA IN ($lecher_q, $lecher_q00)
-            ORDER BY ANIO_PERIODO DESC, MES_PERIODO DESC";
-
-    $resultado = $pdo->query($sql)->fetch(PDO::FETCH_ASSOC);
+    // SQLite: FIRST 1 → LIMIT 1, parametrizamos en vez de concatenar.
+    $sql = "SELECT FIN_LITROS, MES_PERIODO, ANIO_PERIODO
+            FROM inventarios_mensuales
+            WHERE CLAVE_LECHERIA IN (?, ?)
+            ORDER BY ANIO_PERIODO DESC, MES_PERIODO DESC
+            LIMIT 1";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$lecher, $lecher . '00']);
+    $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if ($resultado) {
         echo json_encode([

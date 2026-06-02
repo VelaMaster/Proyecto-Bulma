@@ -6,9 +6,8 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     echo json_encode([]); exit();
 }
 
-// 1. AQUÍ ESTÁ EL CAMBIO MÁGICO 👇
-require_once __DIR__ . '/../Database.php';
-$pdo = Database::getInstance();
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
+$pdo = DatabaseSQLite::getInstance();
 
 $clavePromotor = $_SESSION['clave_promotor'] ?? null;
 if (!$clavePromotor) {
@@ -17,36 +16,34 @@ if (!$clavePromotor) {
 }
 
 try {
+    // SQLite: CAST AS TEXT (no VARCHAR(20)) y tablas en minúscula.
     $sql = "SELECT
                 L.LECHER,
                 TRIM(L.NOMBRELECH)          AS NOMBRELECH,
                 TRIM(M.MUN_DESCRIPCION)     AS MUNICIPIO,
                 TRIM(LOC.LOC_DESCRIPCION)   AS COMUNIDAD,
                 L.CC_FAM                    AS TOTAL_HOGARES,
-                (L.CC_BT1 + L.CC_BT2)      AS TOTAL_INFANTILES,
+                (L.CC_BT1 + L.CC_BT2)       AS TOTAL_INFANTILES,
                 (L.CC_BT3 + L.CC_BT4 + L.CC_BT5 + L.CC_BT6 + L.CC_BT7) AS TOTAL_RESTO,
                 TRIM(L.ALMACEN_RURAL)       AS ALMACEN_RURAL,
                 L.NUM_TIENDA,
                 L.EN_OPERACION,
-                -- Conteo de inventarios guardados para esta lechería
-                (SELECT COUNT(*)
-                 FROM INVENTARIOS_MENSUALES IM
-                 WHERE IM.CLAVE_LECHERIA = CAST(L.LECHER AS VARCHAR(20))
+                (SELECT COUNT(*) FROM inventarios_mensuales IM
+                 WHERE IM.CLAVE_LECHERIA = CAST(L.LECHER AS TEXT)
                 ) AS TOTAL_INVENTARIOS,
-                -- Fecha del último inventario
-                (SELECT MAX(IM2.FECHA)
-                 FROM INVENTARIOS_MENSUALES IM2
-                 WHERE IM2.CLAVE_LECHERIA = CAST(L.LECHER AS VARCHAR(20))
+                (SELECT MAX(IM2.FECHA) FROM inventarios_mensuales IM2
+                 WHERE IM2.CLAVE_LECHERIA = CAST(L.LECHER AS TEXT)
                 ) AS ULTIMO_INVENTARIO
-            FROM LECHERIA L
-            LEFT JOIN MUNICIPIO M ON
-                (L.EFD_NUMERO = M.EFD_NUMERO AND L.MUN_NUMERO = M.MUN_NUMERO)
-            LEFT JOIN LOCALIDAD LOC ON
-                (L.EFD_NUMERO = LOC.EFD_NUMERO AND L.MUN_NUMERO = LOC.MUN_NUMERO
-                 AND L.LOC_NUMERO = LOC.LOC_NUMERO)
+            FROM lecheria L
+            LEFT JOIN municipio M
+                   ON L.EFD_NUMERO = M.EFD_NUMERO AND L.MUN_NUMERO = M.MUN_NUMERO
+            LEFT JOIN localidad LOC
+                   ON L.EFD_NUMERO = LOC.EFD_NUMERO
+                  AND L.MUN_NUMERO = LOC.MUN_NUMERO
+                  AND L.LOC_NUMERO = LOC.LOC_NUMERO
             WHERE L.EFD_NUMERO = 20
               AND L.PROMOTOR = ?
-              AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
+              AND COALESCE(L.EN_OPERACION, 0) = 0
             ORDER BY L.NOMBRELECH";
 
     $stmt = $pdo->prepare($sql);
@@ -58,7 +55,6 @@ try {
     });
 
     echo json_encode($rows, JSON_UNESCAPED_UNICODE);
-
-} catch (Exception $e) { // Cambiado a Exception general por si acaso
+} catch (Exception $e) {
     echo json_encode(['error' => true, 'mensaje' => $e->getMessage()]);
 }

@@ -1,23 +1,25 @@
 <?php
-require_once __DIR__ . '/../../Database.php';
+// src/Repositorio/InventarioRepositorio.php
+// MIGRADO a SQLite (Fase 3.2).
+// - FIRST n → LIMIT n
+// - EXTRACT(YEAR/MONTH FROM FECHA) → strftime('%Y'/'%m', FECHA)
+// - GEN_ID(seq_…) → NULL (AUTOINCREMENT en SQLite)
+// - INVENTARIO_LEP_SUBSIDIADA ya no se usa: el código que la sincronizaba
+//   queda como no-op porque INVENTARIOS_MENSUALES es la única fuente de verdad.
+require_once __DIR__ . '/../Database/DatabaseSQLite.php';
 
 class InventarioRepositorio
 {
-    private $db;
+    private PDO $db;
 
     public function __construct()
     {
-        $this->db = Database::getInstance();
-        $this->db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
-        $this->db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $this->db = DatabaseSQLite::getInstance();
     }
 
     /**
-     * Genera la lista SQL de claves candidatas para una lechería, tolerando
-     * el sufijo "00" en cualquier sentido y espacios. Devuelve algo como:
-     *   '2000610400','20006104','200061040000'
-     * para usar dentro de un IN (...). Así el match de clave es idéntico en
-     * guardar, cargar y arrastrar, sin importar cómo se haya capturado.
+     * Genera lista SQL de claves candidatas para una lechería tolerando
+     * sufijo "00". Devuelve string para usar en IN (...).
      */
     private function clavesCandidatas(string $lecher): string
     {
@@ -36,61 +38,35 @@ class InventarioRepositorio
         ));
     }
 
-    /**
-     * Historial de la lechería SOLO desde INVENTARIOS_MENSUALES (captura del
-     * promotor). NO se usa INVENTARIO_LEP_SUBSIDIADA para rellenar datos.
-     * Se devuelven las mismas claves que antes (VENTA_REAL / INVENTARIO_FINAL)
-     * para no romper a quien consume este método (la Neurona).
-     */
     public function obtenerHistorialLecheria($lecher)
     {
         $inList = $this->clavesCandidatas($lecher);
 
         $sql = "SELECT VENTA_LITROS AS VENTA_REAL, FIN_LITROS AS INVENTARIO_FINAL
-                FROM INVENTARIOS_MENSUALES
+                FROM inventarios_mensuales
                 WHERE TRIM(CLAVE_LECHERIA) IN ($inList)
                 ORDER BY ANIO_PERIODO DESC, MES_PERIODO DESC";
-        $stmt = $this->db->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    /**
-     * Devuelve los litros finales (FIN_LITROS) del mes ANTERIOR al periodo indicado,
-     * EXCLUSIVAMENTE desde INVENTARIOS_MENSUALES (captura propia del promotor).
-     *
-     * La cadena es: FIN del mes N → INV_INI del mes N+1.
-     * Si no existe registro del mes anterior en INVENTARIOS_MENSUALES retorna null.
-     * El llamador debe tratar null como "falta inventario previo".
-     */
     public function obtenerInventarioFinalMesAnterior(string $lecher, int $mes_actual, int $anio_actual): ?float
     {
         $mes_ant  = $mes_actual - 1;
         $anio_ant = $anio_actual;
-        if ($mes_ant <= 0) {
-            $mes_ant  = 12;
-            $anio_ant = $anio_actual - 1;
-        }
+        if ($mes_ant <= 0) { $mes_ant = 12; $anio_ant--; }
 
         $inList = $this->clavesCandidatas($lecher);
 
-        $sql = "SELECT FIRST 1 FIN_LITROS
-                FROM INVENTARIOS_MENSUALES
+        $sql = "SELECT FIN_LITROS
+                FROM inventarios_mensuales
                 WHERE TRIM(CLAVE_LECHERIA) IN ($inList)
                   AND MES_PERIODO  = $mes_ant
-                  AND ANIO_PERIODO = $anio_ant";
+                  AND ANIO_PERIODO = $anio_ant
+                LIMIT 1";
         $row = $this->db->query($sql)->fetch(PDO::FETCH_ASSOC);
-        if ($row) {
-            // FIN_LITROS puede ser 0 (sobran 0 litros) → válido, no es "sin registro"
-            return floatval($row['FIN_LITROS'] ?? 0);
-        }
-
-        // No hay registro del mes anterior en INVENTARIOS_MENSUALES
-        return null;
+        return $row ? floatval($row['FIN_LITROS'] ?? 0) : null;
     }
 
-    /**
-     * Devuelve el mes y año anterior al periodo indicado (para mensajes al usuario).
-     */
     public function calcularMesAnterior(int $mes_actual, int $anio_actual): array
     {
         $mes_ant  = $mes_actual - 1;
@@ -99,9 +75,6 @@ class InventarioRepositorio
         return ['mes' => $mes_ant, 'anio' => $anio_ant];
     }
 
-    /**
-     * Devuelve el ID del inventario si ya existe, o false si no.
-     */
     private function existeInventarioMes($lecheria, $mes, $anio)
     {
         if (empty($lecheria)) return false;
@@ -109,67 +82,26 @@ class InventarioRepositorio
         $anio = (int)$anio;
         $inList = $this->clavesCandidatas($lecheria);
 
-        $sql = "SELECT FIRST 1 ID FROM INVENTARIOS_MENSUALES
+        $sql = "SELECT ID FROM inventarios_mensuales
                 WHERE TRIM(CLAVE_LECHERIA) IN ($inList)
                   AND (
                         (ANIO_PERIODO = $anio AND MES_PERIODO = $mes)
                      OR (FECHA IS NOT NULL
-                         AND EXTRACT(YEAR  FROM FECHA) = $anio
-                         AND EXTRACT(MONTH FROM FECHA) = $mes)
-                  )";
-
+                         AND CAST(strftime('%Y', FECHA) AS INTEGER) = $anio
+                         AND CAST(strftime('%m', FECHA) AS INTEGER) = $mes)
+                  )
+                LIMIT 1";
         $row = $this->db->query($sql)->fetch(PDO::FETCH_ASSOC);
         return $row ? (int)$row['ID'] : false;
     }
 
     /**
-     * Hace UPSERT en INVENTARIO_LEP_SUBSIDIADA.
-     * Esta tabla la alimenta originalmente Distribución; ahora también la
-     * llenamos cuando un promotor captura su inventario mensual, para que
-     * el flujo (reporte → requerimiento del mes+2) se quede sincronizado
-     * sin necesidad de cargar datos a mano.
-     *
-     * Conversión:
-     *   INVENTARIO_FINAL    ← fin_litros
-     *   SURTIMIENTO         ← surt_cajas
-     *   VENTA_REAL          ← venta_litros
-     *   VENTA_LIBRO_RETIRO  ← reg_litros
+     * NO-OP: INVENTARIO_LEP_SUBSIDIADA queda fuera del nuevo esquema.
+     * Se mantiene la firma por compatibilidad con código existente.
      */
-    private function upsertLepSubsidiada($lecher, $mes, $anio, $finLitros, $surtCajas, $ventaLitros, $regLitros)
+    private function upsertLepSubsidiada($lecher, $mes, $anio, $finLitros, $surtCajas, $ventaLitros, $regLitros): void
     {
-        if (empty($lecher)) return;
-
-        $lecher_q  = "'" . str_replace("'", "''", $lecher) . "'";
-        $mes_n     = (int)$mes;
-        $anio_n    = (int)$anio;
-        $finL      = (int)$finLitros;
-        $surtC     = (int)$surtCajas;
-        $ventaL    = (int)$ventaLitros;
-        $regL      = (int)$regLitros;
-
-        // Intentamos UPDATE primero; si no afectó filas, INSERT.
-        $sqlUpd = "UPDATE INVENTARIO_LEP_SUBSIDIADA SET
-                       INVENTARIO_FINAL   = $finL,
-                       SURTIMIENTO        = $surtC,
-                       VENTA_REAL         = $ventaL,
-                       VENTA_LIBRO_RETIRO = $regL
-                   WHERE LECHER = $lecher_q
-                     AND MES_PERIODO  = $mes_n
-                     AND ANIO_PERIODO = $anio_n";
-        $afectadas = $this->db->exec($sqlUpd);
-
-        if ($afectadas === 0 || $afectadas === false) {
-            $sqlIns = "INSERT INTO INVENTARIO_LEP_SUBSIDIADA
-                       (LECHER, MES_PERIODO, ANIO_PERIODO,
-                        INVENTARIO_FINAL, SURTIMIENTO, VENTA_REAL, VENTA_LIBRO_RETIRO)
-                       VALUES ($lecher_q, $mes_n, $anio_n, $finL, $surtC, $ventaL, $regL)";
-            try {
-                $this->db->exec($sqlIns);
-            } catch (PDOException $e) {
-                // Si por carrera otro proceso ya insertó, reintentamos UPDATE.
-                $this->db->exec($sqlUpd);
-            }
-        }
+        // Intencionalmente vacío. INVENTARIOS_MENSUALES es la única fuente.
     }
 
     public function guardar($datos, $usuario)
@@ -179,8 +111,6 @@ class InventarioRepositorio
         $anio_actual = !empty($datos['anio_periodo']) ? (int)$datos['anio_periodo'] : (int)date('Y', strtotime($datos['fecha']));
         $mes_actual  = !empty($datos['mes_periodo'])  ? (int)$datos['mes_periodo']  : (int)date('m', strtotime($datos['fecha']));
 
-        // Bloquear duplicados — el JS debería haberlo detectado, pero si llega aquí
-        // devolvemos el ID para que el frontend cambie a modo edición sin recargar.
         $idExistente = $this->existeInventarioMes($lecheria_limpia, $mes_actual, $anio_actual);
         if ($idExistente !== false) {
             return [
@@ -193,164 +123,122 @@ class InventarioRepositorio
         // Verificar mes anterior
         $mes_anterior  = $mes_actual - 1;
         $anio_anterior = $anio_actual;
-        if ($mes_anterior <= 0) {
-            $mes_anterior  = 12;
-            $anio_anterior = $anio_actual - 1;
-        }
+        if ($mes_anterior <= 0) { $mes_anterior = 12; $anio_anterior--; }
 
         if (!$this->existeInventarioMes($lecheria_limpia, $mes_anterior, $anio_anterior) && empty($datos['confirmado_periodo'])) {
             $nombres_meses = ["", "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
                               "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
             $nombre_mes_ant = $nombres_meses[$mes_anterior] ?? '';
-            
+
             return [
                 'status'  => 'requiere_confirmacion',
                 'mensaje' => "Oye, te falta registrar el inventario de $nombre_mes_ant del $anio_anterior.\n\n¿Estás seguro de que quieres guardar este mes aunque falte el anterior?"
             ];
         }
 
-        $q = function ($val, $len = 255) {
-            if ($val === null || $val === "") return 'NULL';
-            $limpio = substr((string)$val, 0, $len);
-            return "'" . str_replace("'", "''", $limpio) . "'";
-        };
-        $n = function ($val) {
-            if ($val === null || $val === "") return 0;
-            return (int)$val;
-        };
-
         $pdf_nombre = "Inventario_{$lecheria_limpia}_{$anio_actual}_" . sprintf('%02d', $mes_actual) . ".pdf";
 
-        $sql = "INSERT INTO INVENTARIOS_MENSUALES (
-            FECHA, CLAVE_LECHERIA, CLAVE_TIENDA, ALMACEN, MUNICIPIO, COMUNIDAD,
-            SURT_FECHA, SURT_CAJAS, SURT_LITROS, SURT_FACTURA, SURT_CADUCIDAD,
-            INV_INI_CAJA, INV_INI_SOBRES, INV_INI_LITROS,
-            ABASTO_CAJA, ABASTO_SOBRES, ABASTO_LITROS,
-            VENTA_CAJA, VENTA_SOBRES, VENTA_LITROS,
-            REG_CAJA, REG_SOBRES, REG_LITROS,
-            DIF_CAJA, DIF_SOBRES, DIF_LITROS,
-            FIN_CAJA, FIN_SOBRES, FIN_LITROS,
-            HOGARES, MENORES, MAYORES, DOTACION,
-            PDF_RUTA, USUARIO, ESTADO, MES_PERIODO, ANIO_PERIODO, ID
-        ) VALUES (
-            " . $q($datos['fecha'], 10) . ", 
-            " . $q($datos['lecheria'], 20) . ", 
-            " . $q($datos['tienda'], 20) . ", 
-            " . $q($datos['almacen'], 100) . ", 
-            " . $q($datos['municipio'], 100) . ", 
-            " . $q($datos['comunidad'], 100) . ", 
-            " . $q($datos['surt_fecha'], 10) . ", 
-            " . $n($datos['surt_cajas']) . ", 
-            " . $n($datos['surt_litros']) . ", 
-            " . $q($datos['surt_factura'], 60) . ", 
-            " . $q($datos['surt_caducidad'], 10) . ", 
-            " . $n($datos['inv_ini_caja']) . ", " . $n($datos['inv_ini_sobres']) . ", " . $n($datos['inv_ini_litros']) . ",
-            " . $n($datos['abasto_caja']) . ", " . $n($datos['abasto_sobres']) . ", " . $n($datos['abasto_litros']) . ",
-            " . $n($datos['venta_caja']) . ", " . $n($datos['venta_sobres']) . ", " . $n($datos['venta_litros']) . ",
-            " . $n($datos['reg_caja']) . ", " . $n($datos['reg_sobres']) . ", " . $n($datos['reg_litros']) . ",
-            " . $n($datos['dif_caja']) . ", " . $n($datos['dif_sobres']) . ", " . $n($datos['dif_litros']) . ",
-            " . $n($datos['fin_caja']) . ", " . $n($datos['fin_sobres']) . ", " . $n($datos['fin_litros']) . ",
-            " . $n($datos['hogares']) . ", " . $n($datos['menores']) . ", " . $n($datos['mayores']) . ", " . $n($datos['dotacion']) . ",
-            " . $q($pdf_nombre, 255) . ", 
-            " . $q($usuario, 100) . ", 
-            'guardado', 
-            $mes_actual, 
-            $anio_actual,
-            GEN_ID(seq_inventarios_mens_id, 1)
-        )";
+        // SQLite: USUARIO_CAPTURA (no USUARIO), sin DOTACION (no está en el esquema),
+        // ID se asigna por AUTOINCREMENT.
+        $sql = "INSERT INTO inventarios_mensuales (
+                    FECHA, CLAVE_LECHERIA, CLAVE_TIENDA, ALMACEN, MUNICIPIO, COMUNIDAD,
+                    SURT_FECHA, SURT_CAJAS, SURT_LITROS, SURT_FACTURA, SURT_CADUCIDAD,
+                    INV_INI_CAJA, INV_INI_SOBRES, INV_INI_LITROS,
+                    ABASTO_CAJA, ABASTO_SOBRES, ABASTO_LITROS,
+                    VENTA_CAJA, VENTA_SOBRES, VENTA_LITROS,
+                    REG_CAJA, REG_SOBRES, REG_LITROS,
+                    DIF_CAJA, DIF_SOBRES, DIF_LITROS,
+                    FIN_CAJA, FIN_SOBRES, FIN_LITROS,
+                    HOGARES, MENORES, MAYORES,
+                    PDF_RUTA, USUARIO_CAPTURA, ESTADO, MES_PERIODO, ANIO_PERIODO
+                ) VALUES (
+                    :fecha, :lecheria, :tienda, :almacen, :municipio, :comunidad,
+                    :surt_fecha, :surt_cajas, :surt_litros, :surt_factura, :surt_caducidad,
+                    :inv_ini_caja, :inv_ini_sobres, :inv_ini_litros,
+                    :abasto_caja, :abasto_sobres, :abasto_litros,
+                    :venta_caja, :venta_sobres, :venta_litros,
+                    :reg_caja, :reg_sobres, :reg_litros,
+                    :dif_caja, :dif_sobres, :dif_litros,
+                    :fin_caja, :fin_sobres, :fin_litros,
+                    :hogares, :menores, :mayores,
+                    :pdf_ruta, :usuario, 'guardado', :mes, :anio
+                )";
+
+        $n = fn($v) => (int)($v ?? 0);
 
         try {
-            if (!$this->db->inTransaction()) {
-                $this->db->beginTransaction();
-            }
-            $this->db->exec($sql);
-
-            // Sincroniza con la tabla "oficial" de Distribución
-            $this->upsertLepSubsidiada(
-                $lecheria_limpia,
-                $mes_actual,
-                $anio_actual,
-                $datos['fin_litros']   ?? 0,
-                $datos['surt_cajas']   ?? 0,
-                $datos['venta_litros'] ?? 0,
-                $datos['reg_litros']   ?? 0
-            );
-
-            $this->db->commit();
-            return ['status' => 'success', 'mensaje' => 'Guardado con éxito'];
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':fecha'          => $datos['fecha'] ?? null,
+                ':lecheria'       => $lecheria_limpia,
+                ':tienda'         => $datos['tienda'] ?? null,
+                ':almacen'        => $datos['almacen'] ?? null,
+                ':municipio'      => $datos['municipio'] ?? null,
+                ':comunidad'      => $datos['comunidad'] ?? null,
+                ':surt_fecha'     => $datos['surt_fecha'] ?? null,
+                ':surt_cajas'     => $n($datos['surt_cajas']),
+                ':surt_litros'    => $n($datos['surt_litros']),
+                ':surt_factura'   => $datos['surt_factura'] ?? null,
+                ':surt_caducidad' => $datos['surt_caducidad'] ?? null,
+                ':inv_ini_caja'   => $n($datos['inv_ini_caja']),
+                ':inv_ini_sobres' => $n($datos['inv_ini_sobres']),
+                ':inv_ini_litros' => $n($datos['inv_ini_litros']),
+                ':abasto_caja'    => $n($datos['abasto_caja']),
+                ':abasto_sobres'  => $n($datos['abasto_sobres']),
+                ':abasto_litros'  => $n($datos['abasto_litros']),
+                ':venta_caja'     => $n($datos['venta_caja']),
+                ':venta_sobres'   => $n($datos['venta_sobres']),
+                ':venta_litros'   => $n($datos['venta_litros']),
+                ':reg_caja'       => $n($datos['reg_caja']),
+                ':reg_sobres'     => $n($datos['reg_sobres']),
+                ':reg_litros'     => $n($datos['reg_litros']),
+                ':dif_caja'       => $n($datos['dif_caja']),
+                ':dif_sobres'     => $n($datos['dif_sobres']),
+                ':dif_litros'     => $n($datos['dif_litros']),
+                ':fin_caja'       => $n($datos['fin_caja']),
+                ':fin_sobres'     => $n($datos['fin_sobres']),
+                ':fin_litros'     => $n($datos['fin_litros']),
+                ':hogares'        => $n($datos['hogares']),
+                ':menores'        => $n($datos['menores']),
+                ':mayores'        => $n($datos['mayores']),
+                ':pdf_ruta'       => $pdf_nombre,
+                ':usuario'        => $usuario,
+                ':mes'            => $mes_actual,
+                ':anio'           => $anio_actual,
+            ]);
+            return ['status' => 'success', 'mensaje' => 'Guardado con éxito', 'id' => (int)$this->db->lastInsertId()];
         } catch (PDOException $e) {
-            if ($this->db->inTransaction()) {
-                $this->db->rollBack();
-            }
-            throw new Exception("Error Firebird: " . $e->getMessage());
+            throw new Exception("Error SQLite: " . $e->getMessage());
         }
     }
 
-    /**
-     * Llamado desde actualizar_inventario.php tras hacer el UPDATE en
-     * INVENTARIOS_MENSUALES. Mantiene INVENTARIO_LEP_SUBSIDIADA sincronizada.
-     */
-    public function syncLepSubsidiada($lecher, $mes, $anio, $datos)
-    {
-        if (!$this->db->inTransaction()) {
-            $this->db->beginTransaction();
-        }
-        try {
-            $this->upsertLepSubsidiada(
-                $lecher,
-                $mes,
-                $anio,
-                $datos['fin_litros']   ?? 0,
-                $datos['surt_cajas']   ?? 0,
-                $datos['venta_litros'] ?? 0,
-                $datos['reg_litros']   ?? 0
-            );
-            $this->db->commit();
-        } catch (Exception $e) {
-            if ($this->db->inTransaction()) $this->db->rollBack();
-            throw $e;
-        }
-    }
+    /** NO-OP: ya no se sincroniza con INVENTARIO_LEP_SUBSIDIADA. */
+    public function syncLepSubsidiada($lecher, $mes, $anio, $datos): void { /* deprecated */ }
 
     public function buscarPorLecheria($clave, $mes = 0, $anio = 0)
     {
         $mes  = (int)$mes;
         $anio = (int)$anio;
 
-        // El filtro por periodo es OBLIGATORIO. Si no se pasa, devolvemos vacío
-        // para evitar el bug de "trae el último inventario" cuando el usuario
-        // selecciona un mes que no existe.
-        if ($mes < 1 || $mes > 12 || $anio < 2000) {
-            return [];
-        }
+        if ($mes < 1 || $mes > 12 || $anio < 2000) return [];
 
         $inList = $this->clavesCandidatas($clave);
 
         $sql = "SELECT ID, FECHA, MUNICIPIO, COMUNIDAD, FIN_CAJA, FIN_LITROS, ESTADO,
                        MES_PERIODO, ANIO_PERIODO
-                FROM INVENTARIOS_MENSUALES
+                FROM inventarios_mensuales
                 WHERE TRIM(CLAVE_LECHERIA) IN ($inList)
                   AND ANIO_PERIODO = $anio
                   AND MES_PERIODO  = $mes
                 ORDER BY ID DESC";
-
-        try {
-            $stmt = $this->db->query($sql);
-            return $stmt->fetchAll(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            throw new Exception("Error al buscar inventarios: " . $e->getMessage());
-        }
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
     }
 
     public function obtenerPorId($id)
     {
-        $id_limpio = (int)$id;
-        $sql = "SELECT * FROM INVENTARIOS_MENSUALES WHERE ID = $id_limpio";
-        try {
-            $stmt = $this->db->query($sql);
-            return $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            throw new Exception("Error al buscar el inventario por ID: " . $e->getMessage());
-        }
+        $id = (int)$id;
+        $stmt = $this->db->prepare("SELECT * FROM inventarios_mensuales WHERE ID = ?");
+        $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }

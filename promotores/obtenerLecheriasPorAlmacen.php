@@ -7,8 +7,8 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     echo json_encode([]); 
     exit();
 }
-require_once __DIR__ . '/../Database.php';
-$pdo = Database::getInstance();
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
+$pdo = DatabaseSQLite::getInstance();
 $usuario = $_SESSION['usuario'] ?? null;
 $almacen = trim($_GET['almacen'] ?? '');
 
@@ -27,8 +27,8 @@ try {
                    TRIM(L.NUM_TIENDA) AS NUM_TIENDA,
                    TRIM(L.ALMACEN_RURAL) AS ALMACEN_RURAL,
                    L.TIPO_PUNTO_VENTA AS TIPO_PUNTO_VENTA
-            FROM LECHERIA L
-            INNER JOIN USUARIOS_INVENTARIOS U ON L.PROMOTOR = U.CLAVE_ROL
+            FROM lecheria L
+            INNER JOIN usuarios_inventarios U ON L.PROMOTOR = U.CLAVE_ROL
             WHERE L.EFD_NUMERO = 20
               AND U.USUARIO = :usuario
               AND COALESCE(L.EN_OPERACION, 0) = 0
@@ -52,7 +52,7 @@ try {
     $sql_inv = "SELECT INV_INI_CAJA, INV_INI_SOBRES, SURT_CAJAS, ABASTO_CAJA, ABASTO_SOBRES,
                        VENTA_CAJA, VENTA_SOBRES, FIN_CAJA, FIN_SOBRES, REG_CAJA, REG_SOBRES,
                        SURT_FECHA, SURT_CADUCIDAD
-                FROM INVENTARIOS_MENSUALES
+                FROM inventarios_mensuales
                 WHERE CLAVE_LECHERIA IN (?, ?)
                   AND MES_PERIODO  = " . (int)$mes_inv . "
                   AND ANIO_PERIODO = " . (int)$anio_inv;
