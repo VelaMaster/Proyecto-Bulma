@@ -181,9 +181,10 @@ class SincronizadorFirebird
      */
     private function _syncInventariosMensuales(PDO $fb, PDO $sqlite): int
     {
-        $cols = [
+        // Columnas que SÍ existen en Firebird real (PRECIO no existe; el usuario se llama USUARIO).
+        $colsFB = [
             'CLAVE_LECHERIA','MES_PERIODO','ANIO_PERIODO','FECHA',
-            'CLAVE_TIENDA','ALMACEN','MUNICIPIO','COMUNIDAD','PRECIO',
+            'CLAVE_TIENDA','ALMACEN','MUNICIPIO','COMUNIDAD',
             'HOGARES','MENORES','MAYORES',
             'INV_INI_CAJA','INV_INI_SOBRES','INV_INI_LITROS',
             'SURT_CAJAS','SURT_LITROS','SURT_FECHA','SURT_FACTURA','SURT_CADUCIDAD',
@@ -192,11 +193,21 @@ class SincronizadorFirebird
             'REG_CAJA','REG_SOBRES','REG_LITROS',
             'DIF_CAJA','DIF_SOBRES','DIF_LITROS',
             'FIN_CAJA','FIN_SOBRES','FIN_LITROS',
-            'ESTADO','PDF_RUTA','USUARIO_CAPTURA',
+            'ESTADO','PDF_RUTA','USUARIO',
         ];
-        $sql  = "SELECT " . implode(',', $cols) . " FROM INVENTARIOS_MENSUALES";
+        $sql  = "SELECT " . implode(',', $colsFB) . " FROM INVENTARIOS_MENSUALES";
         $rows = $fb->query($sql)->fetchAll();
-        return $this->_mergeTabla($sqlite, 'inventarios_mensuales', $cols, $rows);
+
+        // Mapeo a las columnas SQLite (USUARIO → USUARIO_CAPTURA).
+        $rowsMap = [];
+        foreach ($rows as $r) {
+            $r['USUARIO_CAPTURA'] = $r['USUARIO'] ?? null;
+            unset($r['USUARIO']);
+            $rowsMap[] = $r;
+        }
+        $colsSQLite = $colsFB;
+        $colsSQLite[array_search('USUARIO', $colsSQLite, true)] = 'USUARIO_CAPTURA';
+        return $this->_mergeTabla($sqlite, 'inventarios_mensuales', $colsSQLite, $rowsMap);
     }
 
     /**
