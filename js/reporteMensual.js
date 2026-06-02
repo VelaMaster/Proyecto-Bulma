@@ -533,21 +533,6 @@ const jsG = await resG.json().catch(async () => {
 });
 console.warn('[debug] HTTP:', resG.status, '| jsG:', JSON.stringify(jsG));
 
-            /* [OFFLINE DESACTIVADO] — La app requiere conexión a WiFi.
-            if (jsG.status === 'offline_queued') {
-                notificar('Sin conexión. El reporte se guardó localmente y se sincronizará cuando regrese internet.', 'info');
-                if (generarPDF) {
-                    await fetch('generar_pdf_reporte.php', {
-                        method:  'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body:    JSON.stringify(datos)
-                    }).catch(() => {});
-                    notificar('PDF también en cola. Se generará (o reemplazará) al sincronizar.', 'info');
-                }
-                return;
-            }
-            */
-
             if (jsG.status === 'bloqueado') {
                 notificar(jsG.mensaje || 'Reporte bloqueado. Solicita un cambio al supervisor.', 'error');
                 mostrarBannerBloqueo(+selectMesReporte.value, +inputAnioReporte.value);

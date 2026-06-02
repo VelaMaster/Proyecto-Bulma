@@ -380,42 +380,9 @@ document.addEventListener('DOMContentLoaded', () => {
             surtCajas.placeholder  = '0';
             surtLitros.placeholder = '0';
         })
-        .catch(async () => {
-            // ── Fallback offline: usar caché del SW ──────────────────────────
-            try {
-                const r = await fetch(`obtenerInventarioAnterior.php?lecher=${encodeURIComponent(lecheria)}`);
-                const cache = await r.json();
-
-                if (!cache.error && cache.encontrado) {
-                    const litrosIniciales = Math.round(parseFloat(cache.inventario_inicial) || 0);
-                    const invFmt = formatearCantidades(litrosIniciales);
-                    invCaja.value   = invFmt.cajas;
-                    invSobres.value = invFmt.sobres;
-                    invLitros.value = invFmt.litros;
-
-                    // Cálculo simplificado basado en padrón (sin historial múltiple)
-                    const totalBenef   = menores + mayores;
-                    const demandaLitros = Math.round((totalBenef * 8 / 36) * L_X_CAJA);
-                    const metaCajas    = demandaLitros / L_X_CAJA;
-                    const cajasIni     = litrosIniciales / L_X_CAJA;
-                    const cajasSurtir  = Math.max(0, Math.round(metaCajas - cajasIni));
-
-                    surtCajas.value  = cajasSurtir;
-                    surtLitros.value = cajasSurtir * L_X_CAJA;
-                    actualizarAbastoTotal();
-
-                    mostrarNotificacion(
-                        `[Sin conexión] Arrastre: ${litrosIniciales}L del mes anterior (${cache.mes_consultado}/${cache.anio_consultado}). Surtimiento estimado por padrón.`,
-                        'info'
-                    );
-                } else {
-                    // Sin historial en caché → al menos dejar el inventario en 0
-                    invCaja.value = ''; invSobres.value = ''; invLitros.value = '';
-                    mostrarNotificacion('Sin conexión y sin historial en caché para esta lechería.', 'error');
-                }
-            } catch {
-                mostrarNotificacion('Sin conexión. No se pudo calcular el surtimiento.', 'error');
-            }
+        .catch(() => {
+            invCaja.value = ''; invSobres.value = ''; invLitros.value = '';
+            mostrarNotificacion('Error de conexión con el servidor. Verifica tu WiFi.', 'error');
             surtCajas.placeholder  = '0';
             surtLitros.placeholder = '0';
         });

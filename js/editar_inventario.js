@@ -438,22 +438,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 const j1 = await r1.json();
 
-                if (j1.status === 'offline_queued') {
-                    // Sin conexión: PDF local + encolar PDF servidor
-                    try {
-                        const blob = await window.generarPDFInventarioOffline(datos);
-                        window.open(URL.createObjectURL(blob), '_blank');
-                        if (window.PWA) window.PWA.mostrarToast('PDF offline generado. El oficial se reemplazará al sincronizar.', 'info');
-                    } catch (ePDF) {
-                        if (window.PWA) window.PWA.mostrarToast('Sin conexión. Cambios en cola. PDF offline no disponible.', 'info');
-                    }
-                    fetch('generar_pdf.php', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(datos)
-                    }).catch(() => {});
-                    return;
-                }
-
                 if (j1.status !== 'success') throw new Error(j1.mensaje);
 
                 /* Paso 2: regenerar PDF (online) */
@@ -466,12 +450,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const blob = await r2.blob();
                 window.open(URL.createObjectURL(blob), '_blank');
-                if (window.PWA) window.PWA.mostrarToast('Inventario y PDF actualizados correctamente.', 'success');
+                alert('Inventario y PDF actualizados correctamente.');
 
             } catch (err) {
                 console.error(err);
-                if (window.PWA) window.PWA.mostrarToast('Error: ' + err.message, 'error');
-                else alert('Error: ' + err.message);
+                alert('Error: ' + err.message);
             } finally {
                 btnActualizar.disabled = false;
                 btnActualizar.classList.remove('is-loading');

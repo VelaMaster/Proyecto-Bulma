@@ -31,8 +31,6 @@ $lecher_get = $_GET['lecher'] ?? '';
     <link rel="stylesheet" href="../estilos/generarInventarioMensual.css">
     <link rel="stylesheet" href="../estilos/editarinventarioMensual.css">
 
-    <!-- PWA -->
-    <!-- [OFFLINE DESACTIVADO] <link rel="manifest" href="/manifest.json"> -->
     <meta name="theme-color" content="#6750A4">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -693,8 +691,7 @@ $lecher_get = $_GET['lecher'] ?? '';
             .then(r => r.json())
             .then(res => {
                 if (res.status !== 'success') {
-                    // Sin caché para este ID → limpiar y usar arrastre del mes anterior
-                    if (res.error || res.offline) {
+                    if (res.error) {
                         limpiarTablaLeche();
                         document.dispatchEvent(new Event('lecheriaSeleccionada'));
                     }
@@ -944,7 +941,6 @@ $lecher_get = $_GET['lecher'] ?? '';
             btnGuardar.classList.add('is-loading');
 
             try {
-                /* [OFFLINE DESACTIVADO] — La app requiere conexión a WiFi.
                    Se eliminó la lógica de guardado local y PDF offline.
                    Todo pasa directo al servidor. */
                 const guardadoOffline = false;
@@ -1107,8 +1103,5 @@ $lecher_get = $_GET['lecher'] ?? '';
         };
     }
     </script>
-    <!-- [OFFLINE DESACTIVADO] <script src="../js/pwa_offline.js"></script> -->
-    <!-- [OFFLINE DESACTIVADO] <script src="../js/offline_preload.js"></script> -->
-    <!-- [OFFLINE DESACTIVADO] <script src="../js/pdf_offline.js"></script> -->
 </body>
 </html>

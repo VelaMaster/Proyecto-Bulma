@@ -18,12 +18,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <link rel="stylesheet" href="../estilos/iniciocards.css">
     <link rel="stylesheet" href="../estilos/iniciosupervisor.css">
 
-    <!-- PWA -->
-    <!-- [OFFLINE DESACTIVADO] <link rel="manifest" href="/manifest.json"> -->
     <meta name="theme-color" content="#6750A4">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Inventarios">
     <link rel="apple-touch-icon" href="/imagenes/Logos/icon-192.png">
 
     <script type="importmap">
@@ -291,27 +286,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             }
         });
     </script>
-    <!-- Guardar sesión en IndexedDB para acceso offline -->
-    <script>
-    window.__SESION_PHP__ = {
-        usuario:   '<?= htmlspecialchars($_SESSION['usuario'],  ENT_QUOTES) ?>',
-        nombre:    '<?= htmlspecialchars($_SESSION['nombre'],   ENT_QUOTES) ?>',
-        rol:       '<?= htmlspecialchars($_SESSION['rol'],      ENT_QUOTES) ?>',
-        clave_rol: '<?= htmlspecialchars($_SESSION['clave_rol'] ?? '', ENT_QUOTES) ?>',
-    };
-    </script>
-    <!-- [OFFLINE DESACTIVADO] <script src="../js/pwa_offline.js"></script> -->
-    <script src="../js/offline_login.js"></script>
-    <!-- [OFFLINE DESACTIVADO] <script src="../js/offline_preload.js"></script> -->
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        if (window.__SESION_PHP__ && window.OfflineLogin) {
-            window.OfflineLogin.guardarSesionOffline(window.__SESION_PHP__);
-        }
-        if (window.OfflinePreload && navigator.onLine) {
-            setTimeout(() => { window.OfflinePreload.runIfStale('/supervisor'); }, 2500);
-        }
-
         // Badge de solicitudes pendientes
         fetch('api_solicitudes.php', {
             method: 'POST',

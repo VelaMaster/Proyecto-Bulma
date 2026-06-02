@@ -27,12 +27,7 @@ $origen_conexion = Database::getEnvName();
     <link rel="stylesheet" href="main_md3.css">
     <link rel="stylesheet" href="loader_md3.css">
 
-    <!-- PWA -->
-    <!-- [OFFLINE DESACTIVADO] <link rel="manifest" href="/manifest.json"> -->
     <meta name="theme-color" content="#6750A4">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Inventarios">
     <link rel="apple-touch-icon" href="/imagenes/Logos/icon-192.png">
 
@@ -160,27 +155,5 @@ $origen_conexion = Database::getEnvName();
 
     <script src="js/temas_md3.js"></script>
     <script src="js/loader_md3.js"></script>
-    <!-- [OFFLINE DESACTIVADO] <script src="js/pwa_offline.js"></script> -->
-    <script src="js/offline_login.js"></script>
-    <script>
-    /* Forzar que el SW actualice si hay una versión nueva disponible */
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.ready.then(reg => reg.update()).catch(() => {});
-    }
-    </script>
-    <?php if (isset($_GET['logout'])): ?>
-    <script>
-    // Limpiar sesión offline al hacer logout
-    document.addEventListener('DOMContentLoaded', async () => {
-        if (window.OfflineLogin) {
-            await window.OfflineLogin.limpiarSesionOffline();
-        }
-        // También borrar datos del SW
-        if (navigator.serviceWorker?.controller) {
-            navigator.serviceWorker.controller.postMessage({ type: 'CLEAR_SESSION' });
-        }
-    });
-    </script>
-    <?php endif; ?>
 </body>
 </html>

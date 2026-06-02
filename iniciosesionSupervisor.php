@@ -17,13 +17,7 @@ $origen_conexion = Database::getEnvName();
     <link rel="stylesheet" href="main_md3.css">
     <link rel="stylesheet" href="loader_md3.css">
 
-    <!-- PWA -->
-    <!-- [OFFLINE DESACTIVADO] <link rel="manifest" href="/manifest.json"> -->
     <meta name="theme-color" content="#6750A4">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Inventarios">
     <link rel="apple-touch-icon" href="/imagenes/Logos/icon-192.png">
 
     <script type="importmap">
@@ -161,17 +155,6 @@ $origen_conexion = Database::getEnvName();
             }
         }
     </script>
-    <!-- [OFFLINE DESACTIVADO] <script src="js/pwa_offline.js"></script> -->
-    <script src="js/offline_login.js"></script>
-    <?php if (isset($_GET['logout'])): ?>
-    <script>
-    document.addEventListener('DOMContentLoaded', async () => {
-        if (window.OfflineLogin) {
-            await window.OfflineLogin.limpiarSesionOffline();
-        }
-    });
-    </script>
-    <?php endif; ?>
 </body>
 
 </html>

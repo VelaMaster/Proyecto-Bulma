@@ -143,6 +143,127 @@ class DatabaseSQLite
         ] as $alter) {
             try { $pdo->exec($alter); } catch (\Throwable $e) { /* columna ya existe */ }
         }
+
+        // ── Espejo de Firebird (poblado por el sincronizador admin) ───
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS lecheria (
+                LECHER             INTEGER PRIMARY KEY,
+                NOMBRELECH         TEXT,
+                EFD_NUMERO         INTEGER,
+                MUN_NUMERO         INTEGER,
+                LOC_NUMERO         INTEGER,
+                NUM_TIENDA         TEXT,
+                TIPO_PUNTO_VENTA   TEXT,
+                ALMACEN_RURAL      TEXT,
+                PROMOTOR           INTEGER,
+                SUPERVISOR         INTEGER,
+                CC_FAM             INTEGER DEFAULT 0,
+                CC_BT1             INTEGER DEFAULT 0,
+                CC_BT2             INTEGER DEFAULT 0,
+                CC_BT3             INTEGER DEFAULT 0,
+                CC_BT4             INTEGER DEFAULT 0,
+                CC_BT5             INTEGER DEFAULT 0,
+                CC_BT6             INTEGER DEFAULT 0,
+                CC_BT7             INTEGER DEFAULT 0,
+                synced_at          TEXT DEFAULT (datetime('now','localtime'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_lecheria_promotor ON lecheria (PROMOTOR);
+            CREATE INDEX IF NOT EXISTS idx_lecheria_supervisor ON lecheria (SUPERVISOR);
+            CREATE INDEX IF NOT EXISTS idx_lecheria_almacen ON lecheria (ALMACEN_RURAL);
+
+            CREATE TABLE IF NOT EXISTS usuarios_inventarios (
+                USUARIO            TEXT PRIMARY KEY,
+                CONTRASENA         TEXT,
+                NOMBRE             TEXT,
+                ROL                TEXT,        -- promotor | supervisor | distribucion
+                CLAVE_ROL          INTEGER,
+                ACTIVO             INTEGER DEFAULT 1,
+                synced_at          TEXT DEFAULT (datetime('now','localtime'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_usr_rol ON usuarios_inventarios (ROL);
+
+            CREATE TABLE IF NOT EXISTS municipio (
+                EFD_NUMERO         INTEGER NOT NULL,
+                MUN_NUMERO         INTEGER NOT NULL,
+                MUN_DESCRIPCION    TEXT,
+                synced_at          TEXT DEFAULT (datetime('now','localtime')),
+                PRIMARY KEY (EFD_NUMERO, MUN_NUMERO)
+            );
+
+            CREATE TABLE IF NOT EXISTS localidad (
+                EFD_NUMERO         INTEGER NOT NULL,
+                MUN_NUMERO         INTEGER NOT NULL,
+                LOC_NUMERO         INTEGER NOT NULL,
+                LOC_DESCRIPCION    TEXT,
+                synced_at          TEXT DEFAULT (datetime('now','localtime')),
+                PRIMARY KEY (EFD_NUMERO, MUN_NUMERO, LOC_NUMERO)
+            );
+        ");
+
+        // ── Configuración admin (Firebird) + logs ─────────────────────
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS admin_config (
+                clave   TEXT PRIMARY KEY,
+                valor   TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS errores_log (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                tipo        TEXT,        -- php | pdo | sync | app
+                nivel       TEXT,        -- error|warning|notice|info
+                mensaje     TEXT,
+                archivo     TEXT,
+                linea       INTEGER,
+                contexto    TEXT,        -- JSON
+                usuario     TEXT,
+                fecha       TEXT DEFAULT (datetime('now','localtime'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_err_fecha ON errores_log (fecha);
+            CREATE INDEX IF NOT EXISTS idx_err_tipo  ON errores_log (tipo);
+
+            CREATE TABLE IF NOT EXISTS sync_log (
+                id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                tabla       TEXT,
+                filas       INTEGER DEFAULT 0,
+                duracion_ms INTEGER DEFAULT 0,
+                ok          INTEGER DEFAULT 0,
+                mensaje     TEXT,
+                fecha       TEXT DEFAULT (datetime('now','localtime'))
+            );
+        ");
+
+        // Valores por defecto de Firebird (sobreescribibles desde /admin/config)
+        $defaults = [
+            'fb_host'    => '172.24.10.251',
+            'fb_port'    => '3050',
+            'fb_user'    => 'SYSDBA',
+            'fb_pass'    => '290990',
+            'fb_db_path' => 'C:/SisDLL20/BD/DB_SIDIST.FDB',
+            'fb_charset' => 'NONE',
+        ];
+        $ins = $pdo->prepare("INSERT OR IGNORE INTO admin_config (clave, valor) VALUES (?, ?)");
+        foreach ($defaults as $k => $v) $ins->execute([$k, $v]);
+    }
+
+    /** Lee un valor de admin_config */
+    public static function getConfig(string $clave, ?string $default = null): ?string
+    {
+        $st = self::getInstance()->prepare("SELECT valor FROM admin_config WHERE clave=?");
+        $st->execute([$clave]);
+        $v = $st->fetchColumn();
+        return $v !== false ? $v : $default;
+    }
+
+    /** Escribe un valor en admin_config (upsert) */
+    public static function setConfig(string $clave, string $valor): void
+    {
+        self::getInstance()->prepare(
+            "INSERT INTO admin_config (clave, valor) VALUES (?, ?)
+             ON CONFLICT(clave) DO UPDATE SET valor=excluded.valor"
+        )->execute([$clave, $valor]);
     }
 
     /** Ruta al archivo .db (útil para backups) */

@@ -48,8 +48,6 @@ foreach ($conteo as $fila) {
     <link rel="stylesheet" href="../main_md3.css">
     <link rel="stylesheet" href="../estilos/generarreporteMensual.css">
 
-    <!-- PWA -->
-    <!-- [OFFLINE DESACTIVADO] <link rel="manifest" href="/manifest.json"> -->
     <meta name="theme-color" content="#6750A4">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -305,7 +303,5 @@ foreach ($conteo as $fila) {
             }
         });
     </script>
-    <!-- [OFFLINE DESACTIVADO] <script src="../js/pwa_offline.js"></script> -->
-    <!-- [OFFLINE DESACTIVADO] <script src="../js/offline_preload.js"></script> -->
 </body>
 </html>

@@ -25,8 +25,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     <script type="importmap">{"imports":{"@material/web/":"https://esm.run/@material/web/"}}</script>
     <script type="module">import '@material/web/all.js';</script>
 
-    <!-- PWA -->
-    <!-- [OFFLINE DESACTIVADO] <link rel="manifest" href="/manifest.json"> -->
     <meta name="theme-color" content="#6750A4">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -233,30 +231,21 @@ function togglePDFs() {
 
 function cargarPDFs() {
     _pdfsYaCargados = true;
-    const lista = document.getElementById('listaPDFs');
 
     fetch('listar_pdfs.php')
-        .then(r => {
-            const offline = r.headers.get('X-Served-From') === 'offline-cache';
-            return r.json().then(d => ({ data: d, offline }));
-        })
-        .then(({ data, offline }) => {
-            renderPDFs(data, offline);
-        })
-        .catch(() => {
-            // Sin conexión y sin caché: intentar desde la caché del SW
-            renderPDFs([], true);
-        });
+        .then(r => r.json())
+        .then(data => renderPDFs(data))
+        .catch(() => renderPDFs([]));
 }
 
-function renderPDFs(archivos, offline) {
+function renderPDFs(archivos) {
     const lista = document.getElementById('listaPDFs');
 
     if (!Array.isArray(archivos) || archivos.length === 0) {
         lista.innerHTML = `
             <div style="text-align:center; padding:24px; color:var(--md-sys-color-on-surface-variant);">
                 <span class="material-symbols-outlined" style="font-size:40px; display:block; margin-bottom:8px; opacity:.5;">picture_as_pdf</span>
-                ${offline ? 'Sin conexión y sin PDFs en caché.' : 'Aún no has generado ningún PDF.'}
+                Aún no has generado ningún PDF.
             </div>`;
         return;
     }
@@ -264,14 +253,7 @@ function renderPDFs(archivos, offline) {
     const meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
                    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-    lista.innerHTML = (offline ? `
-        <div style="padding:8px 12px 4px; background:var(--md-sys-color-tertiary-container);
-             color:var(--md-sys-color-on-tertiary-container); border-radius:12px; font-size:.82rem;
-             display:flex; align-items:center; gap:8px; margin-bottom:10px;">
-            <span class="material-symbols-outlined" style="font-size:18px;">wifi_off</span>
-            Mostrando PDFs en caché (sin conexión)
-        </div>` : '') +
-        archivos.map(pdf => {
+    lista.innerHTML = archivos.map(pdf => {
             const fecha = new Date(pdf.fecha + 'Z');
             const fechaTxt = isNaN(fecha) ? pdf.fecha :
                 fecha.toLocaleDateString('es-MX', { day:'2-digit', month:'short', year:'numeric' });
@@ -303,7 +285,6 @@ function renderPDFs(archivos, offline) {
 }
 
 function abrirPDF(url) {
-    // Intentar abrir; si falla (offline sin cache) el service worker devolverá JSON de error
     const win = window.open(url, '_blank');
     // Fallback: si el navegador bloquea popups, usar fetch para detectar 404
     if (!win) {
@@ -341,12 +322,7 @@ function descargarPDF(url, nombre) {
 }
 
 function mostrarErrorPDF(msg) {
-    const m = msg || 'Archivo removido o no disponible. Genera un nuevo PDF cuando tengas conexión.';
-    if (window.PWA?.mostrarToast) {
-        window.PWA.mostrarToast('⚠️ ' + m, 'warning', 5000);
-    } else {
-        alert(m);
-    }
+    alert(msg || 'Archivo no disponible. Genera un nuevo PDF.');
 }
 
 /* ── Menú y drawer ── */
@@ -495,7 +471,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 </script>
-<!-- [OFFLINE DESACTIVADO] <script src="../js/pwa_offline.js"></script> -->
-<!-- [OFFLINE DESACTIVADO] <script src="../js/offline_preload.js"></script> -->
 </body>
 </html>

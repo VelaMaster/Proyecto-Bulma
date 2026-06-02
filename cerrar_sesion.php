@@ -17,6 +17,5 @@ if (ini_get("session.use_cookies")) {
 }
 session_destroy();
 
-// Redirigir con flag para que el JS limpie la sesión offline en IndexedDB
-header("Location: iniciosesionPromotor.php?logout=1");
+header("Location: iniciosesionPromotor.php");
 exit();
