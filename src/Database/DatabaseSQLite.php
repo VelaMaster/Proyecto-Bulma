@@ -136,10 +136,14 @@ class DatabaseSQLite
 
         // Migraciones idempotentes: agregar columnas nuevas si no existen
         foreach ([
-            "ALTER TABLE reporte_mensual_lecher  ADD COLUMN pdf_nombre TEXT",
-            "ALTER TABLE requerimiento_dotacion  ADD COLUMN pdf_nombre TEXT",
-            "ALTER TABLE reporte_mensual_lecher  ADD COLUMN bloqueado  INTEGER DEFAULT 0",
-            "ALTER TABLE requerimiento_dotacion  ADD COLUMN bloqueado  INTEGER DEFAULT 0",
+            "ALTER TABLE reporte_mensual_lecher  ADD COLUMN pdf_nombre   TEXT",
+            "ALTER TABLE requerimiento_dotacion  ADD COLUMN pdf_nombre   TEXT",
+            "ALTER TABLE reporte_mensual_lecher  ADD COLUMN bloqueado    INTEGER DEFAULT 0",
+            "ALTER TABLE requerimiento_dotacion  ADD COLUMN bloqueado    INTEGER DEFAULT 0",
+            // Fase 3 — espejo de Firebird
+            "ALTER TABLE lecheria                ADD COLUMN EN_OPERACION INTEGER DEFAULT 0",
+            "ALTER TABLE lecheria                ADD COLUMN SUPERVISOR   INTEGER",
+            "ALTER TABLE usuarios_inventarios    ADD COLUMN ACTIVO       INTEGER DEFAULT 1",
         ] as $alter) {
             try { $pdo->exec($alter); } catch (\Throwable $e) { /* columna ya existe */ }
         }
