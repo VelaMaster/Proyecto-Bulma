@@ -5,15 +5,15 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
     exit();
 }
 
-require_once '../Database.php';
-$pdo = Database::getInstance();
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
+$pdo = DatabaseSQLite::getInstance();
 
 $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
 // Resumen rápido de lecherías para este promotor
 $sql_resumen = "SELECT L.TIPO_PUNTO_VENTA, COUNT(*) as TOTAL
-                FROM LECHERIA L
-                INNER JOIN USUARIOS_INVENTARIOS U ON L.PROMOTOR = U.CLAVE_ROL
+                FROM lecheria L
+                INNER JOIN usuarios_inventarios U ON L.PROMOTOR = U.CLAVE_ROL
                 WHERE L.EFD_NUMERO = 20 AND U.USUARIO = :usuario
                   AND COALESCE(L.EN_OPERACION, 0) = 0
                 GROUP BY L.TIPO_PUNTO_VENTA";

@@ -1,7 +1,6 @@
 <?php
 session_start();
-require_once 'Database.php';
-$origen_conexion = Database::getEnvName();
+$origen_conexion = 'SQLite local';
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">

@@ -18,12 +18,13 @@ if ($id <= 0) {
     echo json_encode(['status' => 'error', 'mensaje' => 'ID inválido']); exit();
 }
 
-require_once __DIR__ . '/../Database.php';
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 require_once __DIR__ . '/_fn_pdf_inventario.php';
 
 try {
-    $db = Database::getInstance();
-    $stmt = $db->query("SELECT * FROM INVENTARIOS_MENSUALES WHERE ID = $id");
+    $db = DatabaseSQLite::getInstance();
+    $stmt = $db->prepare("SELECT * FROM inventarios_mensuales WHERE ID = ?");
+    $stmt->execute([$id]);
     $inv = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$inv) {
@@ -74,8 +75,8 @@ try {
     }
 
     // Actualizar PDF_RUTA en BD por si había cambiado
-    $q = function($v) use ($db) { return "'" . str_replace("'", "''", (string)$v) . "'"; };
-    $db->exec("UPDATE INVENTARIOS_MENSUALES SET PDF_RUTA = " . $q($nombreArchivo) . " WHERE ID = $id");
+    $db->prepare("UPDATE inventarios_mensuales SET PDF_RUTA = ? WHERE ID = ?")
+       ->execute([$nombreArchivo, $id]);
 
     echo json_encode([
         'status'   => 'success',

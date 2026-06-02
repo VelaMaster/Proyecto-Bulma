@@ -138,7 +138,7 @@ class SincronizadorFirebird
         // supervisor↔lechería viene por MAPEO_SUPERVISOR_LECHERIA.
         $sql = "SELECT LECHER, NOMBRELECH, EFD_NUMERO, MUN_NUMERO, LOC_NUMERO,
                        NUM_TIENDA, TIPO_PUNTO_VENTA, ALMACEN_RURAL,
-                       PROMOTOR,
+                       PROMOTOR, RESSURTI,
                        CC_FAM, CC_BT1, CC_BT2, CC_BT3, CC_BT4, CC_BT5, CC_BT6, CC_BT7,
                        EN_OPERACION
                 FROM LECHERIA WHERE EFD_NUMERO=20";
@@ -146,7 +146,7 @@ class SincronizadorFirebird
         return $this->_reemplazarTabla($sqlite, 'lecheria',
             ['LECHER','NOMBRELECH','EFD_NUMERO','MUN_NUMERO','LOC_NUMERO',
              'NUM_TIENDA','TIPO_PUNTO_VENTA','ALMACEN_RURAL',
-             'PROMOTOR',
+             'PROMOTOR','RESSURTI',
              'CC_FAM','CC_BT1','CC_BT2','CC_BT3','CC_BT4','CC_BT5','CC_BT6','CC_BT7',
              'EN_OPERACION'],
             $rows);

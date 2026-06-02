@@ -19,7 +19,6 @@
 // ────────────────────────────────────────────────────────────────────
 require_once __DIR__ . '/../includes/session_guard.php';
 header('Content-Type: application/json; charset=utf-8');
-require_once __DIR__ . '/../Database.php';
 require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
@@ -42,18 +41,19 @@ if ($promotor_id <= 0 || $mes < 1 || $mes > 12 || $anio < 2000) {
 }
 
 try {
-    $pdo = Database::getInstance();
+    $pdo = DatabaseSQLite::getInstance();
 
     // 1) Datos del promotor + usuario asociado, validando que pertenezca al supervisor.
     $sqlP = "
-        SELECT FIRST 1 P.PMT_NUMERO, P.PMT_NOMBRE, U.USUARIO
-        FROM PROMOTOR P
-        JOIN LECHERIA L ON L.PROMOTOR = P.PMT_NUMERO
-        JOIN MAPEO_SUPERVISOR_LECHERIA M ON M.LECHER = L.LECHER
-        LEFT JOIN USUARIOS_INVENTARIOS U
+        SELECT P.PMT_NUMERO, P.PMT_NOMBRE, U.USUARIO
+        FROM promotor P
+        JOIN lecheria L ON L.PROMOTOR = P.PMT_NUMERO
+        JOIN mapeo_supervisor_lecheria M ON M.LECHER = L.LECHER
+        LEFT JOIN usuarios_inventarios U
                ON U.CLAVE_ROL = P.PMT_NUMERO AND U.ROL = '0'
         WHERE M.ID_SUPERVISOR = :id_sup
           AND P.PMT_NUMERO    = :id_prom
+        LIMIT 1
     ";
     $stmt = $pdo->prepare($sqlP);
     $stmt->execute([':id_sup' => $id_supervisor, ':id_prom' => $promotor_id]);
@@ -73,15 +73,15 @@ try {
     //    no se reflejan en el mapeo, haciendo que al supervisor le
     //    aparezcan menos lecherías de las que realmente tiene el promotor.
     $sqlL = "
-        SELECT TRIM(L.LECHER) AS LECHER,
+        SELECT TRIM(CAST(L.LECHER AS TEXT)) AS LECHER,
                TRIM(L.NUM_TIENDA) AS NUM_TIENDA,
                L.TIPO_PUNTO_VENTA AS TIPO_PUNTO_VENTA,
                TRIM(L.NOMBRELECH) AS NOMBRE,
                TRIM(L.ALMACEN_RURAL) AS ALMACEN
-        FROM LECHERIA L
+        FROM lecheria L
         WHERE L.PROMOTOR = :id_prom
-          AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
-        ORDER BY TRIM(L.ALMACEN_RURAL), TRIM(L.LECHER)
+          AND COALESCE(L.EN_OPERACION, 0) = 0
+        ORDER BY TRIM(L.ALMACEN_RURAL), L.LECHER
     ";
     $stmt = $pdo->prepare($sqlL);
     $stmt->execute([':id_prom' => $promotor_id]);
@@ -91,8 +91,8 @@ try {
     //    Validamos contra INVENTARIOS_MENSUALES (flujo del promotor),
     //    no contra INVENTARIO_LEP_SUBSIDIADA, que puede traer datos
     //    precargados por Distribución y daría falsos positivos.
-    $sqlI = "SELECT FIRST 1 1 FROM INVENTARIOS_MENSUALES
-             WHERE CLAVE_LECHERIA = ? AND MES_PERIODO = ? AND ANIO_PERIODO = ?";
+    $sqlI = "SELECT 1 FROM inventarios_mensuales
+             WHERE CLAVE_LECHERIA = ? AND MES_PERIODO = ? AND ANIO_PERIODO = ? LIMIT 1";
     $stmtI = $pdo->prepare($sqlI);
 
     // Carpeta donde se guardan los PDFs individuales de inventario.

@@ -12,7 +12,6 @@
 //  Devuelve el PDF inline. Si no existe, 404.
 // ────────────────────────────────────────────────────────────────────
 require_once __DIR__ . '/../includes/session_guard.php';
-require_once __DIR__ . '/../Database.php';
 require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
@@ -38,18 +37,19 @@ if (!in_array($tipo, ['inv','rep','req'], true) ||
 }
 
 try {
-    $pdo = Database::getInstance();
+    $pdo = DatabaseSQLite::getInstance();
 
     // 1) Validar que el promotor pertenece a este supervisor.
     $sqlV = "
-        SELECT FIRST 1 P.PMT_NUMERO, U.USUARIO
-        FROM PROMOTOR P
-        JOIN LECHERIA L ON L.PROMOTOR = P.PMT_NUMERO
-        JOIN MAPEO_SUPERVISOR_LECHERIA M ON M.LECHER = L.LECHER
-        LEFT JOIN USUARIOS_INVENTARIOS U
+        SELECT P.PMT_NUMERO, U.USUARIO
+        FROM promotor P
+        JOIN lecheria L ON L.PROMOTOR = P.PMT_NUMERO
+        JOIN mapeo_supervisor_lecheria M ON M.LECHER = L.LECHER
+        LEFT JOIN usuarios_inventarios U
                ON U.CLAVE_ROL = P.PMT_NUMERO AND U.ROL = '0'
         WHERE M.ID_SUPERVISOR = :id_sup
           AND P.PMT_NUMERO    = :id_prom
+        LIMIT 1
     ";
     $stmt = $pdo->prepare($sqlV);
     $stmt->execute([':id_sup' => $id_supervisor, ':id_prom' => $promotor]);
@@ -69,12 +69,13 @@ try {
     if ($tipo === 'inv') {
         if ($lecher === '') { http_response_code(400); exit('Falta lecher.'); }
         // Validar que la lechería esté bajo este supervisor
-        $sqlL = "SELECT FIRST 1 1
-                 FROM LECHERIA L
-                 JOIN MAPEO_SUPERVISOR_LECHERIA M ON M.LECHER = L.LECHER
+        $sqlL = "SELECT 1
+                 FROM lecheria L
+                 JOIN mapeo_supervisor_lecheria M ON M.LECHER = L.LECHER
                  WHERE M.ID_SUPERVISOR = :id_sup
                    AND L.PROMOTOR      = :id_prom
-                   AND TRIM(L.LECHER)  = :lecher";
+                   AND TRIM(CAST(L.LECHER AS TEXT)) = :lecher
+                 LIMIT 1";
         $stmt = $pdo->prepare($sqlL);
         $stmt->execute([
             ':id_sup'  => $id_supervisor,

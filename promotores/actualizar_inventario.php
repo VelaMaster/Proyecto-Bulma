@@ -1,6 +1,6 @@
 <?php
+// MIGRADO a SQLite (Fase 3.4a). UPDATE con bind params.
 require_once __DIR__ . '/../includes/session_guard.php';
-// Apagamos los errores de PHP en pantalla para que NUNCA rompan el JSON
 ini_set('display_errors', 0);
 error_reporting(E_ALL);
 header('Content-Type: application/json');
@@ -17,26 +17,12 @@ if (!$datos || empty($datos['inventario_id'])) {
     exit();
 }
 
-// 1. Usamos nuestra conexión parcheada
-require_once __DIR__ . '/../Database.php';
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 require_once __DIR__ . '/../src/Repositorio/InventarioRepositorio.php';
 
-// 2. Funciones ayudantes (Spoon-feeding para el SQL Crudo)
-$q = function ($val, $len = 255) {
-    if ($val === null || $val === "") return 'NULL';
-    $limpio = substr((string)$val, 0, $len);
-    return "'" . str_replace("'", "''", $limpio) . "'";
-};
-
-$n = function ($val) {
-    if ($val === null || $val === "") return 0;
-    return (int)$val;
-};
+$n = fn($v) => ($v === null || $v === '') ? 0 : (int)$v;
 
 $lecheria = $datos['lecheria'] ?? 'X';
-// La FECHA es la fuente de verdad del periodo. Si difiere de mes_periodo/anio_periodo,
-// los re-alineamos para no dejar la fila con periodo inconsistente (eso era lo que
-// permitía colar duplicados del mismo mes).
 $mes  = (int)date('m', strtotime($datos['fecha'] ?? 'now'));
 $anio = (int)date('Y', strtotime($datos['fecha'] ?? 'now'));
 $datos['mes_periodo']  = $mes;
@@ -44,68 +30,82 @@ $datos['anio_periodo'] = $anio;
 $nombreArchivo = "Inventario_{$lecheria}_{$anio}_" . sprintf('%02d', $mes) . ".pdf";
 
 try {
-    $db = Database::getInstance();
-
+    $db = DatabaseSQLite::getInstance();
     $id = (int)$datos['inventario_id'];
 
-    // Guardamos el PDF_RUTA anterior para detectar si la edición cambió de mes
-    // (FECHA distinta) y en tal caso borrar el archivo viejo en disco.
+    // Guardamos el PDF_RUTA anterior para detectar si cambió de mes y borrar el viejo en disco.
     $rutaPrev = '';
     try {
-        $stmtPrev = $db->query("SELECT PDF_RUTA FROM INVENTARIOS_MENSUALES WHERE ID = $id");
-        $rowPrev  = $stmtPrev->fetch(PDO::FETCH_ASSOC);
+        $stmtPrev = $db->prepare("SELECT PDF_RUTA FROM inventarios_mensuales WHERE ID = ?");
+        $stmtPrev->execute([$id]);
+        $rowPrev = $stmtPrev->fetch(PDO::FETCH_ASSOC);
         $rutaPrev = trim($rowPrev['PDF_RUTA'] ?? '');
     } catch (Throwable $e) { /* no crítico */ }
 
-    // 3. ARMAMOS EL UPDATE GIGANTE EN TEXTO PLANO
-    $sql = "UPDATE INVENTARIOS_MENSUALES SET
-        FECHA          = " . $q($datos['fecha'], 10) . ",
-        SURT_FECHA     = " . $q($datos['surt_fecha'], 10) . ",
-        SURT_CAJAS     = " . $n($datos['surt_cajas']) . ",
-        SURT_LITROS    = " . $n($datos['surt_litros']) . ",
-        SURT_FACTURA   = " . $q($datos['surt_factura'], 60) . ",
-        SURT_CADUCIDAD = " . $q($datos['surt_caducidad'], 10) . ",
-
-        INV_INI_CAJA   = " . $n($datos['inv_ini_caja']) . ",
-        INV_INI_SOBRES = " . $n($datos['inv_ini_sobres']) . ",
-        INV_INI_LITROS = " . $n($datos['inv_ini_litros']) . ",
-
-        ABASTO_CAJA    = " . $n($datos['abasto_caja']) . ",
-        ABASTO_SOBRES  = " . $n($datos['abasto_sobres']) . ",
-        ABASTO_LITROS  = " . $n($datos['abasto_litros']) . ",
-
-        VENTA_CAJA     = " . $n($datos['venta_caja']) . ",
-        VENTA_SOBRES   = " . $n($datos['venta_sobres']) . ",
-        VENTA_LITROS   = " . $n($datos['venta_litros']) . ",
-
-        REG_CAJA       = " . $n($datos['reg_caja']) . ",
-        REG_SOBRES     = " . $n($datos['reg_sobres']) . ",
-        REG_LITROS     = " . $n($datos['reg_litros']) . ",
-
-        DIF_CAJA       = " . $n($datos['dif_caja']) . ",
-        DIF_SOBRES     = " . $n($datos['dif_sobres']) . ",
-        DIF_LITROS     = " . $n($datos['dif_litros']) . ",
-
-        FIN_CAJA       = " . $n($datos['fin_caja']) . ",
-        FIN_SOBRES     = " . $n($datos['fin_sobres']) . ",
-        FIN_LITROS     = " . $n($datos['fin_litros']) . ",
-
-        PDF_RUTA       = " . $q($nombreArchivo, 255) . ",
-        MES_PERIODO    = $mes,
-        ANIO_PERIODO   = $anio,
+    $sql = "UPDATE inventarios_mensuales SET
+        FECHA          = :fecha,
+        SURT_FECHA     = :surt_fecha,
+        SURT_CAJAS     = :surt_cajas,
+        SURT_LITROS    = :surt_litros,
+        SURT_FACTURA   = :surt_factura,
+        SURT_CADUCIDAD = :surt_caducidad,
+        INV_INI_CAJA   = :inv_ini_caja,
+        INV_INI_SOBRES = :inv_ini_sobres,
+        INV_INI_LITROS = :inv_ini_litros,
+        ABASTO_CAJA    = :abasto_caja,
+        ABASTO_SOBRES  = :abasto_sobres,
+        ABASTO_LITROS  = :abasto_litros,
+        VENTA_CAJA     = :venta_caja,
+        VENTA_SOBRES   = :venta_sobres,
+        VENTA_LITROS   = :venta_litros,
+        REG_CAJA       = :reg_caja,
+        REG_SOBRES     = :reg_sobres,
+        REG_LITROS     = :reg_litros,
+        DIF_CAJA       = :dif_caja,
+        DIF_SOBRES     = :dif_sobres,
+        DIF_LITROS     = :dif_litros,
+        FIN_CAJA       = :fin_caja,
+        FIN_SOBRES     = :fin_sobres,
+        FIN_LITROS     = :fin_litros,
+        PDF_RUTA       = :pdf_ruta,
+        MES_PERIODO    = :mes,
+        ANIO_PERIODO   = :anio,
         ESTADO         = 'editado'
-        WHERE ID = $id";
+        WHERE ID = :id";
 
-    if (!$db->inTransaction()) { $db->beginTransaction(); }
+    $stmt = $db->prepare($sql);
+    $stmt->execute([
+        ':fecha'          => $datos['fecha']          ?? null,
+        ':surt_fecha'     => $datos['surt_fecha']     ?? null,
+        ':surt_cajas'     => $n($datos['surt_cajas']),
+        ':surt_litros'    => $n($datos['surt_litros']),
+        ':surt_factura'   => $datos['surt_factura']   ?? null,
+        ':surt_caducidad' => $datos['surt_caducidad'] ?? null,
+        ':inv_ini_caja'   => $n($datos['inv_ini_caja']),
+        ':inv_ini_sobres' => $n($datos['inv_ini_sobres']),
+        ':inv_ini_litros' => $n($datos['inv_ini_litros']),
+        ':abasto_caja'    => $n($datos['abasto_caja']),
+        ':abasto_sobres'  => $n($datos['abasto_sobres']),
+        ':abasto_litros'  => $n($datos['abasto_litros']),
+        ':venta_caja'     => $n($datos['venta_caja']),
+        ':venta_sobres'   => $n($datos['venta_sobres']),
+        ':venta_litros'   => $n($datos['venta_litros']),
+        ':reg_caja'       => $n($datos['reg_caja']),
+        ':reg_sobres'     => $n($datos['reg_sobres']),
+        ':reg_litros'     => $n($datos['reg_litros']),
+        ':dif_caja'       => $n($datos['dif_caja']),
+        ':dif_sobres'     => $n($datos['dif_sobres']),
+        ':dif_litros'     => $n($datos['dif_litros']),
+        ':fin_caja'       => $n($datos['fin_caja']),
+        ':fin_sobres'     => $n($datos['fin_sobres']),
+        ':fin_litros'     => $n($datos['fin_litros']),
+        ':pdf_ruta'       => $nombreArchivo,
+        ':mes'            => $mes,
+        ':anio'           => $anio,
+        ':id'             => $id,
+    ]);
 
-    // 4. EJECUTAMOS DIRECTO (Sin bind_params)
-    $db->exec($sql);
-
-    $db->commit();
-
-    // 5. Regenerar PDF en disco con los datos actualizados.
-    //    Si la edición cambió la FECHA a otro mes, el nombre del archivo cambia;
-    //    borramos el viejo para no dejar PDFs huérfanos en /datos/promotores.
+    // Regenerar PDF en disco con los datos actualizados.
     try {
         require_once __DIR__ . '/_fn_pdf_inventario.php';
         if ($rutaPrev !== '' && $rutaPrev !== $nombreArchivo) {
@@ -117,23 +117,10 @@ try {
         error_log('[actualizar_inventario] PDF no regenerado: ' . $ePDF->getMessage());
     }
 
-    // 6. Sincronizamos también INVENTARIO_LEP_SUBSIDIADA para que el flujo
-    //    (reporte/requerimiento) pueda leer los nuevos valores sin que
-    //    Distribución tenga que cargar nada a mano.
-    try {
-        $repo = new InventarioRepositorio();
-        $repo->syncLepSubsidiada($lecheria, $mes, $anio, $datos);
-    } catch (Exception $eSync) {
-        // No tumbamos la operación principal por un fallo en el sync.
-        error_log('[actualizar_inventario] sync LEP falló: ' . $eSync->getMessage());
-    }
-
+    // syncLepSubsidiada ya es no-op (INVENTARIOS_MENSUALES es la única fuente).
     echo json_encode(["status" => "success", "mensaje" => "Inventario actualizado correctamente."]);
 
 } catch (Exception $e) {
-    if (isset($db) && $db->inTransaction()) { $db->rollBack(); }
-    
-    // Devolvemos el error en un JSON válido, no en HTML
     http_response_code(500);
     echo json_encode(["status" => "error", "mensaje" => "Error BD: " . $e->getMessage()]);
 }

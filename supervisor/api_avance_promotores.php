@@ -11,7 +11,7 @@
 // ────────────────────────────────────────────────────────────────────
 require_once __DIR__ . '/../includes/session_guard.php';
 header('Content-Type: application/json; charset=utf-8');
-require_once __DIR__ . '/../Database.php';
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
     echo json_encode(['status' => 'error', 'message' => 'Acceso denegado.']);
@@ -32,33 +32,30 @@ if ($mes < 1 || $mes > 12 || $anio < 2000) {
 }
 
 try {
-    $pdo = Database::getInstance();
+    $pdo = DatabaseSQLite::getInstance();
 
-    // "Capturado" significa que el promotor llenó su inventario mensual:
-    // se valida contra INVENTARIOS_MENSUALES (la tabla del flujo del
-    // promotor), NO contra INVENTARIO_LEP_SUBSIDIADA, que puede traer
-    // datos precargados por Distribución y daría falsos positivos.
+    // "Capturado" = el promotor llenó su inventario mensual (inventarios_mensuales).
     $sql = "
         SELECT
             P.PMT_NUMERO  AS ID,
             P.PMT_NOMBRE  AS NOMBRE,
             COUNT(DISTINCT L.LECHER) AS TOTAL,
             COUNT(DISTINCT CASE WHEN IM.CLAVE_LECHERIA IS NOT NULL THEN L.LECHER END) AS CAPTURADAS
-        FROM PROMOTOR P
-        JOIN LECHERIA L ON L.PROMOTOR = P.PMT_NUMERO
-        LEFT JOIN INVENTARIOS_MENSUALES IM
-               ON IM.CLAVE_LECHERIA = L.LECHER
+        FROM promotor P
+        JOIN lecheria L ON L.PROMOTOR = P.PMT_NUMERO
+        LEFT JOIN inventarios_mensuales IM
+               ON IM.CLAVE_LECHERIA = CAST(L.LECHER AS TEXT)
               AND IM.MES_PERIODO    = :mes
               AND IM.ANIO_PERIODO   = :anio
         WHERE EXISTS (
                 SELECT 1
-                FROM MAPEO_SUPERVISOR_LECHERIA M
-                JOIN LECHERIA L2 ON M.LECHER = L2.LECHER
+                FROM mapeo_supervisor_lecheria M
+                JOIN lecheria L2 ON M.LECHER = L2.LECHER
                 WHERE M.ID_SUPERVISOR = :id_sup
                   AND L2.PROMOTOR = P.PMT_NUMERO
               )
           AND P.PMT_ACTIVO = 'S'
-          AND COALESCE(L.EN_OPERACION, 0) = 0   -- 0 = activa, 1 = baja
+          AND COALESCE(L.EN_OPERACION, 0) = 0
         GROUP BY P.PMT_NUMERO, P.PMT_NOMBRE
         ORDER BY P.PMT_NOMBRE
     ";

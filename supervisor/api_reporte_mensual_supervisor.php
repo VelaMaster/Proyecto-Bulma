@@ -8,7 +8,6 @@
 require_once __DIR__ . '/../includes/session_guard.php';
 session_write_close();
 header('Content-Type: application/json; charset=utf-8');
-require_once __DIR__ . '/../Database.php';
 require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
@@ -33,26 +32,26 @@ if ($mes < 1 || $mes > 12 || $anio < 2000) {
 }
 
 try {
-    $pdo = Database::getInstance();
+    $pdo = DatabaseSQLite::getInstance();
 
-    // 1) Lecherías del supervisor (Firebird) — todas las asignadas vía MAPEO
+    // 1) Lecherías del supervisor — todas las asignadas vía MAPEO (SQLite espejo)
     $sql = "
-        SELECT TRIM(L.LECHER)        AS LECHER,
-               TRIM(L.NUM_TIENDA)    AS NUM_TIENDA,
-               TRIM(L.ALMACEN_RURAL) AS ALMACEN,
-               L.TIPO_PUNTO_VENTA    AS TIPO_PUNTO_VENTA,
-               TRIM(P.PMT_NOMBRE)    AS PROMOTOR_NOMBRE,
-               L.PROMOTOR            AS PROMOTOR_ID
-        FROM LECHERIA L
-        JOIN PROMOTOR P ON P.PMT_NUMERO = L.PROMOTOR
+        SELECT TRIM(CAST(L.LECHER AS TEXT)) AS LECHER,
+               TRIM(L.NUM_TIENDA)           AS NUM_TIENDA,
+               TRIM(L.ALMACEN_RURAL)        AS ALMACEN,
+               L.TIPO_PUNTO_VENTA           AS TIPO_PUNTO_VENTA,
+               TRIM(P.PMT_NOMBRE)           AS PROMOTOR_NOMBRE,
+               L.PROMOTOR                   AS PROMOTOR_ID
+        FROM lecheria L
+        JOIN promotor P ON P.PMT_NUMERO = L.PROMOTOR
         WHERE P.PMT_ACTIVO = 'S'
           AND COALESCE(L.EN_OPERACION, 0) = 0
           AND EXISTS (
-                SELECT 1 FROM MAPEO_SUPERVISOR_LECHERIA M
+                SELECT 1 FROM mapeo_supervisor_lecheria M
                 WHERE M.ID_SUPERVISOR = :id_sup
-                  AND TRIM(M.LECHER) = TRIM(L.LECHER)
+                  AND M.LECHER = L.LECHER
               )
-        ORDER BY TRIM(L.ALMACEN_RURAL), TRIM(L.LECHER)
+        ORDER BY TRIM(L.ALMACEN_RURAL), L.LECHER
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute([':id_sup' => $id_supervisor]);
@@ -95,8 +94,8 @@ try {
     }
 
     // 3) Nombre del supervisor
-    $stmtN = $pdo->prepare("SELECT FIRST 1 NOMBRE FROM USUARIOS_INVENTARIOS
-                            WHERE CLAVE_ROL = :id AND ROL = '1'");
+    $stmtN = $pdo->prepare("SELECT NOMBRE FROM usuarios_inventarios
+                            WHERE CLAVE_ROL = :id AND ROL = '1' LIMIT 1");
     $stmtN->execute([':id' => $id_supervisor]);
     $nombreSup = trim((string)$stmtN->fetchColumn());
     if ($nombreSup === '') $nombreSup = 'Supervisor #' . $id_supervisor;

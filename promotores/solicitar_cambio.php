@@ -34,21 +34,20 @@ if (!$tipo || $clave_lecheria === '' || $mes < 1 || $mes > 12 || $anio < 2000) {
 }
 
 require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
-require_once __DIR__ . '/../Database.php';
 
 try {
-    // Obtener supervisor de la lechería desde Firebird
+    $db = DatabaseSQLite::getInstance();
+
+    // Obtener supervisor de la lechería desde el espejo en SQLite
     $supervisor_clave = null;
     try {
-        $pdo = Database::getInstance();
-        $stmtSup = $pdo->prepare("SELECT FIRST 1 M.ID_SUPERVISOR
-            FROM MAPEO_SUPERVISOR_LECHERIA M WHERE TRIM(M.LECHER) = ?");
+        $stmtSup = $db->prepare("SELECT M.ID_SUPERVISOR
+            FROM mapeo_supervisor_lecheria M
+            WHERE TRIM(M.LECHER) = ? LIMIT 1");
         $stmtSup->execute([$clave_lecheria]);
         $supRow = $stmtSup->fetch(PDO::FETCH_ASSOC);
         if ($supRow) $supervisor_clave = (int)$supRow['ID_SUPERVISOR'];
     } catch (Throwable $ignored) {}
-
-    $db   = DatabaseSQLite::getInstance();
 
     // Evitar duplicados pendientes
     $stmtDup = $db->prepare("SELECT id FROM solicitudes_cambio

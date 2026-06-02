@@ -15,7 +15,6 @@
 require_once __DIR__ . '/../includes/session_guard.php';
 session_write_close();
 header('Content-Type: application/json; charset=utf-8');
-require_once __DIR__ . '/../Database.php';
 require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'distribucion') {
@@ -45,29 +44,29 @@ if (abs($precioNum - 4.50) < 0.001) {
 }
 
 try {
-    $pdo = Database::getInstance();
+    $pdo = DatabaseSQLite::getInstance();
 
-    // 1) Lecherías desde Firebird con supervisor (sin JOIN a requerimiento)
+    // 1) Lecherías desde SQLite con supervisor (sin JOIN a requerimiento)
     $sql = "
         SELECT
-            TRIM(L.LECHER)           AS LECHER,
-            TRIM(L.NUM_TIENDA)       AS NUM_TIENDA,
-            TRIM(L.ALMACEN_RURAL)    AS ALMACEN,
-            L.TIPO_PUNTO_VENTA       AS TIPO_PUNTO_VENTA,
-            L.PROMOTOR               AS PROMOTOR_ID,
-            M.ID_SUPERVISOR          AS ID_SUPERVISOR,
-            TRIM(U.NOMBRE)           AS SUPERVISOR_NOMBRE
-        FROM LECHERIA L
-        JOIN PROMOTOR P ON P.PMT_NUMERO = L.PROMOTOR
-        LEFT JOIN MAPEO_SUPERVISOR_LECHERIA M ON TRIM(M.LECHER) = TRIM(L.LECHER)
-        LEFT JOIN USUARIOS_INVENTARIOS U
+            TRIM(CAST(L.LECHER AS TEXT))   AS LECHER,
+            TRIM(L.NUM_TIENDA)             AS NUM_TIENDA,
+            TRIM(L.ALMACEN_RURAL)          AS ALMACEN,
+            L.TIPO_PUNTO_VENTA             AS TIPO_PUNTO_VENTA,
+            L.PROMOTOR                     AS PROMOTOR_ID,
+            M.ID_SUPERVISOR                AS ID_SUPERVISOR,
+            TRIM(U.NOMBRE)                 AS SUPERVISOR_NOMBRE
+        FROM lecheria L
+        JOIN promotor P ON P.PMT_NUMERO = L.PROMOTOR
+        LEFT JOIN mapeo_supervisor_lecheria M ON M.LECHER = L.LECHER
+        LEFT JOIN usuarios_inventarios U
                ON U.CLAVE_ROL = M.ID_SUPERVISOR
               AND U.ROL = '1'
         WHERE P.PMT_ACTIVO = 'S'
           AND COALESCE(L.EN_OPERACION, 0) = 0
         ORDER BY COALESCE(TRIM(U.NOMBRE), 'ZZZ'),
                  TRIM(L.ALMACEN_RURAL),
-                 TRIM(L.LECHER)
+                 L.LECHER
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute();

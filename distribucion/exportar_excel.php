@@ -9,7 +9,6 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'distribucion') {
     http_response_code(403); exit('Acceso denegado');
 }
 
-require_once __DIR__ . '/../Database.php';
 require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 
 $mes         = isset($_GET['mes'])           ? (int)$_GET['mes']           : 0;
@@ -32,23 +31,23 @@ if (abs($precioNum - 4.50) < 0.001) {
 }
 
 try {
-    $pdo = Database::getInstance();
+    $pdo = DatabaseSQLite::getInstance();
     $sql = "
-        SELECT TRIM(L.LECHER)        AS LECHER,
-               TRIM(L.NUM_TIENDA)    AS NUM_TIENDA,
-               TRIM(L.ALMACEN_RURAL) AS ALMACEN,
-               L.TIPO_PUNTO_VENTA    AS TIPO_PUNTO_VENTA,
-               M.ID_SUPERVISOR       AS ID_SUPERVISOR,
-               TRIM(U.NOMBRE)        AS SUPERVISOR_NOMBRE
-        FROM LECHERIA L
-        JOIN PROMOTOR P ON P.PMT_NUMERO = L.PROMOTOR
-        LEFT JOIN MAPEO_SUPERVISOR_LECHERIA M ON TRIM(M.LECHER) = TRIM(L.LECHER)
-        LEFT JOIN USUARIOS_INVENTARIOS U
+        SELECT TRIM(CAST(L.LECHER AS TEXT)) AS LECHER,
+               TRIM(L.NUM_TIENDA)           AS NUM_TIENDA,
+               TRIM(L.ALMACEN_RURAL)        AS ALMACEN,
+               L.TIPO_PUNTO_VENTA           AS TIPO_PUNTO_VENTA,
+               M.ID_SUPERVISOR              AS ID_SUPERVISOR,
+               TRIM(U.NOMBRE)               AS SUPERVISOR_NOMBRE
+        FROM lecheria L
+        JOIN promotor P ON P.PMT_NUMERO = L.PROMOTOR
+        LEFT JOIN mapeo_supervisor_lecheria M ON M.LECHER = L.LECHER
+        LEFT JOIN usuarios_inventarios U
                ON U.CLAVE_ROL = M.ID_SUPERVISOR AND U.ROL = '1'
         WHERE P.PMT_ACTIVO = 'S'
           AND COALESCE(L.EN_OPERACION, 0) = 0
         ORDER BY COALESCE(TRIM(U.NOMBRE), 'ZZZ'),
-                 TRIM(L.ALMACEN_RURAL), TRIM(L.LECHER)
+                 TRIM(L.ALMACEN_RURAL), L.LECHER
     ";
     $stmt = $pdo->prepare($sql);
     $stmt->execute();

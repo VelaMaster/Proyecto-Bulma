@@ -143,6 +143,7 @@ class DatabaseSQLite
             // Fase 3 — espejo de Firebird
             "ALTER TABLE lecheria                ADD COLUMN EN_OPERACION INTEGER DEFAULT 0",
             "ALTER TABLE lecheria                ADD COLUMN SUPERVISOR   INTEGER",
+            "ALTER TABLE lecheria                ADD COLUMN RESSURTI     INTEGER",
             "ALTER TABLE usuarios_inventarios    ADD COLUMN ACTIVO       INTEGER DEFAULT 1",
         ] as $alter) {
             try { $pdo->exec($alter); } catch (\Throwable $e) { /* columna ya existe */ }
