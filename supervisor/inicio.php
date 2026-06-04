@@ -79,6 +79,11 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     Reporte Mensual
                 </md-text-button>
 
+                <md-text-button href="inventario_almacen.php">
+                    <md-icon slot="icon">warehouse</md-icon>
+                    Inventario de Almacén
+                </md-text-button>
+
                 <a href="solicitudes.php" style="position:relative;display:inline-flex;align-items:center;gap:6px;
                     padding:0 12px;height:40px;border-radius:20px;text-decoration:none;
                     color:var(--md-sys-color-on-surface);font-size:.875rem;font-weight:500;">
@@ -146,6 +151,11 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <md-list-item href="reporte_mensual.php" type="button">
                     <div slot="headline">Ver Reporte Mensual</div>
                     <md-icon slot="start">bar_chart</md-icon>
+                </md-list-item>
+
+                <md-list-item href="inventario_almacen.php" type="button">
+                    <div slot="headline">Inventario de Almacén</div>
+                    <md-icon slot="start">warehouse</md-icon>
                 </md-list-item>
             </md-list>
         </div>
