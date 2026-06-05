@@ -13,6 +13,16 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'distribucion') {
     exit('Acceso denegado.');
 }
 
+if (!class_exists('ZipArchive')) {
+    http_response_code(500);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode([
+        'status'  => 'error',
+        'message' => 'Falta la extensión PHP zip. Ejecuta en la raíz del proyecto: docker compose build --no-cache web && docker compose up -d'
+    ]);
+    exit();
+}
+
 $mes    = isset($_GET['mes'])    ? (int)$_GET['mes']    : 0;
 $anio   = isset($_GET['anio'])   ? (int)$_GET['anio']   : 0;
 $precio = isset($_GET['precio']) ? trim($_GET['precio']) : 'all';
