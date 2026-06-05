@@ -231,6 +231,9 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <md-outlined-button id="btnOpe650">
                     <md-icon slot="icon">download</md-icon> Solo $6.50
                 </md-outlined-button>
+                <md-text-button href="comparar_lecherias.php" target="_blank">
+                    <md-icon slot="icon">fact_check</md-icon> Validar lecherías BDD↔OPE
+                </md-text-button>
             </div>
             <div id="opePendientes" style="display:none; margin-top:12px; padding:10px 14px; border-radius:10px;
                                            background:color-mix(in srgb,var(--md-sys-color-error-container) 70%,transparent);
