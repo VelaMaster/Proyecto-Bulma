@@ -1,0 +1,17 @@
+node_modules/
+fpdf/
+imagenes/
+archivos/
+database/
+datos/
+sass/
+src/
+*.css.map
+*.css
+*.scss
+mainprincipal.css
+googleae74797202ed025d.html
+*.fdb
+*.fbk
+hasclic.html
+prueba_loader.html

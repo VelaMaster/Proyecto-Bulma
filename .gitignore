@@ -4,3 +4,6 @@
 .DS_Store
 database/*.fdb
 database/*.fbk
+
+# graphify - knowledge graph generado localmente
+graphify-out/

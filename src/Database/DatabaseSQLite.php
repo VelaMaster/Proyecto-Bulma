@@ -132,6 +132,21 @@ class DatabaseSQLite
 
             CREATE INDEX IF NOT EXISTS idx_sol_promotor
                 ON solicitudes_cambio (promotor_usr, estado);
+
+            -- Cierre de mes por supervisor (autorización para que Distribución descargue el OPE)
+            CREATE TABLE IF NOT EXISTS cierre_mes_supervisor (
+                id                  INTEGER PRIMARY KEY AUTOINCREMENT,
+                supervisor_clave    INTEGER NOT NULL,
+                supervisor_usr      TEXT    NOT NULL,
+                mes                 INTEGER NOT NULL,
+                anio                INTEGER NOT NULL,
+                total_lecherias     INTEGER DEFAULT 0,
+                fecha_autorizacion  TEXT DEFAULT (datetime('now','localtime')),
+                UNIQUE (supervisor_clave, mes, anio)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_cierre_mes
+                ON cierre_mes_supervisor (mes, anio);
         ");
 
         // Migraciones idempotentes: agregar columnas nuevas si no existen

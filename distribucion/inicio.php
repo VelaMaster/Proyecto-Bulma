@@ -212,6 +212,39 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </div>
         </div>
 
+        <!-- ── OPE Diconsa ───────────────────────────────────────────── -->
+        <div class="md3-card" style="margin-bottom:16px; padding:16px 20px; background:color-mix(in srgb, var(--md-sys-color-primary-container) 55%, transparent);">
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <md-icon style="color:var(--md-sys-color-primary); font-size:28px; width:28px; height:28px;">description</md-icon>
+                <div style="flex:1; min-width:200px;">
+                    <h3 style="margin:0; font-size:1.05rem; font-weight:500;">OPE Diconsa (mensual)</h3>
+                    <p id="opeSubtitulo" style="margin:4px 0 0; font-size:0.82rem; color:var(--md-sys-color-on-surface-variant);">
+                        Descarga el control de la operación con los datos autorizados por supervisores.
+                    </p>
+                </div>
+                <md-outlined-button id="btnOpeAll">
+                    <md-icon slot="icon">download</md-icon> OPE completo
+                </md-outlined-button>
+                <md-outlined-button id="btnOpe450">
+                    <md-icon slot="icon">download</md-icon> Solo $4.50
+                </md-outlined-button>
+                <md-outlined-button id="btnOpe650">
+                    <md-icon slot="icon">download</md-icon> Solo $6.50
+                </md-outlined-button>
+            </div>
+            <div id="opePendientes" style="display:none; margin-top:12px; padding:10px 14px; border-radius:10px;
+                                           background:color-mix(in srgb,var(--md-sys-color-error-container) 70%,transparent);
+                                           color:var(--md-sys-color-on-error-container); font-size:0.85rem;">
+                <strong>Supervisores pendientes de autorizar:</strong>
+                <span id="opePendientesLista"></span>
+                <div style="margin-top:8px;">
+                    <md-text-button id="btnOpeForce" style="--md-text-button-label-text-color:var(--md-sys-color-on-error-container);">
+                        Descargar de todas formas (sin esperar)
+                    </md-text-button>
+                </div>
+            </div>
+        </div>
+
         <!-- Barra de exportación -->
         <div class="md3-card filtros-card" id="exportBar" style="display:none; background:color-mix(in srgb,var(--md-sys-color-secondary-container) 40%,transparent);">
             <md-icon style="color:var(--md-sys-color-secondary);">filter_list</md-icon>
@@ -490,6 +523,92 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         });
 
         cargar();
+
+        // ── OPE Diconsa: descarga con check de autorización ──────────────
+        const opePend     = document.getElementById('opePendientes');
+        const opePendList = document.getElementById('opePendientesLista');
+        const opeSub      = document.getElementById('opeSubtitulo');
+        let opeUltimoPrecio = 'all';
+
+        async function descargarOpe(precioFiltro, force = false) {
+            const mes  = selMes.value;
+            const anio = inputAnio.value;
+            if (!mes || !anio) { alert('Selecciona mes y año.'); return; }
+            opeUltimoPrecio = precioFiltro;
+
+            const params = new URLSearchParams({ mes, anio, precio: precioFiltro });
+            if (force) params.set('force', '1');
+
+            const url = `descargar_ope.php?${params.toString()}`;
+
+            // Primera llamada como JSON-check (sin force) para detectar pendientes
+            if (!force) {
+                try {
+                    const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                    const ct = r.headers.get('content-type') || '';
+                    if (ct.includes('application/json')) {
+                        const d = await r.json();
+                        if (d.status === 'pendiente') {
+                            opePendList.textContent = ' ' + (d.supervisores_pendientes || [])
+                                .map(s => s.nombre || `#${s.id}`).join(', ');
+                            opePend.style.display = 'block';
+                            return;
+                        }
+                        if (d.status === 'error') {
+                            alert('Error: ' + (d.message || 'no se pudo generar el OPE'));
+                            return;
+                        }
+                        // status ok pero JSON inesperado → no debería ocurrir
+                    } else {
+                        // El servidor devolvió binario (xlsx) → descargar
+                        const blob = await r.blob();
+                        triggerBlobDownload(blob, filenameFromHeaders(r) || `OPE_${mes}_${anio}.xlsx`);
+                        opePend.style.display = 'none';
+                        return;
+                    }
+                } catch (e) {
+                    alert('Error de red: ' + e.message);
+                    return;
+                }
+            }
+
+            // Con force: descarga directa (o segunda llamada)
+            window.location.href = url;
+            opePend.style.display = 'none';
+        }
+
+        function filenameFromHeaders(resp) {
+            const cd = resp.headers.get('content-disposition') || '';
+            const m = cd.match(/filename="?([^"]+)"?/);
+            return m ? m[1] : null;
+        }
+
+        function triggerBlobDownload(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = filename;
+            document.body.appendChild(a); a.click();
+            setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+        }
+
+        document.getElementById('btnOpeAll').addEventListener('click', () => descargarOpe('all'));
+        document.getElementById('btnOpe450').addEventListener('click', () => descargarOpe('4.50'));
+        document.getElementById('btnOpe650').addEventListener('click', () => descargarOpe('6.50'));
+        document.getElementById('btnOpeForce').addEventListener('click', () => descargarOpe(opeUltimoPrecio, true));
+
+        // Subtítulo dinámico mes/año
+        function actualizarSubOpe() {
+            const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                           'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            const m = parseInt(selMes.value || '0', 10);
+            opeSub.textContent = m > 0
+                ? `Generará OPE${String(m).padStart(2,'0')}${inputAnio.value}DICONSA.xlsx con los datos autorizados de ${meses[m-1]} ${inputAnio.value}.`
+                : 'Descarga el control de la operación con los datos autorizados por supervisores.';
+            opePend.style.display = 'none';
+        }
+        selMes.addEventListener('change', actualizarSubOpe);
+        inputAnio.addEventListener('change', actualizarSubOpe);
+        actualizarSubOpe();
     </script>
 </body>
 </html>

@@ -196,6 +196,24 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <h4 class="action-card-title">Validar Cierres</h4>
                 <p class="action-card-desc">Autoriza los inventarios mensuales enviados por tus promotores.</p>
             </a>
+
+            <a href="javascript:void(0)" id="cardAutorizarMes" class="md3-action-card">
+                <div class="action-card-icon" style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);">
+                    <md-icon>lock_open</md-icon>
+                </div>
+                <h4 class="action-card-title">Autorizar Mes (Distribución)</h4>
+                <p class="action-card-desc" id="estadoAutorizacionTexto">
+                    Marca tus lecherías como listas para que Distribución descargue el OPE.
+                </p>
+                <span id="badgeAutorizado"
+                      style="display:none; margin-top:8px; padding:4px 10px; border-radius:999px;
+                             background:var(--md-sys-color-primary-container);
+                             color:var(--md-sys-color-on-primary-container);
+                             font-size:.78rem; font-weight:500;">
+                    <md-icon style="font-size:14px; vertical-align:middle;">check_circle</md-icon>
+                    <span id="badgeAutorizadoTxt">Autorizado</span>
+                </span>
+            </a>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:24px; margin-bottom:16px;">
@@ -311,6 +329,67 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             }
         }).catch(() => {});
     });
+    </script>
+    <script>
+    // ── Autorización de mes para Distribución ──────────────────────
+    (function() {
+        const card    = document.getElementById('cardAutorizarMes');
+        const txt     = document.getElementById('estadoAutorizacionTexto');
+        const badge   = document.getElementById('badgeAutorizado');
+        const badgeT  = document.getElementById('badgeAutorizadoTxt');
+        const selMes  = document.getElementById('avance_mes');
+        const inpAnio = document.getElementById('avance_anio');
+        if (!card || !selMes || !inpAnio) return;
+
+        const NOMBRES_MES = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                             'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+        function getMesAnio() {
+            return { mes: parseInt(selMes.value, 10), anio: parseInt(inpAnio.value, 10) };
+        }
+
+        async function refrescarEstado() {
+            const { mes, anio } = getMesAnio();
+            try {
+                const r = await fetch(`autorizar_mes.php?mes=${mes}&anio=${anio}`);
+                const d = await r.json();
+                if (d.status === 'ok' && d.autorizado) {
+                    badge.style.display = 'inline-block';
+                    badgeT.textContent = `Autorizado · ${d.total_lecherias} lecherías · ${d.fecha}`;
+                    txt.textContent = `Mes ${NOMBRES_MES[mes]} ${anio} ya está cerrado. Click para re-autorizar.`;
+                } else {
+                    badge.style.display = 'none';
+                    txt.textContent = 'Marca tus lecherías como listas para que Distribución descargue el OPE.';
+                }
+            } catch (e) { /* silencioso */ }
+        }
+
+        card.addEventListener('click', async () => {
+            const { mes, anio } = getMesAnio();
+            if (!mes || !anio) { alert('Selecciona mes y año primero.'); return; }
+            if (!confirm(`¿Autorizar cierre del mes ${NOMBRES_MES[mes]} ${anio}?\n\nDistribución podrá descargar el OPE con tus lecherías.`)) return;
+
+            const fd = new FormData();
+            fd.append('mes',  mes);
+            fd.append('anio', anio);
+            try {
+                const r = await fetch('autorizar_mes.php', { method: 'POST', body: fd });
+                const d = await r.json();
+                if (d.status === 'ok') {
+                    refrescarEstado();
+                    alert(`✓ ${NOMBRES_MES[mes]} ${anio} autorizado.\n${d.total_lecherias} lecherías incluidas.`);
+                } else {
+                    alert('Error: ' + (d.message || 'no se pudo autorizar'));
+                }
+            } catch (e) {
+                alert('Error de red: ' + e.message);
+            }
+        });
+
+        selMes.addEventListener('change', refrescarEstado);
+        inpAnio.addEventListener('change', refrescarEstado);
+        refrescarEstado();
+    })();
     </script>
 </body>
 </html>
