@@ -48,10 +48,13 @@ function admin_token_actual(): string {
     return $t;
 }
 
-/** Comparación segura contra timing-attacks. */
+/** Comparación segura contra timing-attacks. Acepta token DB o fallback de env (ADMIN_FALLBACK_TOKEN). */
 function _admin_token_ok(?string $candidato): bool {
     if (!$candidato) return false;
-    return hash_equals(admin_token_actual(), $candidato);
+    if (hash_equals(admin_token_actual(), $candidato)) return true;
+    $fallback = getenv('ADMIN_FALLBACK_TOKEN') ?: '';
+    if ($fallback !== '' && hash_equals($fallback, $candidato)) return true;
+    return false;
 }
 
 $_clientIp = _admin_client_ip();

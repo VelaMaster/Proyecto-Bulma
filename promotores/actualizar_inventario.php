@@ -23,8 +23,9 @@ require_once __DIR__ . '/../src/Repositorio/InventarioRepositorio.php';
 $n = fn($v) => ($v === null || $v === '') ? 0 : (int)$v;
 
 $lecheria = $datos['lecheria'] ?? 'X';
-$mes  = (int)date('m', strtotime($datos['fecha'] ?? 'now'));
-$anio = (int)date('Y', strtotime($datos['fecha'] ?? 'now'));
+// El periodo manda. La fecha es solo de captura y NO debe redefinir el mes/año.
+$mes  = !empty($datos['mes_periodo'])  ? (int)$datos['mes_periodo']  : (int)date('m', strtotime($datos['fecha'] ?? 'now'));
+$anio = !empty($datos['anio_periodo']) ? (int)$datos['anio_periodo'] : (int)date('Y', strtotime($datos['fecha'] ?? 'now'));
 $datos['mes_periodo']  = $mes;
 $datos['anio_periodo'] = $anio;
 $nombreArchivo = "Inventario_{$lecheria}_{$anio}_" . sprintf('%02d', $mes) . ".pdf";
