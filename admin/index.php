@@ -63,6 +63,7 @@ $_token = admin_token_actual();
     <a href="sync.php"><span class="material-symbols-outlined">sync</span>Sincronizar BDD</a>
     <a href="config.php"><span class="material-symbols-outlined">settings</span>Configurar Firebird</a>
     <a href="usuarios.php"><span class="material-symbols-outlined">group</span>Usuarios</a>
+    <a href="conciliar_ope.php"><span class="material-symbols-outlined">fact_check</span>Conciliar OPE</a>
     <a href="errores.php"><span class="material-symbols-outlined">bug_report</span>Visor de errores</a>
   </nav>
 

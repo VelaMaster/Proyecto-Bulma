@@ -2950,9 +2950,7 @@ html {
   overflow-x: var(--bulma-body-overflow-x);
   overflow-y: var(--bulma-body-overflow-y);
   text-rendering: var(--bulma-body-rendering);
-  -webkit-text-size-adjust: 100%;
-     -moz-text-size-adjust: 100%;
-          text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 article,
@@ -3024,9 +3022,7 @@ a strong {
 }
 
 button {
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   background: none;
   border: none;
   color: inherit;
@@ -3163,9 +3159,7 @@ table th {
 .pagination-ellipsis, .file-cta,
 .file-name, .select select, .select-temas select, .input, .entradasTexto, .textarea, .button, .botonTemas {
   align-items: center;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   border-color: transparent;
   border-style: solid;
   border-width: var(--bulma-control-border-width);
@@ -3231,9 +3225,7 @@ fieldset[disabled] .file-name, fieldset[disabled] .select select, fieldset[disab
   --bulma-delete-background-l: 0%;
   --bulma-delete-background-alpha: 0.5;
   --bulma-delete-color: var(--bulma-white);
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   background-color: hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-delete-background-l), var(--bulma-delete-background-alpha));
   border: none;
   border-radius: var(--bulma-radius-rounded);
@@ -3319,9 +3311,7 @@ fieldset[disabled] .file-name, fieldset[disabled] .select select, fieldset[disab
 .navbar-burger, .menu-list a,
 .menu-list button,
 .menu-list .menu-item {
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   background: none;
   border: none;
   color: inherit;
@@ -3338,6 +3328,7 @@ fieldset[disabled] .file-name, fieldset[disabled] .select select, fieldset[disab
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   -moz-user-select: none;
+  -ms-user-select: none;
   user-select: none;
 }
 
@@ -3923,8 +3914,7 @@ a.box:active {
   background-color: transparent;
   border-color: transparent;
   color: var(--bulma-button-text-color);
-  -webkit-text-decoration: var(--bulma-button-text-decoration);
-          text-decoration: var(--bulma-button-text-decoration);
+  text-decoration: var(--bulma-button-text-decoration);
 }
 
 .button.is-text:hover, .is-text.botonTemas:hover, .button.is-text.is-hovered, .is-text.is-hovered.botonTemas {
@@ -3947,14 +3937,12 @@ a.box:active {
   border-color: var(--bulma-button-ghost-border-color);
   box-shadow: none;
   color: var(--bulma-button-ghost-color);
-  -webkit-text-decoration: var(--bulma-button-ghost-decoration);
-          text-decoration: var(--bulma-button-ghost-decoration);
+  text-decoration: var(--bulma-button-ghost-decoration);
 }
 
 .button.is-ghost:hover, .is-ghost.botonTemas:hover, .button.is-ghost.is-hovered, .is-ghost.is-hovered.botonTemas {
   color: var(--bulma-button-ghost-hover-color);
-  -webkit-text-decoration: var(--bulma-button-ghost-hover-decoration);
-          text-decoration: var(--bulma-button-ghost-hover-decoration);
+  text-decoration: var(--bulma-button-ghost-hover-decoration);
 }
 
 .button.is-small, .is-small.botonTemas, .button.select-temas, .select-temas.botonTemas {
@@ -4340,9 +4328,7 @@ a.box:active {
   --bulma-delete-background-l: 0%;
   --bulma-delete-background-alpha: 0.5;
   --bulma-delete-color: var(--bulma-white);
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   background-color: hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-delete-background-l), var(--bulma-delete-background-alpha));
   border: none;
   border-radius: var(--bulma-radius-rounded);
@@ -5008,9 +4994,7 @@ div.icon-text {
 }
 
 .progress {
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   border: none;
   border-radius: var(--bulma-progress-border-radius);
   display: block;
@@ -6164,8 +6148,7 @@ button.tag:active,
 .radios {
   display: flex;
   flex-wrap: wrap;
-  -moz-column-gap: 1em;
-       column-gap: 1em;
+  column-gap: 1em;
   row-gap: 0.5em;
 }
 
@@ -7245,9 +7228,7 @@ button.tag:active,
 }
 
 .card-header-icon {
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   background: none;
   border: none;
   color: inherit;
@@ -8183,9 +8164,7 @@ body.has-navbar-fixed-bottom {
 
 .navbar-burger {
   align-items: center;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
+  appearance: none;
   background: none;
   border: none;
   border-radius: var(--bulma-burger-border-radius);
@@ -11245,8 +11224,7 @@ label.panel-block:hover {
   --bulma-grid-cell-row-span: 1;
   display: grid;
   gap: var(--bulma-grid-gap);
-  -moz-column-gap: var(--bulma-grid-column-gap, var(--bulma-grid-gap));
-       column-gap: var(--bulma-grid-column-gap, var(--bulma-grid-gap));
+  column-gap: var(--bulma-grid-column-gap, var(--bulma-grid-gap));
   row-gap: var(--bulma-grid-row-gap, var(--bulma-grid-gap));
   grid-template-columns: repeat(auto-fit, minmax(var(--bulma-grid-column-min), 1fr));
   grid-template-rows: auto;
@@ -21053,88 +21031,71 @@ has-background-danger.is-hoverable:active {
 }
 
 .is-column-gap-0 {
-  -moz-column-gap: 0rem !important;
-       column-gap: 0rem !important;
+  column-gap: 0rem !important;
 }
 
 .is-column-gap-0\.5 {
-  -moz-column-gap: 0.25rem !important;
-       column-gap: 0.25rem !important;
+  column-gap: 0.25rem !important;
 }
 
 .is-column-gap-1 {
-  -moz-column-gap: 0.5rem !important;
-       column-gap: 0.5rem !important;
+  column-gap: 0.5rem !important;
 }
 
 .is-column-gap-1\.5 {
-  -moz-column-gap: 0.75rem !important;
-       column-gap: 0.75rem !important;
+  column-gap: 0.75rem !important;
 }
 
 .is-column-gap-2 {
-  -moz-column-gap: 1rem !important;
-       column-gap: 1rem !important;
+  column-gap: 1rem !important;
 }
 
 .is-column-gap-2\.5 {
-  -moz-column-gap: 1.25rem !important;
-       column-gap: 1.25rem !important;
+  column-gap: 1.25rem !important;
 }
 
 .is-column-gap-3 {
-  -moz-column-gap: 1.5rem !important;
-       column-gap: 1.5rem !important;
+  column-gap: 1.5rem !important;
 }
 
 .is-column-gap-3\.5 {
-  -moz-column-gap: 1.75rem !important;
-       column-gap: 1.75rem !important;
+  column-gap: 1.75rem !important;
 }
 
 .is-column-gap-4 {
-  -moz-column-gap: 2rem !important;
-       column-gap: 2rem !important;
+  column-gap: 2rem !important;
 }
 
 .is-column-gap-4\.5 {
-  -moz-column-gap: 2.25rem !important;
-       column-gap: 2.25rem !important;
+  column-gap: 2.25rem !important;
 }
 
 .is-column-gap-5 {
-  -moz-column-gap: 2.5rem !important;
-       column-gap: 2.5rem !important;
+  column-gap: 2.5rem !important;
 }
 
 .is-column-gap-5\.5 {
-  -moz-column-gap: 2.75rem !important;
-       column-gap: 2.75rem !important;
+  column-gap: 2.75rem !important;
 }
 
 .is-column-gap-6 {
-  -moz-column-gap: 3rem !important;
-       column-gap: 3rem !important;
+  column-gap: 3rem !important;
 }
 
 .is-column-gap-6\.5 {
-  -moz-column-gap: 3.25rem !important;
-       column-gap: 3.25rem !important;
+  column-gap: 3.25rem !important;
 }
 
 .is-column-gap-7 {
-  -moz-column-gap: 3.5rem !important;
-       column-gap: 3.5rem !important;
+  column-gap: 3.5rem !important;
 }
 
 .is-column-gap-7\.5 {
-  -moz-column-gap: 3.75rem !important;
-       column-gap: 3.75rem !important;
+  column-gap: 3.75rem !important;
 }
 
 .is-column-gap-8 {
-  -moz-column-gap: 4rem !important;
-       column-gap: 4rem !important;
+  column-gap: 4rem !important;
 }
 
 .is-row-gap-0 {
@@ -22848,12 +22809,6 @@ html[data-theme=light] .entradasTexto {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08) !important;
 }
 
-.entradasTexto::-moz-placeholder {
-  color: var(--bulma-text-weak) !important;
-  opacity: 0.8;
-  font-weight: 400;
-}
-
 .entradasTexto::placeholder {
   color: var(--bulma-text-weak) !important;
   opacity: 0.8;
@@ -23085,6 +23040,7 @@ html[data-theme=light] nav.navbar.nav-base-moderna .navbar-dropdown.glass-menu .
 .dropdown-content.glass-menu {
   background-color: var(--bulma-scheme-main-ter) !important;
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--bulma-border);
   border-radius: 12px !important;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
@@ -23259,13 +23215,6 @@ html[data-theme=light] .label-dinamico {
 }
 
 /* LA MAGIA: Cuando el input tiene foco O cuando el input NO ESTÁ VACÍO (por eso pusimos placeholder=" ") */
-.input-flotante:not(:-moz-placeholder) ~ .label-flotante {
-  top: 0.8rem; /* Sube hacia arriba */
-  font-size: 0.65rem; /* Se hace pequeña */
-  font-weight: 600;
-  color: var(--bulma-link) !important; /* Toma el color de tu tema (violeta/verde/naranja) */
-  opacity: 1;
-}
 .input-flotante:focus ~ .label-flotante,
 .input-flotante:not(:placeholder-shown) ~ .label-flotante {
   top: 0.8rem; /* Sube hacia arriba */
@@ -23406,12 +23355,14 @@ html[data-theme=light] .label-dinamico {
 }
 
 /* --- EFECTO COQUETO AL PASAR EL MOUSE (Filas) --- */
+/* Fix Safari: transform no aplica a <td> (display: table-cell) */
 .tabla-glass tbody tr {
-  transition: all 0.3s ease;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.tabla-glass tbody tr:hover td {
-  transform: scale(1.05);
+.tabla-glass tbody tr:hover {
+  background-color: rgba(var(--bulma-link-rgb), 0.08);
+  box-shadow: inset 0 0 0 1px rgba(var(--bulma-link-rgb), 0.25);
 }
 
 /* =========================================
@@ -23536,4 +23487,4 @@ html[data-theme=light] .notificacion-glass {
 input[type=checkbox],
 input[type=radio] {
   accent-color: var(--bulma-link) !important;
-}/*# sourceMappingURL=mainprincipal.css.map */
+}

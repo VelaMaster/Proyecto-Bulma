@@ -49,10 +49,9 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
         <div class="app-bar-end">
             <div class="desktop-nav">
                 <md-text-button href="inicio.php"><md-icon slot="icon">home</md-icon>Inicio</md-text-button>
-                <md-text-button href="lecherias.php"><md-icon slot="icon">storefront</md-icon>Lecherías</md-text-button>
-                <md-text-button href="solicitudes.php" style="color:var(--md-sys-color-primary);">
-                    <md-icon slot="icon">inbox</md-icon>Solicitudes
-                </md-text-button>
+                <md-text-button href="listadoReportesPromotores.php"><md-icon slot="icon">receipt_long</md-icon>Reporte Mensual</md-text-button>
+                <md-text-button href="requerimientodedotacion.php"><md-icon slot="icon">fact_check</md-icon>Requerimiento de Dotación</md-text-button>
+                <md-text-button href="inventario_almacen.php"><md-icon slot="icon">warehouse</md-icon>Inventario de Almacén</md-text-button>
             </div>
             <md-filled-tonal-button href="../cerrar_sesionsupervisor.php" style="margin-left:16px;">
                 <md-icon slot="icon">logout</md-icon>Salir
@@ -68,8 +67,10 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
         </div>
         <md-list style="background:transparent;">
             <md-list-item href="inicio.php" type="button"><div slot="headline">Inicio</div><md-icon slot="start">home</md-icon></md-list-item>
-            <md-list-item href="lecherias.php" type="button"><div slot="headline">Lecherías</div><md-icon slot="start">storefront</md-icon></md-list-item>
-            <md-list-item href="solicitudes.php" type="button"><div slot="headline">Solicitudes</div><md-icon slot="start">inbox</md-icon></md-list-item>
+            <md-divider style="margin:8px 0;"></md-divider>
+            <md-list-item href="listadoReportesPromotores.php" type="button"><div slot="headline">Reporte Mensual</div><md-icon slot="start">receipt_long</md-icon></md-list-item>
+            <md-list-item href="requerimientodedotacion.php" type="button"><div slot="headline">Requerimiento de Dotación</div><md-icon slot="start">fact_check</md-icon></md-list-item>
+            <md-list-item href="inventario_almacen.php" type="button"><div slot="headline">Inventario de Almacén</div><md-icon slot="start">warehouse</md-icon></md-list-item>
         </md-list>
     </aside>
 

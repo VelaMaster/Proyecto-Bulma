@@ -52,12 +52,34 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'promotor') {
                 <md-icon style="color:var(--md-sys-color-on-primary-container);font-size:32px;width:32px;height:32px;">notifications</md-icon>
             </div>
             <div>
-                <h2 style="margin:0;font-size:1.5rem;font-weight:500;">Mis notificaciones</h2>
+                <h2 style="margin:0;font-size:1.5rem;font-weight:500;">Avisos y solicitudes</h2>
                 <p style="margin:4px 0 0;font-size:.9rem;color:var(--md-sys-color-on-surface-variant);">
-                    Estado de tus solicitudes de cambio enviadas al supervisor.
+                    Estado de tus solicitudes de cambio y avisos del supervisor.
                 </p>
             </div>
         </div>
+
+        <!-- Ayuda: cómo solicitar un cambio -->
+        <details class="md3-card" style="margin-bottom:16px; padding:14px 18px;">
+            <summary style="cursor:pointer; font-weight:500; display:flex; align-items:center; gap:10px;">
+                <md-icon style="color:var(--md-sys-color-primary);">help_outline</md-icon>
+                ¿Cómo solicito un cambio a mi supervisor?
+            </summary>
+            <ol style="padding-left:20px; margin:10px 0 4px; line-height:1.55; font-size:.92rem;">
+                <li>Abre <strong>Reporte mensual</strong> o <strong>Requerimiento</strong> según lo que necesites corregir.</li>
+                <li>Selecciona el <strong>mes y año</strong> del registro ya enviado.</li>
+                <li>Verás un aviso rojo con el botón <strong>Solicitar cambio</strong>. Pulsa ahí.</li>
+                <li>Escribe el motivo y envía. Te avisaremos aquí cuando el supervisor responda.</li>
+            </ol>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px;">
+                <md-filled-tonal-button href="generarreporteMensual.php">
+                    <md-icon slot="icon">receipt_long</md-icon> Ir a Reporte
+                </md-filled-tonal-button>
+                <md-filled-tonal-button href="requerimiento.php">
+                    <md-icon slot="icon">inventory</md-icon> Ir a Requerimiento
+                </md-filled-tonal-button>
+            </div>
+        </details>
 
         <div id="listaSolicitudes">
             <div style="text-align:center;padding:40px;color:var(--md-sys-color-on-surface-variant);">

@@ -444,8 +444,9 @@ lecherias.forEach(lech => {
             <span style="flex:1;font-size:.9rem;font-weight:500;">
                 Este reporte ya fue enviado y está bloqueado. Si necesitas modificarlo, solicita un cambio al supervisor.
             </span>
-            <button id="btnSolicitarCambioRep" style="background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
-                border:none;border-radius:20px;padding:8px 18px;cursor:pointer;font-weight:600;font-size:.85rem;">
+            <button id="btnSolicitarCambioRep" style="background:#fff;color:#b3261e;
+                border:none;border-radius:20px;padding:8px 18px;cursor:pointer;font-weight:700;font-size:.85rem;
+                box-shadow:0 1px 3px rgba(0,0,0,.25);">
                 Solicitar cambio
             </button>`;
         btnGuardar.parentNode.insertBefore(_bannerBloqueo, btnGuardar);
@@ -508,11 +509,7 @@ lecherias.forEach(lech => {
             return;
         }
 
-        const generarPDF = chkGenerarPDF && chkGenerarPDF.checked;
-        if (generarPDF) {
-            const ok = await confirmar('Vamos a guardar el reporte y abrir el PDF al terminar. ¿Continuamos?', 'Generar PDF');
-            if (!ok) return;
-        }
+        const generarPDF = true;
 
         const datos = construirPayload();
 

@@ -68,11 +68,14 @@ $dirPdf = __DIR__ . '/../datos/supervisores/requerimientos_dotacion/';
                 <md-text-button href="inicio.php">
                     <md-icon slot="icon">home</md-icon>Inicio
                 </md-text-button>
-                <md-text-button href="lecherias.php">
-                    <md-icon slot="icon">storefront</md-icon>Lecherías
+                <md-text-button href="listadoReportesPromotores.php">
+                    <md-icon slot="icon">receipt_long</md-icon>Reporte Mensual
                 </md-text-button>
                 <md-text-button href="requerimientodedotacion.php">
-                    <md-icon slot="icon">description</md-icon>Requerimiento
+                    <md-icon slot="icon">fact_check</md-icon>Requerimiento de Dotación
+                </md-text-button>
+                <md-text-button href="inventario_almacen.php">
+                    <md-icon slot="icon">warehouse</md-icon>Inventario de Almacén
                 </md-text-button>
             </div>
             <md-filled-tonal-button href="../cerrar_sesionsupervisor.php" style="margin-left:16px;">
@@ -91,14 +94,15 @@ $dirPdf = __DIR__ . '/../datos/supervisores/requerimientos_dotacion/';
             <md-list-item href="inicio.php" type="button">
                 <div slot="headline">Inicio</div><md-icon slot="start">home</md-icon>
             </md-list-item>
-            <md-list-item href="lecherias.php" type="button">
-                <div slot="headline">Lecherías</div><md-icon slot="start">storefront</md-icon>
+            <md-divider style="margin:8px 0;"></md-divider>
+            <md-list-item href="listadoReportesPromotores.php" type="button">
+                <div slot="headline">Reporte Mensual</div><md-icon slot="start">receipt_long</md-icon>
             </md-list-item>
             <md-list-item href="requerimientodedotacion.php" type="button">
-                <div slot="headline">Requerimiento</div><md-icon slot="start">description</md-icon>
+                <div slot="headline">Requerimiento de Dotación</div><md-icon slot="start">fact_check</md-icon>
             </md-list-item>
-            <md-list-item href="historialGlobal.php" type="button">
-                <div slot="headline">Historial General</div><md-icon slot="start">history</md-icon>
+            <md-list-item href="inventario_almacen.php" type="button">
+                <div slot="headline">Inventario de Almacén</div><md-icon slot="start">warehouse</md-icon>
             </md-list-item>
         </md-list>
     </aside>

@@ -35,6 +35,8 @@ try {
     $pdo = DatabaseSQLite::getInstance();
 
     // "Capturado" = el promotor llenó su inventario mensual (inventarios_mensuales).
+    // El JOIN compara TRIM(CLAVE_LECHERIA) contra la clave del padrón con y
+    // sin sufijo "00" (mismo criterio que InventarioRepositorio::clavesCandidatas).
     $sql = "
         SELECT
             P.PMT_NUMERO  AS ID,
@@ -44,7 +46,10 @@ try {
         FROM promotor P
         JOIN lecheria L ON L.PROMOTOR = P.PMT_NUMERO
         LEFT JOIN inventarios_mensuales IM
-               ON IM.CLAVE_LECHERIA = CAST(L.LECHER AS TEXT)
+               ON TRIM(IM.CLAVE_LECHERIA) IN (
+                       TRIM(CAST(L.LECHER AS TEXT)),
+                       TRIM(CAST(L.LECHER AS TEXT)) || '00'
+                  )
               AND IM.MES_PERIODO    = :mes
               AND IM.ANIO_PERIODO   = :anio
         WHERE EXISTS (

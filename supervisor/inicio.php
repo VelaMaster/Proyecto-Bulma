@@ -40,61 +40,25 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
         <div class="app-bar-end">
             <div class="desktop-nav">
-                                <md-text-button href="lecherias.php">
-                    <md-icon slot="icon">storefront</md-icon>
-                    Lecherías
-                </md-text-button>
-                <div style="position: relative;">
-                    <md-text-button id="btn-rev" onclick="abrirMenu('menu-rev')">
-                        Requerimiento de dotacion
-                        <md-icon slot="icon">arrow_drop_down</md-icon>
-                    </md-text-button>
-                    <md-menu id="menu-rev" anchor="btn-rev">
-                        <md-menu-item href="requerimientodedotacion.php">
-                            <div slot="headline">Revisar</div>
-                            <md-icon slot="start">fact_check</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="historialGlobal.php">
-                            <div slot="headline">Historial General</div>
-                            <md-icon slot="start">history</md-icon>
-                        </md-menu-item>
-                    </md-menu>
-                </div>
-
-                <div style="position: relative;">
-                    <md-text-button id="btn-prom" onclick="abrirMenu('menu-prom')">
-                        Inventarios leche en polvo
-                        <md-icon slot="icon">arrow_drop_down</md-icon>
-                    </md-text-button>
-                    <md-menu id="menu-prom" anchor="btn-prom">
-                        <md-menu-item href="listaPromotores.php">
-                            <div slot="headline">Ver Mis Promotores</div>
-                            <md-icon slot="start">group</md-icon>
-                        </md-menu-item>
-                    </md-menu>
-                </div>
-
-                                <md-text-button href="reporte_mensual.php">
-                    <md-icon slot="icon">bar_chart</md-icon>
+                <md-text-button href="listadoReportesPromotores.php">
+                    <md-icon slot="icon">receipt_long</md-icon>
                     Reporte Mensual
+                </md-text-button>
+
+                <md-text-button href="requerimientodedotacion.php">
+                    <md-icon slot="icon">fact_check</md-icon>
+                    Requerimiento de Dotación
                 </md-text-button>
 
                 <md-text-button href="inventario_almacen.php">
                     <md-icon slot="icon">warehouse</md-icon>
                     Inventario de Almacén
                 </md-text-button>
-
-                <a href="solicitudes.php" style="position:relative;display:inline-flex;align-items:center;gap:6px;
-                    padding:0 12px;height:40px;border-radius:20px;text-decoration:none;
-                    color:var(--md-sys-color-on-surface);font-size:.875rem;font-weight:500;">
-                    <md-icon>inbox</md-icon>
-                    Solicitudes
-                    <span id="badgeSolicitudes" style="display:none;position:absolute;top:4px;right:4px;
-                        background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
-                        font-size:.7rem;font-weight:700;min-width:18px;height:18px;border-radius:999px;
-                        display:none;align-items:center;justify-content:center;padding:0 4px;"></span>
-                </a>
             </div>
+
+            <md-text-button href="../cambiar_contrasena.php" style="margin-left: 8px;">
+                <md-icon slot="icon">key</md-icon> Contraseña
+            </md-text-button>
 
             <md-filled-tonal-button href="../cerrar_sesionsupervisor.php" style="margin-left: 16px;">
                 <md-icon slot="icon">logout</md-icon> Salir
@@ -111,46 +75,20 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
         <div style="overflow-y: auto; flex-grow: 1;">
             <md-list style="background: transparent;">
-                <md-divider style="margin: 8px 0;"></md-divider>
-                                <md-list-item href="lecherias.php" type="button">
-                    <div slot="headline">Lecherías</div>
-                    <md-icon slot="start">storefront</md-icon>
+                <md-list-item href="inicio.php" type="button">
+                    <div slot="headline">Inicio</div>
+                    <md-icon slot="start">home</md-icon>
                 </md-list-item>
-                
-                <div class="drawer-section-title">Requerimiento de Dotación</div>
+                <md-divider style="margin: 8px 0;"></md-divider>
+
+                <md-list-item href="listadoReportesPromotores.php" type="button">
+                    <div slot="headline">Reporte Mensual</div>
+                    <md-icon slot="start">receipt_long</md-icon>
+                </md-list-item>
+
                 <md-list-item href="requerimientodedotacion.php" type="button">
-                    <div slot="headline">Generar Requerimiento</div>
-                    <md-icon slot="start">description</md-icon>
-                </md-list-item>
-
-                <md-divider style="margin: 8px 0;"></md-divider>
-
-                <div class="drawer-section-title">Revisión de Inventarios</div>
-                <md-list-item href="validarInventarios.php" type="button">
-                    <div slot="headline">Validar Pendientes</div>
+                    <div slot="headline">Requerimiento de Dotación</div>
                     <md-icon slot="start">fact_check</md-icon>
-                </md-list-item>
-                               <md-divider style="margin: 8px 0;"></md-divider>
-                <md-list-item href="historialGlobal.php" type="button">
-                    <div slot="headline">Historial General</div>
-                    <md-icon slot="start">history</md-icon>
-                </md-list-item>
-
-
-                <md-divider style="margin: 8px 0;"></md-divider>
-
-                <div class="drawer-section-title">Promotores</div>
-                <md-list-item href="listaPromotores.php" type="button">
-                    <div slot="headline">Ver Mis Promotores</div>
-                    <md-icon slot="start">group</md-icon>
-                </md-list-item>
-
-                <md-divider style="margin: 8px 0;"></md-divider>
-
-                <div class="drawer-section-title">Reporte Mensual</div>
-                <md-list-item href="reporte_mensual.php" type="button">
-                    <div slot="headline">Ver Reporte Mensual</div>
-                    <md-icon slot="start">bar_chart</md-icon>
                 </md-list-item>
 
                 <md-list-item href="inventario_almacen.php" type="button">
@@ -166,13 +104,13 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             <canvas id="hero-canvas"></canvas>
             <h2 style="font-size: 2.25rem; font-weight: 500; margin: 0; letter-spacing: -0.5px;">Panel de Supervisión</h2>
             <p style="font-size: 1.1rem; margin: 8px 0 20px; max-width: 600px; line-height: 1.5; opacity: 0.9;">
-                Bienvenido, <strong><?php echo htmlspecialchars($nombre_usuario); ?></strong>. 
-                Aquí podrás gestionar a tus promotores asignados y validar los cierres de inventario de sus respectivas lecherías.
+                Bienvenido, <strong><?php echo htmlspecialchars($nombre_usuario); ?></strong>.
+                Aquí podrás gestionar a tus promotores asignados y revisar los reportes mensuales de sus lecherías.
             </p>
             <div style="margin-top: 12px;">
-                <md-filled-button onclick="location.href='validarInventarios.php'" style="--md-filled-button-container-shape: 16px; height: 48px;">
-                    <md-icon slot="icon">fact_check</md-icon>
-                    Validar Cierres Pendientes
+                <md-filled-button onclick="location.href='listadoReportesPromotores.php'" style="--md-filled-button-container-shape: 16px; height: 48px;">
+                    <md-icon slot="icon">receipt_long</md-icon>
+                    Ir al Reporte Mensual
                 </md-filled-button>
             </div>
         </div>
@@ -187,14 +125,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 </div>
                 <h4 class="action-card-title">Estadísticas de Zona</h4>
                 <p class="action-card-desc">Revisa el rendimiento, distribución y consumo de las lecherías a tu cargo.</p>
-            </a>
-
-            <a href="validarInventarios.php" class="md3-action-card">
-                <div class="action-card-icon">
-                    <md-icon>assignment_turned_in</md-icon>
-                </div>
-                <h4 class="action-card-title">Validar Cierres</h4>
-                <p class="action-card-desc">Autoriza los inventarios mensuales enviados por tus promotores.</p>
             </a>
 
             <a href="javascript:void(0)" id="cardAutorizarMes" class="md3-action-card">
@@ -214,6 +144,34 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     <span id="badgeAutorizadoTxt">Autorizado</span>
                 </span>
             </a>
+
+            <a href="lecherias.php" class="md3-action-card">
+                <div class="action-card-icon" style="background-color: var(--md-sys-color-primary-container); color: var(--md-sys-color-on-primary-container);">
+                    <md-icon>storefront</md-icon>
+                </div>
+                <h4 class="action-card-title">Lecherías</h4>
+                <p class="action-card-desc">Consulta el catálogo de lecherías a tu cargo.</p>
+            </a>
+
+            <a href="historialGlobal.php" class="md3-action-card">
+                <div class="action-card-icon" style="background-color: var(--md-sys-color-tertiary-container); color: var(--md-sys-color-on-tertiary-container);">
+                    <md-icon>history</md-icon>
+                </div>
+                <h4 class="action-card-title">Historial General</h4>
+                <p class="action-card-desc">Historial global de requerimientos de tu zona.</p>
+            </a>
+
+            <a href="solicitudes.php" class="md3-action-card" style="position:relative;">
+                <div class="action-card-icon" style="background-color: var(--md-sys-color-secondary-container); color: var(--md-sys-color-on-secondary-container);">
+                    <md-icon>inbox</md-icon>
+                </div>
+                <h4 class="action-card-title">Solicitudes</h4>
+                <p class="action-card-desc">Bandeja de solicitudes pendientes de tus promotores.</p>
+                <span id="badgeSolicitudes" style="display:none;position:absolute;top:12px;right:12px;
+                    background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
+                    font-size:.7rem;font-weight:700;min-width:20px;height:20px;border-radius:999px;
+                    align-items:center;justify-content:center;padding:0 6px;"></span>
+            </a>
         </div>
 
         <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-top:24px; margin-bottom:16px;">
@@ -221,25 +179,26 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 Mis Promotores Asignados
             </h3>
 
-            <div class="md3-card" style="display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:10px 16px; margin:0;">
+            <div class="md3-card" style="display:flex; flex-wrap:wrap; align-items:center; gap:14px; padding:14px 18px; margin:0;">
                 <span class="material-symbols-outlined" style="color:var(--md-sys-color-primary);">calendar_month</span>
                 <span style="font-weight:500;">Avance del mes:</span>
-                <select class="md3-input" id="avance_mes" style="margin:0; cursor:pointer;">
-                    <option value="1"  <?= date('n')==1  ? 'selected' : '' ?>>Enero</option>
-                    <option value="2"  <?= date('n')==2  ? 'selected' : '' ?>>Febrero</option>
-                    <option value="3"  <?= date('n')==3  ? 'selected' : '' ?>>Marzo</option>
-                    <option value="4"  <?= date('n')==4  ? 'selected' : '' ?>>Abril</option>
-                    <option value="5"  <?= date('n')==5  ? 'selected' : '' ?>>Mayo</option>
-                    <option value="6"  <?= date('n')==6  ? 'selected' : '' ?>>Junio</option>
-                    <option value="7"  <?= date('n')==7  ? 'selected' : '' ?>>Julio</option>
-                    <option value="8"  <?= date('n')==8  ? 'selected' : '' ?>>Agosto</option>
-                    <option value="9"  <?= date('n')==9  ? 'selected' : '' ?>>Septiembre</option>
-                    <option value="10" <?= date('n')==10 ? 'selected' : '' ?>>Octubre</option>
-                    <option value="11" <?= date('n')==11 ? 'selected' : '' ?>>Noviembre</option>
-                    <option value="12" <?= date('n')==12 ? 'selected' : '' ?>>Diciembre</option>
-                </select>
-                <input class="md3-input" type="number" id="avance_anio" value="<?= date('Y') ?>"
-                       style="max-width:96px; margin:0; text-align:center;">
+                <md-outlined-select id="avance_mes" style="min-width:170px;">
+                    <md-select-option value="1"  <?= date('n')==1  ? 'selected' : '' ?>><div slot="headline">Enero</div></md-select-option>
+                    <md-select-option value="2"  <?= date('n')==2  ? 'selected' : '' ?>><div slot="headline">Febrero</div></md-select-option>
+                    <md-select-option value="3"  <?= date('n')==3  ? 'selected' : '' ?>><div slot="headline">Marzo</div></md-select-option>
+                    <md-select-option value="4"  <?= date('n')==4  ? 'selected' : '' ?>><div slot="headline">Abril</div></md-select-option>
+                    <md-select-option value="5"  <?= date('n')==5  ? 'selected' : '' ?>><div slot="headline">Mayo</div></md-select-option>
+                    <md-select-option value="6"  <?= date('n')==6  ? 'selected' : '' ?>><div slot="headline">Junio</div></md-select-option>
+                    <md-select-option value="7"  <?= date('n')==7  ? 'selected' : '' ?>><div slot="headline">Julio</div></md-select-option>
+                    <md-select-option value="8"  <?= date('n')==8  ? 'selected' : '' ?>><div slot="headline">Agosto</div></md-select-option>
+                    <md-select-option value="9"  <?= date('n')==9  ? 'selected' : '' ?>><div slot="headline">Septiembre</div></md-select-option>
+                    <md-select-option value="10" <?= date('n')==10 ? 'selected' : '' ?>><div slot="headline">Octubre</div></md-select-option>
+                    <md-select-option value="11" <?= date('n')==11 ? 'selected' : '' ?>><div slot="headline">Noviembre</div></md-select-option>
+                    <md-select-option value="12" <?= date('n')==12 ? 'selected' : '' ?>><div slot="headline">Diciembre</div></md-select-option>
+                </md-outlined-select>
+                <md-outlined-text-field id="avance_anio" type="number" value="<?= date('Y') ?>"
+                                        min="2020" max="2099" style="max-width:110px;">
+                </md-outlined-text-field>
             </div>
         </div>
 
@@ -290,6 +249,45 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </div>
         </div>
     </div>
+
+    <!-- Diálogo MD3 reutilizable (sustituye confirm/alert nativos) -->
+    <md-dialog id="md3Modal">
+      <div slot="headline" id="md3ModalTitle">Mensaje</div>
+      <form slot="content" id="md3ModalForm" method="dialog">
+        <p id="md3ModalBody" style="margin:0; line-height:1.5;"></p>
+      </form>
+      <div slot="actions">
+        <md-text-button form="md3ModalForm" value="cancel" id="md3ModalCancel">Cancelar</md-text-button>
+        <md-filled-button form="md3ModalForm" value="ok" id="md3ModalOk">Aceptar</md-filled-button>
+      </div>
+    </md-dialog>
+
+    <script>
+    // Helpers MD3 para sustituir confirm/alert nativos
+    window.md3Confirm = (title, body, okText='Confirmar', cancelText='Cancelar') => new Promise(res => {
+        const d  = document.getElementById('md3Modal');
+        const ok = document.getElementById('md3ModalOk');
+        const cn = document.getElementById('md3ModalCancel');
+        document.getElementById('md3ModalTitle').textContent = title;
+        document.getElementById('md3ModalBody').textContent  = body;
+        ok.textContent = okText; cn.textContent = cancelText;
+        cn.style.display = '';
+        const handler = () => { d.removeEventListener('close', handler); res(d.returnValue === 'ok'); };
+        d.addEventListener('close', handler);
+        d.show();
+    });
+    window.md3Alert = (title, body, okText='Aceptar') => new Promise(res => {
+        const d  = document.getElementById('md3Modal');
+        const ok = document.getElementById('md3ModalOk');
+        const cn = document.getElementById('md3ModalCancel');
+        document.getElementById('md3ModalTitle').textContent = title;
+        document.getElementById('md3ModalBody').textContent  = body;
+        ok.textContent = okText; cn.style.display = 'none';
+        const handler = () => { d.removeEventListener('close', handler); cn.style.display=''; res(); };
+        d.addEventListener('close', handler);
+        d.show();
+    });
+    </script>
 
     <script src="../js/temas_md3.js"></script>
     <script src="../js/hero_physics.js"></script> <script src="../js/inicio_supervisor.js"></script> <script>
@@ -366,8 +364,13 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
         card.addEventListener('click', async () => {
             const { mes, anio } = getMesAnio();
-            if (!mes || !anio) { alert('Selecciona mes y año primero.'); return; }
-            if (!confirm(`¿Autorizar cierre del mes ${NOMBRES_MES[mes]} ${anio}?\n\nDistribución podrá descargar el OPE con tus lecherías.`)) return;
+            if (!mes || !anio) { await md3Alert('Datos faltantes', 'Selecciona mes y año primero.'); return; }
+            const ok = await md3Confirm(
+                `Autorizar ${NOMBRES_MES[mes]} ${anio}`,
+                `Distribución podrá descargar el OPE con las lecherías capturadas. ¿Continuar?`,
+                'Autorizar', 'Cancelar'
+            );
+            if (!ok) return;
 
             const fd = new FormData();
             fd.append('mes',  mes);
@@ -377,12 +380,15 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 const d = await r.json();
                 if (d.status === 'ok') {
                     refrescarEstado();
-                    alert(`✓ ${NOMBRES_MES[mes]} ${anio} autorizado.\n${d.total_lecherias} lecherías incluidas.`);
+                    await md3Alert(
+                        `${NOMBRES_MES[mes]} ${anio} autorizado`,
+                        `${d.total_lecherias} ${d.total_lecherias === 1 ? 'lechería incluida' : 'lecherías incluidas'}.`
+                    );
                 } else {
-                    alert('Error: ' + (d.message || 'no se pudo autorizar'));
+                    await md3Alert('Error', d.message || 'No se pudo autorizar');
                 }
             } catch (e) {
-                alert('Error de red: ' + e.message);
+                await md3Alert('Error de red', e.message);
             }
         });
 

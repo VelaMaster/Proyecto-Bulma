@@ -43,6 +43,8 @@ function resizeCanvas() {
     
     canvasLoader.width = w * dpr;
     canvasLoader.height = h * dpr;
+    // Fix Safari: evita acumular el scale en cada resize
+    ctxLoader.setTransform(1, 0, 0, 1, 0, 0);
     ctxLoader.scale(dpr, dpr);
 }
 

@@ -14,7 +14,7 @@ class LecheriaRepositorio
 
     /**
      * Busca lecherías asignadas al promotor por número o nombre.
-     * Máximo 20 resultados. Si $term está vacío devuelve las primeras 20 ordenadas por nombre.
+     * Devuelve TODAS las lecherías del promotor (el frontend filtra en cliente).
      */
     public function searchByTerm(string $term, string $usuario_login): array
     {
@@ -46,7 +46,7 @@ class LecheriaRepositorio
             $sql .= " AND (CAST(L.LECHER AS TEXT) LIKE :query1
                        OR UPPER(L.NOMBRELECH)    LIKE :query2) ";
         }
-        $sql .= " ORDER BY L.NOMBRELECH LIMIT 20";
+        $sql .= " ORDER BY L.NOMBRELECH";
 
         $stmt = $this->db->prepare($sql);
         $stmt->bindValue(':usuario', $usuario_login, PDO::PARAM_STR);

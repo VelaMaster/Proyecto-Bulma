@@ -458,4 +458,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
         });
     });
+
+    // ─── BLOQUEO DE SCROLL DEL MOUSE EN INPUTS NUMÉRICOS ──────────────────────
+    //  Evita que la rueda del mouse modifique los valores cuando el input está
+    //  enfocado (comportamiento por defecto de type="number" muy molesto).
+    document.querySelectorAll('input[type="number"]').forEach(inp => {
+        inp.addEventListener('wheel', (e) => {
+            if (document.activeElement === inp) {
+                e.preventDefault();
+                inp.blur();
+            }
+        }, { passive: false });
+    });
 });

@@ -89,10 +89,19 @@ try {
     $stmt->execute([':id_sup' => $id_supervisor]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 2) Requerimientos desde SQLite — mapa clave_lecheria → req_actual
-    $sqlite    = DatabaseSQLite::getInstance();
-    $stmtSQ    = $sqlite->prepare(
-        "SELECT clave_lecheria, req_actual, fecha_captura
+    // Columnas de aprobación: defensivo, por si la base no tiene aún el ALTER
+    foreach (['aprobado INTEGER DEFAULT 0',
+              'supervisor_aprobador TEXT',
+              'fecha_aprobacion TEXT'] as $colDef) {
+        try { $pdo->exec("ALTER TABLE requerimiento_dotacion ADD COLUMN $colDef"); }
+        catch (Throwable $e) { /* ya existe */ }
+    }
+
+    // 2) Requerimientos capturados → req_actual + estado de aprobación
+    $stmtSQ = $pdo->prepare(
+        "SELECT clave_lecheria, req_actual, fecha_captura,
+                COALESCE(bloqueado,0) AS bloqueado,
+                COALESCE(aprobado,0)  AS aprobado
          FROM requerimiento_dotacion
          WHERE mes_base = :mes AND anio_base = :anio"
     );
@@ -102,11 +111,56 @@ try {
         $reqs[trim((string)$rq['clave_lecheria'])] = $rq;
     }
 
-    // Enriquecer cada fila de Firebird con el requerimiento de SQLite
+    // 2.b) Avance desde INVENTARIOS_MENSUALES: surtimiento del mes base y
+    //      promedio de los últimos 3 meses para fallback cuando el promotor
+    //      aún no envía el requerimiento formal.
+    $stmtInv = $pdo->prepare(
+        "SELECT TRIM(CLAVE_LECHERIA) AS K,
+                SURT_LITROS, FIN_LITROS, VENTA_LITROS, MES_PERIODO, ANIO_PERIODO,
+                FECHA_CAPTURA
+         FROM inventarios_mensuales
+         WHERE (ANIO_PERIODO*12 + MES_PERIODO) BETWEEN :ini AND :fin"
+    );
+    $finKey = $anio*12 + $mes;
+    $iniKey = $finKey - 3;
+    $stmtInv->execute([':ini' => $iniKey, ':fin' => $finKey]);
+    $inv = [];           // K => ['surt'=>[..], 'fin_base'=>?, 'tiene_mes_base'=>bool, 'fecha'=>?]
+    foreach ($stmtInv->fetchAll() as $iv) {
+        $k = trim((string)$iv['K']);
+        if (!isset($inv[$k])) $inv[$k] = ['surt'=>[], 'fin_base'=>null, 'tiene_mes_base'=>false, 'fecha'=>null];
+        $litros = (int)$iv['SURT_LITROS'];
+        if ($litros > 0) $inv[$k]['surt'][] = $litros;
+        if ((int)$iv['MES_PERIODO'] === $mes && (int)$iv['ANIO_PERIODO'] === $anio) {
+            $inv[$k]['tiene_mes_base'] = true;
+            $inv[$k]['fin_base']       = (int)$iv['FIN_LITROS'];
+            $inv[$k]['fecha']          = $iv['FECHA_CAPTURA'];
+        }
+    }
+
+    // Enriquecer cada fila
     foreach ($rows as &$r) {
         $k = trim((string)$r['LECHER']);
-        $r['REQ_ACTUAL']    = isset($reqs[$k]) ? (int)$reqs[$k]['req_actual']    : null;
-        $r['FECHA_CAPTURA'] = isset($reqs[$k]) ?      $reqs[$k]['fecha_captura'] : null;
+        $tieneReq = isset($reqs[$k]);
+        $tieneInv = isset($inv[$k]) && ($inv[$k]['tiene_mes_base'] || count($inv[$k]['surt']) > 0);
+
+        if ($tieneReq) {
+            $r['REQ_ACTUAL']    = (int)$reqs[$k]['req_actual'];
+            $r['FECHA_CAPTURA'] = $reqs[$k]['fecha_captura'];
+            $r['ES_ESTIMADO']   = false;
+            $r['ESTADO']        = ((int)$reqs[$k]['aprobado'] === 1) ? 'verificado' : 'capturado';
+        } elseif ($tieneInv) {
+            $surts = $inv[$k]['surt'];
+            $prom  = count($surts) ? (int) round(array_sum($surts) / count($surts)) : 0;
+            $r['REQ_ACTUAL']    = $prom;          // litros estimados ≈ surtimiento promedio
+            $r['FECHA_CAPTURA'] = $inv[$k]['fecha'];
+            $r['ES_ESTIMADO']   = true;
+            $r['ESTADO']        = 'estimado';
+        } else {
+            $r['REQ_ACTUAL']    = null;
+            $r['FECHA_CAPTURA'] = null;
+            $r['ES_ESTIMADO']   = false;
+            $r['ESTADO']        = 'falta';
+        }
     }
     unset($r);
 
@@ -189,14 +243,19 @@ try {
 
         if (!isset($almacenes[$alm])) {
             $almacenes[$alm] = [
-                'almacen'    => $alm,
-                'lecherias'  => [],
-                'subtotal'   => 0,
-                'capturadas' => 0,
-                'total'      => 0,
+                'almacen'      => $alm,
+                'lecherias'    => [],
+                'subtotal'     => 0,
+                'subtotal_v'   => 0,   // solo verificados
+                'capturadas'   => 0,
+                'verificadas'  => 0,
+                'estimadas'    => 0,
+                'total'        => 0,
             ];
         }
 
+        $estado    = $r['ESTADO'] ?? 'falta';
+        $esEst     = !empty($r['ES_ESTIMADO']);
         $capturado = $r['REQ_ACTUAL'] !== null;
         $req = $capturado ? (int)$r['REQ_ACTUAL'] : null;
 
@@ -216,6 +275,9 @@ try {
             'precio_label'     => ($tipo === 0) ? '$4.50' : '$6.50',
             'requerimiento'    => $req,        // null = FALTA
             'capturado'        => $capturado,
+            'estado'           => $estado,     // verificado | capturado | estimado | falta
+            'es_estimado'      => $esEst,
+            'fecha'            => $r['FECHA_CAPTURA'] ?? null,
         ];
         $almacenes[$alm]['total']++;
         $totalLech++;
@@ -223,6 +285,12 @@ try {
         if ($capturado) {
             $almacenes[$alm]['subtotal'] += $req;
             $almacenes[$alm]['capturadas']++;
+            if ($estado === 'verificado') {
+                $almacenes[$alm]['verificadas']++;
+                $almacenes[$alm]['subtotal_v'] += $req;
+            } elseif ($esEst) {
+                $almacenes[$alm]['estimadas']++;
+            }
             $totalGeneral += $req;
             $totalCapt++;
         }

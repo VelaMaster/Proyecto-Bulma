@@ -72,23 +72,69 @@ try {
     $stmt->execute();
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // 2) Requerimientos desde SQLite
-    $sqlite = DatabaseSQLite::getInstance();
-    $stmtSQ = $sqlite->prepare(
-        "SELECT clave_lecheria, req_actual FROM requerimiento_dotacion
+    // Columnas de aprobación: defensivo
+    foreach (['aprobado INTEGER DEFAULT 0',
+              'supervisor_aprobador TEXT',
+              'fecha_aprobacion TEXT'] as $colDef) {
+        try { $pdo->exec("ALTER TABLE requerimiento_dotacion ADD COLUMN $colDef"); }
+        catch (Throwable $e) {}
+    }
+
+    // 2) Requerimientos capturados + estado de aprobación
+    $stmtSQ = $pdo->prepare(
+        "SELECT clave_lecheria, req_actual,
+                COALESCE(aprobado,0) AS aprobado
+         FROM requerimiento_dotacion
          WHERE mes_base = :mes AND anio_base = :anio"
     );
     $stmtSQ->execute([':mes' => $mes, ':anio' => $anio]);
     $reqs = [];
     foreach ($stmtSQ->fetchAll() as $rq) {
-        $reqs[trim((string)$rq['clave_lecheria'])] = (int)$rq['req_actual'];
+        $reqs[trim((string)$rq['clave_lecheria'])] = [
+            'req'       => (int)$rq['req_actual'],
+            'aprobado'  => (int)$rq['aprobado'],
+        ];
     }
 
-    // Enriquecer con datos de SQLite
+    // 2.b) Avance desde INVENTARIOS_MENSUALES: promedio últimos 3 meses para
+    //      estimar requerimiento cuando el promotor aún no envía formal.
+    $stmtInv = $pdo->prepare(
+        "SELECT TRIM(CLAVE_LECHERIA) AS K,
+                SURT_LITROS, MES_PERIODO, ANIO_PERIODO
+         FROM inventarios_mensuales
+         WHERE (ANIO_PERIODO*12 + MES_PERIODO) BETWEEN :ini AND :fin"
+    );
+    $finKey = $anio*12 + $mes;
+    $iniKey = $finKey - 3;
+    $stmtInv->execute([':ini' => $iniKey, ':fin' => $finKey]);
+    $inv = [];
+    foreach ($stmtInv->fetchAll() as $iv) {
+        $k = trim((string)$iv['K']);
+        if (!isset($inv[$k])) $inv[$k] = ['surt'=>[], 'tiene_mes_base'=>false];
+        $l = (int)$iv['SURT_LITROS'];
+        if ($l > 0) $inv[$k]['surt'][] = $l;
+        if ((int)$iv['MES_PERIODO'] === $mes && (int)$iv['ANIO_PERIODO'] === $anio)
+            $inv[$k]['tiene_mes_base'] = true;
+    }
+
+    // Enriquecer
     foreach ($rows as &$r) {
         $k = trim((string)$r['LECHER']);
-        $r['REQ_ACTUAL']    = isset($reqs[$k]) ? $reqs[$k] : null;
-        $r['FECHA_CAPTURA'] = isset($reqs[$k]) ? 'ok' : null;
+        if (isset($reqs[$k])) {
+            $r['REQ_ACTUAL']  = $reqs[$k]['req'];
+            $r['ES_ESTIMADO'] = false;
+            $r['ESTADO']      = $reqs[$k]['aprobado'] === 1 ? 'verificado' : 'capturado';
+        } elseif (isset($inv[$k]) && ($inv[$k]['tiene_mes_base'] || count($inv[$k]['surt']))) {
+            $s = $inv[$k]['surt'];
+            $prom = count($s) ? (int) round(array_sum($s)/count($s)) : 0;
+            $r['REQ_ACTUAL']  = $prom;
+            $r['ES_ESTIMADO'] = true;
+            $r['ESTADO']      = 'estimado';
+        } else {
+            $r['REQ_ACTUAL']  = null;
+            $r['ES_ESTIMADO'] = false;
+            $r['ESTADO']      = 'falta';
+        }
     }
     unset($r);
 
@@ -132,14 +178,19 @@ try {
 
         if (!isset($supervisores[$supId]['almacenes'][$alm])) {
             $supervisores[$supId]['almacenes'][$alm] = [
-                'almacen'    => $alm,
-                'lecherias'  => [],
-                'subtotal'   => 0,
-                'capturadas' => 0,
-                'total'      => 0,
+                'almacen'     => $alm,
+                'lecherias'   => [],
+                'subtotal'    => 0,
+                'subtotal_v'  => 0,
+                'capturadas'  => 0,
+                'verificadas' => 0,
+                'estimadas'   => 0,
+                'total'       => 0,
             ];
         }
 
+        $estado    = $r['ESTADO'] ?? 'falta';
+        $esEst     = !empty($r['ES_ESTIMADO']);
         $capturado = $r['REQ_ACTUAL'] !== null;
         $req = $capturado ? (int)$r['REQ_ACTUAL'] : null;
 
@@ -147,10 +198,12 @@ try {
         $numTiendaMostrar = ($tipo === 2 || $numTiendaRaw === '10101') ? 'DM' : $numTiendaRaw;
 
         $supervisores[$supId]['almacenes'][$alm]['lecherias'][] = [
-            'punto_venta'  => (string)$r['LECHER'],
-            'num_tienda'   => $numTiendaMostrar,
-            'requerimiento'=> $req,
-            'capturado'    => $capturado,
+            'punto_venta'   => (string)$r['LECHER'],
+            'num_tienda'    => $numTiendaMostrar,
+            'requerimiento' => $req,
+            'capturado'     => $capturado,
+            'estado'        => $estado,
+            'es_estimado'   => $esEst,
         ];
         $supervisores[$supId]['almacenes'][$alm]['total']++;
         $supervisores[$supId]['total_sup']++;
@@ -159,8 +212,14 @@ try {
         if ($capturado) {
             $supervisores[$supId]['almacenes'][$alm]['subtotal']   += $req;
             $supervisores[$supId]['almacenes'][$alm]['capturadas'] ++;
-            $supervisores[$supId]['subtotal_supervisor']            += $req;
-            $supervisores[$supId]['capturadas_sup']                ++;
+            if ($estado === 'verificado') {
+                $supervisores[$supId]['almacenes'][$alm]['verificadas']++;
+                $supervisores[$supId]['almacenes'][$alm]['subtotal_v'] += $req;
+            } elseif ($esEst) {
+                $supervisores[$supId]['almacenes'][$alm]['estimadas']++;
+            }
+            $supervisores[$supId]['subtotal_supervisor']  += $req;
+            $supervisores[$supId]['capturadas_sup']      ++;
             $totalGeneral += $req;
             $totalCapt++;
         }

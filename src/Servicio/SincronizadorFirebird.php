@@ -154,23 +154,72 @@ class SincronizadorFirebird
 
     private function _syncPromotor(PDO $fb, PDO $sqlite): int
     {
+        // UPSERT: NO truncar. Solo actualiza NOMBRE; preserva PMT_ACTIVO local
+        // (los activos los maneja el concentrado XLSX, no Firebird).
         $rows = $fb->query("SELECT PMT_NUMERO, PMT_NOMBRE, PMT_ACTIVO FROM PROMOTOR")->fetchAll();
-        return $this->_reemplazarTabla($sqlite, 'promotor',
-            ['PMT_NUMERO','PMT_NOMBRE','PMT_ACTIVO'], $rows);
+        $sqlite->beginTransaction();
+        try {
+            $stmt = $sqlite->prepare(
+                "INSERT INTO promotor (PMT_NUMERO, PMT_NOMBRE, PMT_ACTIVO) VALUES (?,?,?)
+                 ON CONFLICT(PMT_NUMERO) DO UPDATE SET PMT_NOMBRE=excluded.PMT_NOMBRE"
+            );
+            $n = 0;
+            foreach ($rows as $r) {
+                $stmt->execute([
+                    $r['PMT_NUMERO'],
+                    is_string($r['PMT_NOMBRE']) ? trim($r['PMT_NOMBRE']) : $r['PMT_NOMBRE'],
+                    is_string($r['PMT_ACTIVO']) ? trim($r['PMT_ACTIVO']) : $r['PMT_ACTIVO'],
+                ]);
+                $n++;
+            }
+            $sqlite->commit();
+            return $n;
+        } catch (\Throwable $e) { $sqlite->rollBack(); throw $e; }
     }
 
     private function _syncSupervisor(PDO $fb, PDO $sqlite): int
     {
+        // UPSERT: NO truncar. Solo actualiza NOMBRE; preserva supervisor.ACTIVO local
+        // y los supervisores agregados manualmente desde el concentrado XLSX.
         $rows = $fb->query("SELECT ID_SUPERVISOR, NOMBRE_SUPERVISOR FROM SUPERVISOR")->fetchAll();
-        return $this->_reemplazarTabla($sqlite, 'supervisor',
-            ['ID_SUPERVISOR','NOMBRE_SUPERVISOR'], $rows);
+        $sqlite->beginTransaction();
+        try {
+            $stmt = $sqlite->prepare(
+                "INSERT INTO supervisor (ID_SUPERVISOR, NOMBRE_SUPERVISOR) VALUES (?,?)
+                 ON CONFLICT(ID_SUPERVISOR) DO UPDATE SET NOMBRE_SUPERVISOR=excluded.NOMBRE_SUPERVISOR"
+            );
+            $n = 0;
+            foreach ($rows as $r) {
+                $stmt->execute([
+                    $r['ID_SUPERVISOR'],
+                    is_string($r['NOMBRE_SUPERVISOR']) ? trim($r['NOMBRE_SUPERVISOR']) : $r['NOMBRE_SUPERVISOR'],
+                ]);
+                $n++;
+            }
+            $sqlite->commit();
+            return $n;
+        } catch (\Throwable $e) { $sqlite->rollBack(); throw $e; }
     }
 
     private function _syncMapeo(PDO $fb, PDO $sqlite): int
     {
+        // INSERT OR IGNORE: NO truncar. La verdad del mapeo vive en SQLite (XLSX
+        // concentrado + lecheria.PROMOTOR); Firebird sólo aporta filas nuevas
+        // que no contradigan las locales. Las correcciones manuales se preservan.
         $rows = $fb->query("SELECT ID_SUPERVISOR, LECHER FROM MAPEO_SUPERVISOR_LECHERIA")->fetchAll();
-        return $this->_reemplazarTabla($sqlite, 'mapeo_supervisor_lecheria',
-            ['ID_SUPERVISOR','LECHER'], $rows);
+        $sqlite->beginTransaction();
+        try {
+            $stmt = $sqlite->prepare(
+                "INSERT OR IGNORE INTO mapeo_supervisor_lecheria (ID_SUPERVISOR, LECHER) VALUES (?, ?)"
+            );
+            $n = 0;
+            foreach ($rows as $r) {
+                $stmt->execute([$r['ID_SUPERVISOR'], $r['LECHER']]);
+                $n++;
+            }
+            $sqlite->commit();
+            return $n;
+        } catch (\Throwable $e) { $sqlite->rollBack(); throw $e; }
     }
 
     /**

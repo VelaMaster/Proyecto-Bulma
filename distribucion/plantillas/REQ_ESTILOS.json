@@ -1,0 +1,77 @@
+{
+  "_doc": "Estilos (cellXfs index) extraídos de las plantillas REQ_650/REQ_450. Sirven para construir sheetData dinámicamente.",
+
+  "650": {
+    "sheet_target":      "xl/worksheets/sheet2.xml",
+    "sheet_total":       "xl/worksheets/sheet3.xml",
+    "col_offset":        0,
+    "header_almacen": { "B": 40, "C": 41 },
+    "lecheria": {
+      "A": 1,  "B": 52, "C": 53, "D": 57, "E": 57, "F": 10,
+      "G": 54, "H": 54, "I": 54, "J": 54, "K": 54, "L": 55,
+      "M": 54, "N": 55, "O": 10, "P": 54, "Q": 56
+    },
+    "total_almacen": {
+      "A": 43, "B": 44, "C": 45,
+      "D": 65, "E": 65, "F": 65, "G": 65, "H": 65, "I": 65,
+      "J": 65, "K": 65, "L": 65, "M": 65, "N": 65, "O": 65,
+      "P": 65, "Q": 65
+    },
+    "observaciones": {
+      "A": 66, "B": 67, "C": 68, "D": 69, "E": 69, "F": 70,
+      "G": 69, "H": 69, "I": 69, "J": 69, "K": 69, "L": 70,
+      "M": 71, "N": 72, "O": 72, "P": 73, "Q": 74
+    },
+    "total_recibir_label_col": "P",
+    "total_recibir_value_col": "Q",
+    "first_data_row": 11,
+    "col_clave":   "A",
+    "col_tienda":  "B",
+    "col_local":   "C",
+    "col_fam":     "D",
+    "col_benef":   "E",
+    "col_dot_teo": "F",
+    "col_p_req":   "P",
+    "col_guia":    "Q",
+    "col_sum_inicio": "C",
+    "col_sum_fin":    "Q",
+    "footer_cols": ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q"]
+  },
+
+  "450": {
+    "sheet_target":      "xl/worksheets/sheet1.xml",
+    "sheet_total":       "xl/worksheets/sheet2.xml",
+    "col_offset":        1,
+    "header_almacen": { "C": 27, "D": 28 },
+    "lecheria": {
+      "B": 3,  "C": 35, "D": 35, "E": 35, "F": 35, "G": 35,
+      "H": 36, "I": 230, "J": 32, "K": 32, "L": 32, "M": 230,
+      "N": 32, "O": 32, "P": 32, "Q": 32, "R": 230
+    },
+    "total_almacen": {
+      "B": 46, "C": 47, "D": 47,
+      "E": 48, "F": 48, "G": 49, "H": 49, "I": 49, "J": 49,
+      "K": 49, "L": 49, "M": 49, "N": 49, "O": 49, "P": 49,
+      "Q": 245, "R": 49
+    },
+    "observaciones": {
+      "B": 50, "C": 51, "D": 51, "E": 51, "F": 51, "G": 51,
+      "H": 51, "I": 51, "J": 51, "K": 51, "L": 51, "M": 51,
+      "N": 52, "O": 52, "P": 52, "Q": 78, "R": 53
+    },
+    "total_recibir_label_col": "Q",
+    "total_recibir_value_col": "R",
+    "first_data_row": 11,
+    "col_clave":   "B",
+    "col_tienda":  "C",
+    "col_local":   "D",
+    "col_fam":     "E",
+    "col_benef":   "F",
+    "col_dot_teo": "G",
+    "col_p_req":   "Q",
+    "col_guia":    "R",
+    "col_sum_inicio": "D",
+    "col_sum_fin":    "R",
+    "footer_cols": ["B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R"]
+  }
+}

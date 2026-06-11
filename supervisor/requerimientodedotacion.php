@@ -36,7 +36,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         /* Grid responsivo: 2 columnas en desktop, 1 en móvil */
         .almacenes-grid{
             display:grid;
-            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(460px, 1fr));
             gap:14px;
         }
         .almacen-card{
@@ -45,6 +45,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             border-radius:14px;
             overflow:hidden;
         }
+        .almacen-card .tabla-scroll{overflow-x:auto;}
         .almacen-card .almacen-titulo{
             display:flex; align-items:center; gap:10px;
             padding:10px 14px;
@@ -55,10 +56,10 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         .almacen-card .almacen-titulo .meta{
             margin-left:auto; font-weight:500; opacity:.85; font-size:0.8rem;
         }
-        .reporte-table{width:100%; border-collapse:collapse; font-size:0.85rem;}
+        .reporte-table{width:100%; border-collapse:collapse; font-size:0.82rem; min-width:420px;}
         .reporte-table th, .reporte-table td{
-            padding:6px 10px; border-bottom:1px solid var(--md-sys-color-outline-variant);
-            text-align:left;
+            padding:6px 8px; border-bottom:1px solid var(--md-sys-color-outline-variant);
+            text-align:left; white-space:nowrap;
         }
         .reporte-table th{
             font-weight:600; color:var(--md-sys-color-on-surface-variant);
@@ -75,7 +76,36 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             background:color-mix(in srgb, var(--md-sys-color-error) 18%, transparent);
             color:var(--md-sys-color-error); font-weight:600; font-size:0.75rem;
         }
+        .estado-pill{
+            display:inline-flex; align-items:center; gap:4px;
+            padding:2px 10px; border-radius:999px;
+            font-weight:600; font-size:0.7rem; text-transform:uppercase; letter-spacing:.4px;
+        }
+        .estado-pill md-icon{font-size:14px; width:14px; height:14px;}
+        .estado-ver{
+            background:color-mix(in srgb, #2e7d32 22%, transparent);
+            color:#7fd996;
+        }
+        .estado-cap{
+            background:color-mix(in srgb, var(--md-sys-color-primary) 22%, transparent);
+            color:var(--md-sys-color-primary);
+        }
+        .estado-est{
+            background:color-mix(in srgb, #ffc107 22%, transparent);
+            color:#ffd966;
+        }
+        .req-val.estimado{opacity:.85; font-style:italic;}
+        tr.estimada td{background:color-mix(in srgb, #ffc107 6%, transparent);}
         tr.faltante td{opacity:.85;}
+        .legend{
+            display:flex; flex-wrap:wrap; gap:14px; align-items:center;
+            padding:10px 14px; margin-bottom:12px; border-radius:12px;
+            background:var(--md-sys-color-surface-container);
+            border:1px solid var(--md-sys-color-outline-variant);
+            font-size:0.78rem; color:var(--md-sys-color-on-surface-variant);
+        }
+        .legend .estado-pill{font-size:0.65rem;}
+        .almacen-acciones{display:flex; gap:6px; margin-left:auto;}
         .dm-tag{
             display:inline-block; padding:1px 8px; border-radius:6px;
             background:color-mix(in srgb, var(--md-sys-color-tertiary) 22%, transparent);
@@ -133,12 +163,16 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         <div class="app-bar-end">
             <div class="desktop-nav">
                 <md-text-button href="inicio.php">
-                    <md-icon slot="icon">home</md-icon>
-                    Inicio
+                    <md-icon slot="icon">home</md-icon>Inicio
                 </md-text-button>
-                <md-text-button href="lecherias.php">
-                    <md-icon slot="icon">storefront</md-icon>
-                    Lecherías
+                <md-text-button href="listadoReportesPromotores.php">
+                    <md-icon slot="icon">receipt_long</md-icon>Reporte Mensual
+                </md-text-button>
+                <md-text-button href="requerimientodedotacion.php">
+                    <md-icon slot="icon">fact_check</md-icon>Requerimiento de Dotación
+                </md-text-button>
+                <md-text-button href="inventario_almacen.php">
+                    <md-icon slot="icon">warehouse</md-icon>Inventario de Almacén
                 </md-text-button>
             </div>
 
@@ -147,6 +181,28 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </md-filled-tonal-button>
         </div>
     </header>
+
+    <div id="drawer-scrim" class="md3-drawer-scrim" onclick="toggleDrawer()"></div>
+    <aside class="md3-drawer" id="mobile-drawer">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px 24px;">
+            <span style="font-size:1.25rem;font-weight:500;">Menú Supervisor</span>
+            <md-icon-button onclick="toggleDrawer()"><md-icon>close</md-icon></md-icon-button>
+        </div>
+        <md-list style="background:transparent;">
+            <md-list-item href="inicio.php" type="button">
+                <div slot="headline">Inicio</div><md-icon slot="start">home</md-icon>
+            </md-list-item>
+            <md-list-item href="lecherias.php" type="button">
+                <div slot="headline">Lecherías</div><md-icon slot="start">storefront</md-icon>
+            </md-list-item>
+            <md-list-item href="listadoReportesPromotores.php" type="button">
+                <div slot="headline">Reporte Mensual</div><md-icon slot="start">receipt_long</md-icon>
+            </md-list-item>
+            <md-list-item href="requerimientodedotacion.php" type="button">
+                <div slot="headline">Requerimiento de Dotación</div><md-icon slot="start">fact_check</md-icon>
+            </md-list-item>
+        </md-list>
+    </aside>
 
     <main class="panel-content">
         <div class="md3-card md3-hero-card">
@@ -235,6 +291,19 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </div>
         </div>
         <div id="warnPromos" style="display:none;"></div>
+
+        <div class="legend" id="legendCard" style="display:none;">
+            <span><md-icon style="vertical-align:middle; font-size:18px;">info</md-icon>
+                Estado de cada lechería:</span>
+            <span class="estado-pill estado-ver"><md-icon>verified</md-icon>Verificado</span>
+            <span style="opacity:.8;">VB del promotor y supervisor.</span>
+            <span class="estado-pill estado-cap"><md-icon>edit_note</md-icon>Capturado</span>
+            <span style="opacity:.8;">Promotor envió, falta tu VB.</span>
+            <span class="estado-pill estado-est"><md-icon>auto_graph</md-icon>Estimado</span>
+            <span style="opacity:.8;">Calculado del inventario, aún no confiable.</span>
+            <span class="falta-pill">FALTA</span>
+            <span style="opacity:.8;">Sin datos.</span>
+        </div>
 
         <div id="contenedorTabla">
             <div class="md3-card" style="text-align:center; padding:24px; color:var(--md-sys-color-on-surface-variant);">
@@ -328,44 +397,62 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             return '—';
         }
 
+        function estadoPill(l) {
+            if (l.estado === 'verificado') return `<span class="estado-pill estado-ver"><md-icon>verified</md-icon>Verificado</span>`;
+            if (l.estado === 'capturado')  return `<span class="estado-pill estado-cap"><md-icon>edit_note</md-icon>Capturado</span>`;
+            if (l.estado === 'estimado')   return `<span class="estado-pill estado-est"><md-icon>auto_graph</md-icon>Estimado</span>`;
+            return `<span class="falta-pill">FALTA</span>`;
+        }
+        function reqCell(l) {
+            if (!l.capturado) return `<span class="falta-pill">FALTA</span>`;
+            const cls = l.es_estimado ? 'req-val estimado' : 'req-val';
+            const suf = l.es_estimado ? ' *' : '';
+            return `<span class="${cls}">${fmtNum(l.requerimiento)}${suf}</span>`;
+        }
+
         function pintarAlmacen(b) {
-            // ¿Mostrar columna precio? Solo si hay mezcla de precios en la vista
             const hayMezcla = b.lecherias.some(l => l.precio_label !== b.lecherias[0].precio_label);
             const filas = b.lecherias.map(l => {
                 const precioCol = hayMezcla ? `<td>${l.precio_label || ''}</td>` : '';
-                if (l.capturado) {
-                    return `<tr>
-                        <td>${l.punto_venta}</td>
-                        <td>${tiendaCell(l)}</td>
-                        <td>${distribCell(l)}</td>
-                        ${precioCol}
-                        <td>${fmtNum(l.requerimiento)}</td>
-                    </tr>`;
-                }
-                return `<tr class="faltante">
+                const trCls = l.capturado ? (l.es_estimado ? 'estimada' : '') : 'faltante';
+                return `<tr class="${trCls}">
                     <td>${l.punto_venta}</td>
                     <td>${tiendaCell(l)}</td>
                     <td>${distribCell(l)}</td>
+                    <td>${estadoPill(l)}</td>
                     ${precioCol}
-                    <td><span class="falta-pill">FALTA</span></td>
+                    <td>${reqCell(l)}</td>
                 </tr>`;
             }).join('');
 
             const precioTh = hayMezcla ? '<th>Precio</th>' : '';
-            const span = hayMezcla ? 3 : 2;
+            const span = hayMezcla ? 4 : 3;
+            const verCount = b.verificadas || 0;
+            const capCount = (b.capturadas || 0) - verCount - (b.estimadas || 0);
+            const puedeVerificar = capCount > 0;
+            const metaTxt = `${verCount}<md-icon style="font-size:14px;width:14px;height:14px;vertical-align:middle;">verified</md-icon> / ${b.capturadas}/${b.total}`;
+
             return `
                 <div class="almacen-card">
                     <div class="almacen-titulo">
                         <md-icon>warehouse</md-icon>
                         <span>ALMACÉN ${b.almacen}</span>
-                        <span class="meta">${b.capturadas}/${b.total}</span>
+                        <span class="meta">${metaTxt}</span>
+                        <span class="almacen-acciones">
+                            ${puedeVerificar ? `
+                              <md-text-button class="btn-verificar" data-almacen="${b.almacen}">
+                                <md-icon slot="icon">verified</md-icon>VB
+                              </md-text-button>` : ''}
+                        </span>
                     </div>
+                    <div class="tabla-scroll">
                     <table class="reporte-table">
                         <thead>
                             <tr>
                                 <th>Punto de Venta</th>
                                 <th>Tienda</th>
                                 <th>Distribuidor</th>
+                                <th>Estado</th>
                                 ${precioTh}
                                 <th>Req.</th>
                             </tr>
@@ -378,6 +465,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                             </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>`;
         }
 
@@ -418,12 +506,41 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             contenedor.innerHTML =
                 `<div class="almacenes-grid">${data.almacenes.map(pintarAlmacen).join('')}</div>`;
 
+            document.getElementById('legendCard').style.display = 'flex';
             totalGeneralEl.textContent = fmtNum(data.total_general);
             totalLechEl.textContent =
                 `(${data.total_capturadas}/${data.total_lecherias} lecherías)`;
             grandTotal.style.display = 'flex';
 
+            // Engancha botones VB recién creados
+            contenedor.querySelectorAll('.btn-verificar').forEach(btn => {
+                btn.addEventListener('click', () => verificarAlmacen(btn.dataset.almacen));
+            });
+
             pintarResumen(data.resumen);
+        }
+
+        async function verificarAlmacen(almacen) {
+            if (!confirm(`¿Confirmas que los requerimientos del almacén ${almacen} están correctos? Pasarán a "Verificado" y serán visibles como datos confiables para distribución.`)) return;
+            try {
+                const r = await fetch('verificar_requerimiento.php', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        mes:  Number(selMes.value),
+                        anio: Number(inputAnio.value),
+                        almacen,
+                    }),
+                });
+                const j = await r.json();
+                if (j.status === 'success') {
+                    cargar();
+                } else {
+                    alert(j.message || 'No se pudo verificar.');
+                }
+            } catch (e) {
+                alert('Error de conexión: ' + e.message);
+            }
         }
 
         async function cargar() {

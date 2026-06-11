@@ -96,13 +96,46 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 <body>
 <header class="md3-top-app-bar">
     <div class="app-bar-start">
-        <md-icon-button onclick="history.back()"><md-icon>arrow_back</md-icon></md-icon-button>
-        <div class="app-brand"><span>Inventario de Almacén</span></div>
+        <md-icon-button class="mobile-menu-btn" onclick="toggleDrawer()">
+            <md-icon>menu</md-icon>
+        </md-icon-button>
+        <div class="app-brand"><span>Liconsa — Supervisión</span></div>
     </div>
     <div class="app-bar-end">
-        <md-text-button href="inicio.php"><md-icon slot="icon">home</md-icon> Inicio</md-text-button>
+        <div class="desktop-nav">
+            <md-text-button href="inicio.php"><md-icon slot="icon">home</md-icon> Inicio</md-text-button>
+            <md-text-button href="listadoReportesPromotores.php"><md-icon slot="icon">receipt_long</md-icon> Reporte Mensual</md-text-button>
+            <md-text-button href="requerimientodedotacion.php"><md-icon slot="icon">fact_check</md-icon> Requerimiento de Dotación</md-text-button>
+            <md-text-button href="inventario_almacen.php"><md-icon slot="icon">warehouse</md-icon> Inventario de Almacén</md-text-button>
+        </div>
+        <md-filled-tonal-button href="../cerrar_sesionsupervisor.php" style="margin-left:16px;">
+            <md-icon slot="icon">logout</md-icon> Salir
+        </md-filled-tonal-button>
     </div>
 </header>
+
+<div id="drawer-scrim" class="md3-drawer-scrim" onclick="toggleDrawer()"></div>
+<aside class="md3-drawer" id="mobile-drawer">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 16px 8px 24px;">
+        <span style="font-size:1.25rem;font-weight:500;">Menú Supervisor</span>
+        <md-icon-button onclick="toggleDrawer()"><md-icon>close</md-icon></md-icon-button>
+    </div>
+    <md-list style="background:transparent;">
+        <md-list-item href="inicio.php" type="button">
+            <div slot="headline">Inicio</div><md-icon slot="start">home</md-icon>
+        </md-list-item>
+        <md-divider style="margin:8px 0;"></md-divider>
+        <md-list-item href="listadoReportesPromotores.php" type="button">
+            <div slot="headline">Reporte Mensual</div><md-icon slot="start">receipt_long</md-icon>
+        </md-list-item>
+        <md-list-item href="requerimientodedotacion.php" type="button">
+            <div slot="headline">Requerimiento de Dotación</div><md-icon slot="start">fact_check</md-icon>
+        </md-list-item>
+        <md-list-item href="inventario_almacen.php" type="button">
+            <div slot="headline">Inventario de Almacén</div><md-icon slot="start">warehouse</md-icon>
+        </md-list-item>
+    </md-list>
+</aside>
 
 <main class="panel-content">
     <div class="md3-hero-card" style="padding:20px 24px;">
@@ -148,5 +181,11 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 </main>
 
 <script src="../js/inventario_almacen.js"></script>
+<script>
+    function toggleDrawer(){
+        document.getElementById('mobile-drawer')?.classList.toggle('open');
+        document.getElementById('drawer-scrim')?.classList.toggle('open');
+    }
+</script>
 </body>
 </html>

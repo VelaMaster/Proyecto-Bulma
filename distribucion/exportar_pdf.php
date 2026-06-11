@@ -296,5 +296,16 @@ $slug = preg_replace('/[^A-Za-z0-9]/', '_', $_SESSION['usuario'] ?? 'dist');
 $nombreArchivo = sprintf('ReqGlobal_%04d_%02d_%s.pdf', $anio, $mes,
                          str_replace('.', '', number_format($precioNum, 2)));
 
-if (ob_get_length()) ob_end_clean();
+require_once __DIR__ . '/../includes/pdf_archivado.php';
+archivarPdf($pdf, [
+    'tipo'    => 'req_global',
+    'modulo'  => 'distribucion',
+    'subdir'  => 'req_global',
+    'mes'     => $mes,
+    'anio'    => $anio,
+    'usuario' => $_SESSION['usuario'] ?? '',
+    'nombre'  => $nombreArchivo,
+    'extras'  => ['precio' => number_format($precioNum, 2)],
+]);
+
 $pdf->Output('I', $nombreArchivo);

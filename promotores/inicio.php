@@ -65,27 +65,10 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
         <div class="app-bar-end">
             <div class="desktop-nav">
-
-                <div style="position: relative;">
-                    <md-text-button id="btn-inv" onclick="abrirMenu('menu-inv')">
-                        Inventario mensual
-                        <md-icon slot="icon">arrow_drop_down</md-icon>
-                    </md-text-button>
-                    <md-menu id="menu-inv" anchor="btn-inv">
-                        <md-menu-item href="generarinventarioMensual.php">
-                            <div slot="headline">Generar</div>
-                            <md-icon slot="start">add_box</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="escaner.php">
-                            <div slot="headline">Subir desde camara</div>
-                            <md-icon slot="start">scan</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="consultarinventarioMensual.php">
-                            <div slot="headline">Consultar</div>
-                            <md-icon slot="start">search</md-icon>
-                        </md-menu-item>
-                    </md-menu>
-                </div>
+                <md-text-button href="generarinventarioMensual.php">
+                    <md-icon slot="icon">add_box</md-icon>
+                    Inventario mensual
+                </md-text-button>
 
                 <md-text-button href="generarreporteMensual.php">
                     <md-icon slot="icon">receipt_long</md-icon>
@@ -96,17 +79,12 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     <md-icon slot="icon">inventory</md-icon>
                     Requerimiento
                 </md-text-button>
-
-                <a href="mis_notificaciones.php" style="position:relative;display:inline-flex;align-items:center;gap:6px;
-                    padding:0 12px;height:40px;border-radius:20px;text-decoration:none;
-                    color:var(--md-sys-color-on-surface);font-size:.875rem;font-weight:500;">
-                    <md-icon>notifications</md-icon>
-                    <span id="badgeNotifProm" style="display:none;position:absolute;top:4px;right:4px;
-                        background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
-                        font-size:.7rem;font-weight:700;min-width:18px;height:18px;border-radius:999px;
-                        align-items:center;justify-content:center;padding:0 4px;"></span>
-                </a>
             </div>
+
+            <md-text-button href="../cambiar_contrasena.php" style="margin-left: 8px;">
+                <md-icon slot="icon">key</md-icon>
+                Contraseña
+            </md-text-button>
 
             <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left: 16px;">
                 <md-icon slot="icon">logout</md-icon>
@@ -131,25 +109,16 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     <md-icon slot="start">home</md-icon>
                 </md-list-item>
                 <md-divider style="margin: 8px 0;"></md-divider>
-                <div class="drawer-section-title">Inventario mensual</div>
                 <md-list-item href="generarinventarioMensual.php" type="button">
-                    <div slot="headline">Generar</div>
+                    <div slot="headline">Inventario mensual</div>
                     <md-icon slot="start">add_box</md-icon>
                 </md-list-item>
-                <md-list-item href="consultarinventarioMensual.php" type="button">
-                    <div slot="headline">Consultar</div>
-                    <md-icon slot="start">search</md-icon>
-                </md-list-item>
-                <md-divider style="margin: 8px 0;"></md-divider>
-                <div class="drawer-section-title">Reporte mensual</div>
                 <md-list-item href="generarreporteMensual.php" type="button">
-                    <div slot="headline">Generar</div>
+                    <div slot="headline">Reporte mensual</div>
                     <md-icon slot="start">receipt_long</md-icon>
                 </md-list-item>
-                <md-divider style="margin: 8px 0;"></md-divider>
-                <div class="drawer-section-title">Requerimiento</div>
                 <md-list-item href="requerimiento.php" type="button">
-                    <div slot="headline">Generar</div>
+                    <div slot="headline">Requerimiento</div>
                     <md-icon slot="start">inventory</md-icon>
                 </md-list-item>
             </md-list>
@@ -225,9 +194,67 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </a>
         </div>
 
-        <h3 style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 24px; margin-bottom: 16px;">
+        <!-- Avisos y Solicitudes -->
+        <p style="font-size:0.8rem;font-weight:500;color:var(--md-sys-color-primary);text-transform:uppercase;letter-spacing:.08em;margin:16px 0 4px;">
+            Avisos y Solicitudes</p>
+        <div class="md3-dashboard-grid">
+            <a href="mis_notificaciones.php" class="md3-action-card" style="position:relative;">
+                <div class="action-card-icon" style="background-color:var(--md-sys-color-secondary-container);color:var(--md-sys-color-on-secondary-container);">
+                    <md-icon>notifications</md-icon>
+                </div>
+                <h4 class="action-card-title">Mis avisos</h4>
+                <p class="action-card-desc">Respuestas y comunicados de tu supervisor.</p>
+                <span id="badgeNotifProm" style="display:none;position:absolute;top:12px;right:12px;
+                    background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
+                    font-size:.7rem;font-weight:700;min-width:20px;height:20px;border-radius:999px;
+                    align-items:center;justify-content:center;padding:0 6px;"></span>
+            </a>
+            <a href="javascript:void(0)" onclick="mostrarComoSolicitar()" class="md3-action-card">
+                <div class="action-card-icon" style="background-color:var(--md-sys-color-tertiary-container);color:var(--md-sys-color-on-tertiary-container);">
+                    <md-icon>edit_note</md-icon>
+                </div>
+                <h4 class="action-card-title">Solicitar un cambio</h4>
+                <p class="action-card-desc">¿Necesitas corregir un reporte o requerimiento ya enviado?</p>
+            </a>
+        </div>
+
+        <h3 style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface); margin-top: 24px; margin-bottom: 8px;">
             Mis lecherias
         </h3>
+
+        <!-- Filtro de periodo -->
+        <div class="lech-filtros" style="display:flex;flex-wrap:wrap;gap:12px;align-items:end;margin-bottom:16px;">
+            <md-outlined-select id="filtroMes" label="Mes" style="min-width:160px;">
+                <md-select-option value="" selected><div slot="headline">Todos</div></md-select-option>
+                <md-select-option value="1"><div slot="headline">Enero</div></md-select-option>
+                <md-select-option value="2"><div slot="headline">Febrero</div></md-select-option>
+                <md-select-option value="3"><div slot="headline">Marzo</div></md-select-option>
+                <md-select-option value="4"><div slot="headline">Abril</div></md-select-option>
+                <md-select-option value="5"><div slot="headline">Mayo</div></md-select-option>
+                <md-select-option value="6"><div slot="headline">Junio</div></md-select-option>
+                <md-select-option value="7"><div slot="headline">Julio</div></md-select-option>
+                <md-select-option value="8"><div slot="headline">Agosto</div></md-select-option>
+                <md-select-option value="9"><div slot="headline">Septiembre</div></md-select-option>
+                <md-select-option value="10"><div slot="headline">Octubre</div></md-select-option>
+                <md-select-option value="11"><div slot="headline">Noviembre</div></md-select-option>
+                <md-select-option value="12"><div slot="headline">Diciembre</div></md-select-option>
+            </md-outlined-select>
+            <md-outlined-select id="filtroAnio" label="Año" style="min-width:140px;">
+                <?php
+                $anioActual = (int)date('Y');
+                for ($a = $anioActual; $a >= $anioActual - 4; $a--) {
+                    $sel = ($a === $anioActual) ? 'selected' : '';
+                    echo "<md-select-option value=\"$a\" $sel><div slot=\"headline\">$a</div></md-select-option>";
+                }
+                ?>
+            </md-outlined-select>
+            <md-text-button id="btnLimpiarFiltro">
+                <md-icon slot="icon">clear_all</md-icon>
+                Limpiar
+            </md-text-button>
+            <div id="filtroResumen" style="font-size:.85rem;opacity:.75;margin-left:auto;align-self:center;"></div>
+        </div>
+
         <div class="lecherias-grid" id="lecherasGrid">
             <div class="lech-card is-skeleton">
                 <div class="lech-card-top"></div>
@@ -246,6 +273,37 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </div>
         </div>
     </main>
+
+<!-- Diálogo: cómo solicitar un cambio -->
+<div class="md3-dialog-backdrop" id="modalComoSolicitar">
+    <div class="md3-dialog-surface">
+        <div class="md3-dialog-header">
+            <div>
+                <h3 class="md3-dialog-title">¿Cómo solicito un cambio?</h3>
+                <p class="md3-dialog-subtitle">Para corregir un reporte o requerimiento ya enviado.</p>
+            </div>
+            <md-icon-button onclick="document.getElementById('modalComoSolicitar').classList.remove('open')">
+                <md-icon>close</md-icon>
+            </md-icon-button>
+        </div>
+        <div class="md3-dialog-content" style="padding: 0 24px 8px; font-size:.92rem; line-height:1.55;">
+            <ol style="padding-left:20px; margin:8px 0;">
+                <li>Entra a <strong>Reporte mensual</strong> o <strong>Requerimiento</strong> según lo que quieras modificar.</li>
+                <li>Selecciona el <strong>mes y año</strong> del registro ya enviado.</li>
+                <li>Aparecerá un aviso rojo: <em>"Este registro ya fue enviado y está bloqueado"</em> con un botón <strong>Solicitar cambio</strong>.</li>
+                <li>Escribe el motivo y envía la solicitud. Tu supervisor te responderá y podrás verlo en <strong>Mis avisos</strong>.</li>
+            </ol>
+        </div>
+        <div class="md3-dialog-actions">
+            <md-filled-button onclick="document.getElementById('modalComoSolicitar').classList.remove('open');location.href='generarreporteMensual.php'">
+                <md-icon slot="icon">receipt_long</md-icon> Ir a Reporte
+            </md-filled-button>
+            <md-outlined-button onclick="document.getElementById('modalComoSolicitar').classList.remove('open');location.href='requerimiento.php'">
+                <md-icon slot="icon">inventory</md-icon> Ir a Requerimiento
+            </md-outlined-button>
+        </div>
+    </div>
+</div>
 
 <div class="md3-dialog-backdrop" id="modalOpcionesLecheria">
         <div class="md3-dialog-surface">
@@ -287,6 +345,9 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
     });
     </script>
     <script>
+        function mostrarComoSolicitar() {
+            document.getElementById('modalComoSolicitar').classList.add('open');
+        }
         function abrirMenu(id) {
             document.querySelectorAll('md-menu').forEach(menu => {
                 if (menu.id !== id) menu.open = false;

@@ -248,11 +248,6 @@ foreach ($conteo as $fila) {
                         <md-icon slot="icon">save</md-icon>
                         Guardar Requerimiento
                     </md-filled-button>
-
-                    <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-size:0.9rem; color:var(--md-sys-color-on-surface);">
-                        <md-checkbox id="chkGenerarPDF" touch-target="wrapper"></md-checkbox>
-                        Generar PDF al guardar
-                    </label>
                 </div>
             </form>
         </div>

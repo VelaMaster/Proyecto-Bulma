@@ -4,12 +4,54 @@
 let _promotoresCache = null;
 
 document.addEventListener('DOMContentLoaded', () => {
-    cargarPromotores();
-
     const selMes  = document.getElementById('avance_mes');
     const inpAnio = document.getElementById('avance_anio');
-    if (selMes)  selMes.addEventListener('change',  cargarAvance);
-    if (inpAnio) inpAnio.addEventListener('change', cargarAvance);
+
+    // ── Restaurar mes/año desde localStorage (persistencia entre recargas) ──
+    try {
+        const savedMes  = localStorage.getItem('sup_avance_mes');
+        const savedAnio = localStorage.getItem('sup_avance_anio');
+        if (selMes && savedMes)   selMes.value  = savedMes;
+        if (inpAnio && savedAnio) inpAnio.value = savedAnio;
+    } catch (e) { /* localStorage bloqueado: usar defaults del PHP */ }
+
+    function persistirMesAnio() {
+        try {
+            if (selMes)  localStorage.setItem('sup_avance_mes',  selMes.value);
+            if (inpAnio) localStorage.setItem('sup_avance_anio', inpAnio.value);
+        } catch (e) {}
+    }
+
+    cargarPromotores();
+
+    if (selMes)  selMes.addEventListener('change',  () => { persistirMesAnio(); cargarAvance(false); });
+    if (inpAnio) inpAnio.addEventListener('change', () => { persistirMesAnio(); cargarAvance(false); });
+
+    // ── Polling dinámico: refresca avance cada 20s sin recargar página ──
+    const POLL_MS = 20000;
+    let pollTimer = null;
+
+    function startPolling() {
+        if (pollTimer) return;
+        pollTimer = setInterval(() => cargarAvance(true), POLL_MS);
+    }
+    function stopPolling() {
+        if (!pollTimer) return;
+        clearInterval(pollTimer);
+        pollTimer = null;
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+            stopPolling();
+        } else {
+            cargarAvance(true);   // refresca inmediato al volver a la pestaña
+            startPolling();
+        }
+    });
+    window.addEventListener('focus', () => cargarAvance(true));
+
+    startPolling();
 });
 
 async function cargarPromotores() {
@@ -184,7 +226,10 @@ async function cargarDetalleMesPromotor(cardEl) {
     `;
 
     try {
-        const r = await fetch(`api_estado_promotor.php?promotor=${promotorId}&mes=${mes}&anio=${anio}`);
+        const r = await fetch(`api_estado_promotor.php?promotor=${promotorId}&mes=${mes}&anio=${anio}&_=${Date.now()}`, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+        });
         const data = await r.json();
         if (data.status !== 'success') throw new Error(data.message || 'Error');
 
@@ -253,7 +298,7 @@ function _nombreMesSv(m) {
     return meses[parseInt(m)] || '';
 }
 
-async function cargarAvance() {
+async function cargarAvance(silent = false) {
     const selMes  = document.getElementById('avance_mes');
     const inpAnio = document.getElementById('avance_anio');
     if (!selMes || !inpAnio) return;
@@ -262,12 +307,17 @@ async function cargarAvance() {
     const anio = inpAnio.value;
     if (!mes || !anio) return;
 
-    // Reset visual mientras carga
-    document.querySelectorAll('.promotor-card .avance-text').forEach(el => el.textContent = 'Cargando…');
-    document.querySelectorAll('.promotor-card .avance-bar').forEach(el => el.style.width = '0%');
+    // Reset visual mientras carga (solo en carga inicial / cambio de mes)
+    if (!silent) {
+        document.querySelectorAll('.promotor-card .avance-text').forEach(el => el.textContent = 'Cargando…');
+        document.querySelectorAll('.promotor-card .avance-bar').forEach(el => el.style.width = '0%');
+    }
 
     try {
-        const r = await fetch(`api_avance_promotores.php?mes=${mes}&anio=${anio}`);
+        const r = await fetch(`api_avance_promotores.php?mes=${mes}&anio=${anio}&_=${Date.now()}`, {
+            cache: 'no-store',
+            headers: { 'Cache-Control': 'no-cache' }
+        });
         const data = await r.json();
         if (data.status !== 'success') return;
 

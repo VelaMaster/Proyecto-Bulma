@@ -31,14 +31,16 @@ try {
     $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
     if ($metodo === 'POST') {
-        // Contar lecherías del supervisor que tienen reporte capturado ese mes
+        // Contar lecherías del supervisor con INVENTARIO MENSUAL capturado ese mes.
+        // (reporte_mensual_lecher se llena tarde — usábamos esa tabla y daba 0.)
         $sqlCount = "
-            SELECT COUNT(DISTINCT R.clave_lecheria) AS n
-            FROM reporte_mensual_lecher R
+            SELECT COUNT(DISTINCT IM.CLAVE_LECHERIA) AS n
+            FROM inventarios_mensuales IM
             JOIN mapeo_supervisor_lecheria M
-              ON M.LECHER = CAST(R.clave_lecheria AS INTEGER)
+              ON CAST(M.LECHER AS TEXT) = IM.CLAVE_LECHERIA
             WHERE M.ID_SUPERVISOR = :sup
-              AND R.mes = :mes AND R.anio = :anio
+              AND IM.MES_PERIODO  = :mes
+              AND IM.ANIO_PERIODO = :anio
         ";
         $st = $pdo->prepare($sqlCount);
         $st->execute([':sup' => $supClave, ':mes' => $mes, ':anio' => $anio]);

@@ -81,16 +81,15 @@ try {
         $rows = array_filter($rows, fn($r) => (int)$r['TIPO_PUNTO_VENTA'] === (int)$filtroTipo);
     }
 
-    // 2) Reporte mensual desde SQLite — mapa clave_lecheria → row
-    $sqlite = DatabaseSQLite::getInstance();
-    $stmtSQ = $sqlite->prepare(
-        "SELECT * FROM reporte_mensual_lecher
-         WHERE mes = :mes AND anio = :anio"
+    // 2) Capturas reales desde INVENTARIOS_MENSUALES — mapa clave_lecheria → row
+    $stmtSQ = $pdo->prepare(
+        "SELECT * FROM inventarios_mensuales
+         WHERE MES_PERIODO = :mes AND ANIO_PERIODO = :anio"
     );
     $stmtSQ->execute([':mes' => $mes, ':anio' => $anio]);
     $reportes = [];
-    foreach ($stmtSQ->fetchAll() as $rq) {
-        $reportes[trim((string)$rq['clave_lecheria'])] = $rq;
+    foreach ($stmtSQ->fetchAll(PDO::FETCH_ASSOC) as $rq) {
+        $reportes[trim((string)$rq['CLAVE_LECHERIA'])] = $rq;
     }
 
     // 3) Nombre del supervisor
@@ -138,23 +137,24 @@ try {
             'promotor_id'      => (int)$r['PROMOTOR_ID'],
             'promotor_nombre'  => mb_convert_encoding(trim((string)$r['PROMOTOR_NOMBRE']), 'UTF-8', 'UTF-8,ISO-8859-1,Windows-1252'),
             'capturado'        => $capturado,
-            'inv_ini_cajas'    => $capturado ? (int)$rep['inv_ini_cajas']    : null,
-            'inv_ini_sobres'   => $capturado ? (int)$rep['inv_ini_sobres']   : null,
-            'dot_recib_cajas'  => $capturado ? (int)$rep['dot_recib_cajas']  : null,
-            'total_cajas'      => $capturado ? (int)$rep['total_cajas']      : null,
-            'total_sobres'     => $capturado ? (int)$rep['total_sobres']     : null,
-            'vend_cajas'       => $capturado ? (int)$rep['vend_cajas']       : null,
-            'vend_sobres'      => $capturado ? (int)$rep['vend_sobres']      : null,
-            'inv_fin_cajas'    => $capturado ? (int)$rep['inv_fin_cajas']    : null,
-            'inv_fin_sobres'   => $capturado ? (int)$rep['inv_fin_sobres']   : null,
-            'retiro_cajas'     => $capturado ? (int)$rep['retiro_cajas']     : null,
-            'retiro_sobres'    => $capturado ? (int)$rep['retiro_sobres']    : null,
-            'familias_no_acud' => $capturado ? (int)$rep['familias_no_acud'] : null,
-            'sobres_rotos'     => $capturado ? (int)$rep['sobres_rotos']     : null,
-            'sobres_falt'      => $capturado ? (int)$rep['sobres_falt']      : null,
-            'observaciones'    => $capturado ? (string)$rep['observaciones'] : null,
-            'promotor'         => $capturado ? (string)$rep['promotor']      : null,
-            'fecha_captura'    => $capturado ? (string)$rep['fecha_captura'] : null,
+            'inv_ini_cajas'    => $capturado ? (int)$rep['INV_INI_CAJA']     : null,
+            'inv_ini_sobres'   => $capturado ? (int)$rep['INV_INI_SOBRES']   : null,
+            'dot_recib_cajas'  => $capturado ? (int)$rep['SURT_CAJAS']       : null,
+            'dot_recib_sobres' => $capturado ? 0                              : null,
+            'total_cajas'      => $capturado ? (int)$rep['ABASTO_CAJA']      : null,
+            'total_sobres'     => $capturado ? (int)$rep['ABASTO_SOBRES']    : null,
+            'vend_cajas'       => $capturado ? (int)$rep['VENTA_CAJA']       : null,
+            'vend_sobres'      => $capturado ? (int)$rep['VENTA_SOBRES']     : null,
+            'inv_fin_cajas'    => $capturado ? (int)$rep['FIN_CAJA']         : null,
+            'inv_fin_sobres'   => $capturado ? (int)$rep['FIN_SOBRES']       : null,
+            'retiro_cajas'     => $capturado ? (int)$rep['REG_CAJA']         : null,
+            'retiro_sobres'    => $capturado ? (int)$rep['REG_SOBRES']       : null,
+            'familias_no_acud' => null,
+            'sobres_rotos'     => null,
+            'sobres_falt'      => null,
+            'observaciones'    => null,
+            'promotor'         => $capturado ? (string)$rep['USUARIO_CAPTURA']: null,
+            'fecha_captura'    => $capturado ? (string)$rep['FECHA_CAPTURA'] : null,
         ];
         $almacenes[$alm]['total']++;
         $totalLech++;

@@ -55,32 +55,19 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                     </md-menu-item>
                 </md-menu>
             </div>
-            <div style="position: relative;">
-                <md-text-button id="btn-rep" onclick="abrirMenu('menu-rep')">
-                    Reporte lecherías <md-icon slot="icon">arrow_drop_down</md-icon>
-                </md-text-button>
-                <md-menu id="menu-rep" anchor="btn-rep">
-                    <md-menu-item href="#"><div slot="headline">Generar</div></md-menu-item>
-                    <md-menu-item href="#"><div slot="headline">Consultar</div></md-menu-item>
-                </md-menu>
-            </div>
-            <div style="position: relative;">
-                <md-text-button id="btn-req" onclick="abrirMenu('menu-req')">
-                    Requerimiento <md-icon slot="icon">arrow_drop_down</md-icon>
-                </md-text-button>
-                <md-menu id="menu-req" anchor="btn-req">
-                    <md-menu-item href="#"><div slot="headline">Generar</div></md-menu-item>
-                    <md-menu-item href="#"><div slot="headline">Consultar</div></md-menu-item>
-                    <md-menu-item href="#">
-                        <div slot="headline">Enviar reportes a supervisor</div>
-                        <md-icon slot="start">send</md-icon>
-                    </md-menu-item>
-                </md-menu>
-            </div>
+            <md-text-button href="generarreporteMensual.php">
+                <md-icon slot="icon">receipt_long</md-icon>Reporte mensual
+            </md-text-button>
+            <md-text-button href="requerimiento.php">
+                <md-icon slot="icon">inventory</md-icon>Requerimiento
+            </md-text-button>
         </div>
         <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left:8px;">Salir</md-filled-tonal-button>
     </div>
 </header>
+
+<div class="md3-drawer-scrim" id="drawer-scrim" onclick="toggleDrawer()"></div>
+
 <aside class="md3-drawer" id="mobile-drawer">
 
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px 24px;">
@@ -117,30 +104,13 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
                 <md-divider style="margin: 8px 0;"></md-divider>
 
-                <div class="drawer-section-title">Reporte lecherías</div>
-                <md-list-item href="#" type="button">
-                    <div slot="headline">Generar</div>
+                <md-list-item href="generarreporteMensual.php" type="button">
+                    <div slot="headline">Reporte mensual</div>
                     <md-icon slot="start">receipt_long</md-icon>
                 </md-list-item>
-                <md-list-item href="#" type="button">
-                    <div slot="headline">Consultar</div>
-                    <md-icon slot="start">find_in_page</md-icon>
-                </md-list-item>
-
-                <md-divider style="margin: 8px 0;"></md-divider>
-
-                <div class="drawer-section-title">Requerimiento</div>
-                <md-list-item href="#" type="button">
-                    <div slot="headline">Generar</div>
+                <md-list-item href="requerimiento.php" type="button">
+                    <div slot="headline">Requerimiento</div>
                     <md-icon slot="start">inventory</md-icon>
-                </md-list-item>
-                <md-list-item href="#" type="button">
-                    <div slot="headline">Consultar</div>
-                    <md-icon slot="start">manage_search</md-icon>
-                </md-list-item>
-                <md-list-item href="#" type="button">
-                    <div slot="headline">Enviar a supervisor</div>
-                    <md-icon slot="start">send</md-icon>
                 </md-list-item>
             </md-list>
         </div>

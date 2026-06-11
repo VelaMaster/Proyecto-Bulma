@@ -1,13 +1,17 @@
 <?php
 // ───────────────────────────────────────────────────────────────────────────
-//  PDF "Reporte Mensual de Inventario — Supervisor"
-//  Recibe POST con campo 'datos' (JSON) generado desde reporte_mensual.php
+//  PDF "Reporte Mensual de la Operación" — formato oficial OA-IN-810-02-R08
+//  Réplica visual de la hoja física "REQUERIMIENTO DE LECHE DE $X.XX/LITRO".
 //
+//  POST: campo 'datos' (JSON) generado desde reporte_mensual.php
 //  datos: {
 //    mes, anio, supervisor,
 //    filtro_almacen, filtro_promotor, filtro_tipo,
 //    almacenes: [{almacen, lecherias:[{...}], capturadas, total}]
 //  }
+//
+//  Salida: descarga inline + guardado automático en
+//          datos/supervisores/reportes_mensuales/AAAA-MM/<archivo>.pdf
 // ───────────────────────────────────────────────────────────────────────────
 ob_start();
 error_reporting(E_ALL);
@@ -23,7 +27,6 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
 
 $json  = $_POST['datos'] ?? '';
 $datos = json_decode($json, true);
-
 if (!is_array($datos) || empty($datos['almacenes'])) {
     http_response_code(400);
     exit('Sin datos para generar el PDF.');
@@ -39,231 +42,286 @@ $nombresMeses = ['','ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO',
 $mes        = (int)($datos['mes']  ?? 0);
 $anio       = (int)($datos['anio'] ?? 0);
 $supervisor = trim((string)($datos['supervisor'] ?? ($_SESSION['nombre'] ?? '')));
-$fAlm       = trim((string)($datos['filtro_almacen']  ?? 'Todos'));
-$fProm      = trim((string)($datos['filtro_promotor'] ?? 'Todos'));
-$fTipo      = trim((string)($datos['filtro_tipo']     ?? 'Todos'));
+$fTipo      = trim((string)($datos['filtro_tipo'] ?? 'Todos'));
 $mesNombre  = $nombresMeses[$mes] ?? '';
+$mesSig     = $nombresMeses[($mes % 12) + 1] ?? '';
 
-// ─── Clase PDF ─────────────────────────────────────────────────────────────
-class PDFReporteMensual extends FPDF
+// Precio para el título: tomamos el primero no vacío encontrado en las lecherías
+$precioTit = '6.50';
+foreach ($datos['almacenes'] as $b) {
+    foreach (($b['lecherias'] ?? []) as $l) {
+        $p = (string)($l['precio'] ?? '');
+        if (str_contains($p, '4.50')) { $precioTit = '4.50'; break 2; }
+        if (str_contains($p, '6.50')) { $precioTit = '6.50'; break 2; }
+    }
+}
+
+$logoIzq = __DIR__ . '/../imagenes/Logos/logo_agricultura.png';
+$logoDer = __DIR__ . '/../imagenes/Logos/Logo_lecheparaelbienestar.png';
+
+// ─── Clase PDF (vertical, Letter) ──────────────────────────────────────────
+class PDFReporteOficial extends FPDF
 {
+    public $mesNombre  = '';
+    public $mesSig     = '';
+    public $anio       = 0;
+    public $precioTit  = '6.50';
     public $supervisor = '';
-    public $mesAnio    = '';
-    public $filtros    = '';
+    public $logoIzq    = '';
+    public $logoDer    = '';
+    public $almacenAct = '';
+    public $zonaAct    = '';
+    public $rutaAct    = '';
+    public $promotorAct= '';
+
+    // Ancho de columnas (mm). Total ~ 195 mm útil en Letter vertical
+    public $cols = [
+        ['hdr' => "NUMERO DE\nPUNTO DE\nVENTA",  'w' => 19, 'k' => 'pv'],
+        ['hdr' => "NO. DE\nTIENDA",              'w' => 14, 'k' => 'tienda'],
+        ['hdr' => "FAMILIAS",                    'w' => 13, 'k' => 'familias'],
+        ['hdr' => "NO. DE\nBENEFICIARIOS",       'w' => 18, 'k' => 'beneficiarios'],
+        ['hdr' => "DOTACION\nTEORICA",           'w' => 16, 'k' => 'dot_teorica'],
+        ['hdr' => "INVENTARIO\nINICIAL",         'w' => 17, 'k' => 'inv_ini'],
+        ['hdr' => "SURT.",                       'w' => 11, 'k' => 'surt'],
+        ['hdr' => "VENTAS",                      'w' => 15, 'k' => 'ventas'],
+        ['hdr' => "INVENTARIO\nFINAL",           'w' => 17, 'k' => 'inv_fin'],
+        ['hdr' => "REQ.",                        'w' => 11, 'k' => 'req_ant'],
+        ['hdr' => "V.M.S.",                      'w' => 11, 'k' => 'vms'],
+        ['hdr' => "REQ.",                        'w' => 11, 'k' => 'req_sig'],
+        ['hdr' => "OBSERVACIONES",               'w' => 26, 'k' => 'obs'],
+    ];
 
     function Header()
     {
-        $this->SetFont('Arial', 'B', 9);
-        $this->SetFillColor(30, 100, 60);   // verde Liconsa oscuro
-        $this->SetTextColor(255, 255, 255);
-        $this->Cell(0, 8, d('LICONSA — REPORTE MENSUAL DE INVENTARIO'), 0, 1, 'C', true);
+        // Logos
+        if (file_exists($this->logoIzq)) $this->Image($this->logoIzq, 10, 8, 32);
+        if (file_exists($this->logoDer)) $this->Image($this->logoDer, 173, 8, 30);
 
-        $this->SetFont('Arial', '', 7);
-        $this->SetFillColor(220, 237, 222);
-        $this->SetTextColor(0);
-        $this->Cell(0, 5,
-            d('Supervisor: ' . $this->supervisor . '   |   Período: ' . $this->mesAnio .
-              '   |   Filtros: ' . $this->filtros),
-            0, 1, 'C', true);
+        $this->SetY(10);
+        $this->SetFont('Arial', 'B', 12);
+        $this->Cell(0, 5, d('LECHE PARA EL BIENESTAR, S.A. DE C.V.'), 0, 1, 'C');
+        $this->SetFont('Arial', 'B', 10);
+        $this->Cell(0, 5, d('GERENCIA ESTATAL OAXACA'), 0, 1, 'C');
+        $this->SetFont('Arial', 'B', 10);
+        $this->Cell(0, 5, d("REQUERIMIENTO DE LECHE DE \$" . $this->precioTit . "/LITRO"), 0, 1, 'C');
         $this->Ln(2);
+
+        // ZONA / RUTA / MES
+        $this->SetFont('Arial', 'B', 9);
+        $this->Cell(15, 5, d('ZONA:'), 0, 0, 'L');
+        $this->SetFont('Arial', '', 9);
+        $this->Cell(25, 5, d($this->zonaAct), 'B', 0, 'L');
+        $this->SetFont('Arial', 'B', 9);
+        $this->Cell(15, 5, d('RUTA:'), 0, 0, 'L');
+        $this->SetFont('Arial', '', 9);
+        $this->Cell(40, 5, d($this->rutaAct), 'B', 0, 'L');
+        $this->Cell(40, 5, '', 0, 0);
+        $this->SetFont('Arial', 'B', 9);
+        $this->Cell(20, 5, d('MES DE:'), 0, 0, 'R');
+        $this->SetFont('Arial', '', 9);
+        $this->Cell(0, 5, d($this->mesNombre . ' ' . $this->anio), 'B', 1, 'L');
+        $this->Ln(2);
+
+        // Cabecera de tabla (3 líneas de alto)
+        $this->SetFont('Arial', 'B', 6.5);
+        $this->SetFillColor(235, 235, 235);
+        $xIni = $this->GetX();
+        $yIni = $this->GetY();
+        $hCab = 9;
+        foreach ($this->cols as $c) {
+            $x = $this->GetX(); $y = $this->GetY();
+            $this->MultiCell($c['w'], 3, d($c['hdr']), 1, 'C', true);
+            $this->SetXY($x + $c['w'], $y);
+        }
+        $this->Ln($hCab);
+
+        // Sub-cabecera de meses (REQ mes anterior, V.M.S., REQ mes siguiente)
+        // y la fila "ALMACEN ALIMENTACION PARA EL BIENESTAR: <ALMACEN>" como en el formato.
+        // Sub-rótulos pequeños bajo REQ. (col 10) y REQ. (col 12)
+        $this->SetFont('Arial', 'B', 5.5);
+        // Vamos a reescribir los headers con un sub-rótulo dentro: lo solucionamos
+        // pintando un rectángulo pequeño con el mes en la celda de cabecera.
+        // (Implementado simple: la cabecera ya muestra "REQ."; el mes se anota
+        //  en la fila informativa siguiente.)
+
+        // Banda "ALMACEN ALIMENTACION PARA EL BIENESTAR: ..."
+        $this->SetFont('Arial', 'B', 8);
+        $this->SetFillColor(220, 235, 220);
+        $wTot = array_sum(array_column($this->cols, 'w'));
+        $this->Cell($wTot, 5,
+            d('ALMACEN ALIMENTACION PARA EL BIENESTAR: ' . $this->almacenAct),
+            1, 1, 'L', true);
     }
 
     function Footer()
     {
-        $this->SetY(-10);
-        $this->SetFont('Arial', 'I', 6);
-        $this->SetTextColor(130);
-        $this->Cell(0, 5, 'Pag. ' . $this->PageNo() . '/{nb}', 0, 0, 'R');
+        // Folio inferior derecho
+        $this->SetY(-12);
+        $this->SetFont('Arial', '', 7);
+        $this->Cell(0, 4, d('OA-IN-810-02-R08'), 0, 0, 'R');
+    }
+
+    function pintarFila($l, $mes, $anio, $fill = false)
+    {
+        $this->SetFont('Arial', '', 7);
+        if ($fill) { $this->SetFillColor(250, 250, 250); }
+        $h = 5;
+
+        $cap = !empty($l['capturado']);
+        $par = function($c, $s) {
+            $c = $c === null ? 0 : (int)$c;
+            $s = $s === null ? 0 : (int)$s;
+            return sprintf('%02d-%02d', $c, $s);
+        };
+
+        $valores = [
+            'pv'            => (string)($l['punto_venta'] ?? ''),
+            'tienda'        => (string)($l['num_tienda']  ?? ''),
+            'familias'      => '',  // no en inventarios_mensuales
+            'beneficiarios' => '',  // no en inventarios_mensuales
+            'dot_teorica'   => '',  // pendiente
+            'inv_ini'       => $cap ? $par($l['inv_ini_cajas'], $l['inv_ini_sobres']) : '',
+            'surt'          => $cap ? (string)(int)($l['dot_recib_cajas'] ?? 0)       : '',
+            'ventas'        => $cap ? $par($l['vend_cajas'],   $l['vend_sobres'])     : '',
+            'inv_fin'       => $cap ? $par($l['inv_fin_cajas'],$l['inv_fin_sobres'])  : '',
+            'req_ant'       => '',
+            'vms'           => '',
+            'req_sig'       => '',
+            'obs'           => '',
+        ];
+
+        if (!$cap) {
+            $this->SetTextColor(180, 0, 0);
+            $this->SetFont('Arial', 'BI', 7);
+        }
+
+        foreach ($this->cols as $c) {
+            $v = $valores[$c['k']] ?? '';
+            $this->Cell($c['w'], $h, d($v), 1, 0, 'C', $fill);
+        }
+        $this->Ln();
+        $this->SetTextColor(0);
+        $this->SetFont('Arial', '', 7);
+    }
+
+    function pintarFilaVacia()
+    {
+        $this->SetFont('Arial', '', 7);
+        foreach ($this->cols as $c) {
+            $this->Cell($c['w'], 5, '', 1, 0, 'C');
+        }
+        $this->Ln();
+    }
+
+    function pintarFirmas($fechaElab, $promotor)
+    {
+        // Fija al pie: dos columnas de firma + folio
+        $yFirmas = 250;
+        $this->SetY($yFirmas);
+
+        $this->SetFont('Arial', 'B', 8);
+        // Columna izquierda — Promotor
+        $this->Cell(95, 4, d('FECHA DE ELABORACION:'), 0, 0, 'L');
+        // Columna derecha — Supervisor
+        $this->Cell(0, 4, d('REVISO:'), 0, 1, 'L');
+
+        $this->SetFont('Arial', '', 8);
+        $this->Cell(95, 4, d($fechaElab), 0, 0, 'L');
+        $this->Cell(0, 4, d($fechaElab), 0, 1, 'L');
+
+        $this->SetFont('Arial', '', 7);
+        $this->Cell(95, 4, d('DD       MM       AA'), 0, 0, 'L');
+        $this->Cell(0, 4, d('DD       MM       AA'), 0, 1, 'L');
+
+        $this->Ln(6);
+        $this->SetFont('Arial', '', 9);
+        $this->Cell(95, 4, '_________________________', 0, 0, 'L');
+        $this->Cell(0, 4, '_________________________', 0, 1, 'L');
+
+        $this->SetFont('Arial', 'B', 8);
+        $this->Cell(95, 4, d(strtoupper($promotor ?: 'NOMBRE Y FIRMA DEL PROMOTOR')), 0, 0, 'L');
+        $this->Cell(0, 4, d(strtoupper($this->supervisor)), 0, 1, 'L');
+
+        $this->SetFont('Arial', '', 7);
+        $this->Cell(95, 3, d('NOMBRE Y FIRMA DEL PROMOTOR'), 0, 0, 'L');
+        $this->Cell(0, 3, d('NOMBRE Y FIRMA DEL SUPERVISOR'), 0, 1, 'L');
     }
 }
 
-// ─── Instancia ──────────────────────────────────────────────────────────────
-$pdf = new PDFReporteMensual('L', 'mm', 'Letter');
-$pdf->AliasNbPages();
+// ─── Construcción del documento ───────────────────────────────────────────
+$pdf = new PDFReporteOficial('P', 'mm', 'Letter');
+$pdf->mesNombre  = $mesNombre;
+$pdf->mesSig     = $mesSig;
+$pdf->anio       = $anio;
+$pdf->precioTit  = $precioTit;
 $pdf->supervisor = $supervisor;
-$pdf->mesAnio    = $mesNombre . ' ' . $anio;
-$pdf->filtros    = "Almacén: $fAlm | Promotor: $fProm | Tipo: $fTipo";
-$pdf->SetMargins(6, 14, 6);
-$pdf->SetAutoPageBreak(true, 12);
-$pdf->AddPage();
+$pdf->logoIzq    = $logoIzq;
+$pdf->logoDer    = $logoDer;
+$pdf->SetMargins(10, 10, 10);
+$pdf->SetAutoPageBreak(true, 35);  // deja sitio para firmas+folio
 
-// ─── Columnas de la tabla ───────────────────────────────────────────────────
-$cols = [
-    ['hdr' => 'Punto Venta',   'w' => 20, 'align' => 'C'],
-    ['hdr' => 'Tienda',        'w' => 16, 'align' => 'C'],
-    ['hdr' => 'Precio',        'w' => 14, 'align' => 'C'],
-    ['hdr' => 'Promotor',      'w' => 38, 'align' => 'L'],
-    ['hdr' => 'Inv.Ini Cajas', 'w' => 18, 'align' => 'R'],
-    ['hdr' => 'Dot.Recib.',    'w' => 18, 'align' => 'R'],
-    ['hdr' => 'Total Cajas',   'w' => 18, 'align' => 'R'],
-    ['hdr' => 'Vend.Cajas',    'w' => 16, 'align' => 'R'],
-    ['hdr' => 'Vend.Sobres',   'w' => 16, 'align' => 'R'],
-    ['hdr' => 'Inv.Fin Cajas', 'w' => 18, 'align' => 'R'],
-    ['hdr' => 'Inv.Fin Sobres','w' => 18, 'align' => 'R'],
-    ['hdr' => 'Retiro Caj.',   'w' => 14, 'align' => 'R'],
-    ['hdr' => 'Fam.No Acud.',  'w' => 14, 'align' => 'R'],
-    ['hdr' => 'Observaciones', 'w' => 36, 'align' => 'L'],
-];
+// Una página por almacén. Si un almacén excede capacidad, se parte en varias.
+$FILAS_POR_PAGINA = 25;
 
-function drawTableHeader($pdf, $cols)
-{
-    $pdf->SetFont('Arial', 'B', 5.5);
-    $pdf->SetFillColor(50, 120, 80);
-    $pdf->SetTextColor(255);
-    foreach ($cols as $c) {
-        $pdf->Cell($c['w'], 6, d($c['hdr']), 1, 0, 'C', true);
-    }
-    $pdf->Ln();
-    $pdf->SetTextColor(0);
-}
-
-// ─── Totales globales ─────────────────────────────────────────────────────
-$totGlobal = array_fill_keys(
-    ['inv_ini_cajas','dot_recib_cajas','total_cajas','vend_cajas','vend_sobres',
-     'inv_fin_cajas','inv_fin_sobres','retiro_cajas','familias_no_acud'], 0);
-$totLech     = 0;
-$totCapt     = 0;
-
-// ─── Renderizado por almacén ──────────────────────────────────────────────
 foreach ($datos['almacenes'] as $bloque) {
-    $alm       = strtoupper(trim((string)($bloque['almacen']    ?? '')));
-    $capt      = (int)($bloque['capturadas'] ?? 0);
-    $total     = (int)($bloque['total']      ?? 0);
-    $lecherias = $bloque['lecherias'] ?? [];
+    $alm  = strtoupper(trim((string)($bloque['almacen'] ?? '')));
+    $lecs = $bloque['lecherias'] ?? [];
 
-    // Cabecera de almacén
-    if ($pdf->GetY() > 170) $pdf->AddPage();
-
-    $pdf->SetFont('Arial', 'B', 7);
-    $pdf->SetFillColor(180, 220, 195);
-    $pdf->SetTextColor(0, 70, 30);
-    $pdf->Cell(0, 6,
-        d("  ALMACÉN: $alm   —   $capt / $total capturadas"),
-        0, 1, 'L', true);
-    $pdf->SetTextColor(0);
-
-    drawTableHeader($pdf, $cols);
-
-    // Totales por almacén
-    $totAlm = array_fill_keys(array_keys($totGlobal), 0);
-
-    $row = 0;
-    foreach ($lecherias as $l) {
-        if ($pdf->GetY() > 186) {
-            $pdf->AddPage();
-            drawTableHeader($pdf, $cols);
-        }
-
-        $fill = ($row % 2 === 0);
-        $pdf->SetFillColor(245, 250, 247);
-        $pdf->SetFont('Arial', '', 5.5);
-
-        $capturado = !empty($l['capturado']);
-
-        $tipo    = (int)($l['tipo_punto_venta'] ?? -1);
-        $tienda  = (string)($l['num_tienda'] ?? '');
-        $precio  = (string)($l['precio']     ?? '');
-
-        if ($capturado) {
-            $n = function($v) { return $v !== null ? number_format((int)$v, 0, '.', ',') : '—'; };
-
-            $vals = [
-                $l['punto_venta']      ?? '',
-                $tienda,
-                $precio,
-                $l['promotor_nombre']  ?? ($l['promotor'] ?? ''),
-                $n($l['inv_ini_cajas']),
-                $n($l['dot_recib_cajas']),
-                $n($l['total_cajas']),
-                $n($l['vend_cajas']),
-                $n($l['vend_sobres']),
-                $n($l['inv_fin_cajas']),
-                $n($l['inv_fin_sobres']),
-                $n($l['retiro_cajas']),
-                $n($l['familias_no_acud']),
-                substr((string)($l['observaciones'] ?? ''), 0, 50),
-            ];
-
-            // Acumular totales
-            foreach (['inv_ini_cajas','dot_recib_cajas','total_cajas','vend_cajas',
-                      'vend_sobres','inv_fin_cajas','inv_fin_sobres','retiro_cajas',
-                      'familias_no_acud'] as $campo) {
-                $v = (int)($l[$campo] ?? 0);
-                $totAlm[$campo]    += $v;
-                $totGlobal[$campo] += $v;
-            }
-        } else {
-            $vals = [
-                $l['punto_venta'] ?? '',
-                $tienda,
-                $precio,
-                $l['promotor_nombre'] ?? ($l['promotor'] ?? ''),
-                'FALTA','','','','','','','','','',
-            ];
-            $pdf->SetTextColor(180, 0, 0);
-        }
-
-        foreach ($cols as $i => $c) {
-            $pdf->Cell($c['w'], 5, d($vals[$i]), 'B', 0, $c['align'], $fill);
-        }
-        $pdf->Ln();
-        $pdf->SetTextColor(0);
-        $row++;
-        $totLech++;
-        if ($capturado) $totCapt++;
+    // Promotor "de la página": usamos el primero capturado/disponible
+    $promotorNombre = '';
+    foreach ($lecs as $l) {
+        if (!empty($l['promotor_nombre'])) { $promotorNombre = $l['promotor_nombre']; break; }
     }
 
-    // Fila subtotal almacén
-    $pdf->SetFont('Arial', 'B', 5.5);
-    $pdf->SetFillColor(200, 230, 210);
-    $n = function($v) { return number_format($v, 0, '.', ','); };
-    $subtotalVals = [
-        'SUBTOTAL', '', '', '',
-        $n($totAlm['inv_ini_cajas']),
-        $n($totAlm['dot_recib_cajas']),
-        $n($totAlm['total_cajas']),
-        $n($totAlm['vend_cajas']),
-        $n($totAlm['vend_sobres']),
-        $n($totAlm['inv_fin_cajas']),
-        $n($totAlm['inv_fin_sobres']),
-        $n($totAlm['retiro_cajas']),
-        $n($totAlm['familias_no_acud']),
-        '',
-    ];
-    foreach ($cols as $i => $c) {
-        $pdf->Cell($c['w'], 5, d($subtotalVals[$i]), 1, 0,
-            in_array($i, [4,5,6,7,8,9,10,11,12]) ? 'R' : 'L', true);
+    $pdf->almacenAct  = $alm;
+    $pdf->zonaAct     = '';   // sin dato en BD — se llena a mano
+    $pdf->rutaAct     = '';
+    $pdf->promotorAct = $promotorNombre;
+
+    $trozos = array_chunk($lecs, $FILAS_POR_PAGINA);
+    if (empty($trozos)) $trozos = [[]];
+
+    foreach ($trozos as $iTrozo => $trozo) {
+        $pdf->AddPage();
+
+        $i = 0;
+        foreach ($trozo as $l) {
+            $pdf->pintarFila($l, $mes, $anio, ($i++ % 2 === 0));
+        }
+        // Rellena hasta completar el bloque visual del formato
+        $faltan = $FILAS_POR_PAGINA - count($trozo);
+        for ($k = 0; $k < $faltan; $k++) $pdf->pintarFilaVacia();
+
+        $pdf->pintarFirmas(date('d / m / Y'), $promotorNombre);
     }
-    $pdf->Ln();
-    $pdf->Ln(3);
 }
 
-// ─── Fila TOTAL GENERAL ───────────────────────────────────────────────────
-if ($pdf->GetY() > 182) $pdf->AddPage();
+// ─── Guardado automático + salida inline ──────────────────────────────────
+$slugSup = preg_replace('/[^A-Za-z0-9]/', '_', $_SESSION['usuario'] ?? 'supervisor');
+$nombreArchivo = sprintf('ReporteMensual_%04d_%02d_%s.pdf', $anio, $mes, $slugSup);
 
-$n = function($v) { return number_format($v, 0, '.', ','); };
-$pdf->SetFont('Arial', 'B', 6);
-$pdf->SetFillColor(30, 100, 60);
-$pdf->SetTextColor(255);
-$totalVals = [
-    'TOTAL GENERAL', '', '', '',
-    $n($totGlobal['inv_ini_cajas']),
-    $n($totGlobal['dot_recib_cajas']),
-    $n($totGlobal['total_cajas']),
-    $n($totGlobal['vend_cajas']),
-    $n($totGlobal['vend_sobres']),
-    $n($totGlobal['inv_fin_cajas']),
-    $n($totGlobal['inv_fin_sobres']),
-    $n($totGlobal['retiro_cajas']),
-    $n($totGlobal['familias_no_acud']),
-    "Lech: $totCapt/$totLech capt.",
-];
-foreach ($cols as $i => $c) {
-    $pdf->Cell($c['w'], 6, d($totalVals[$i]), 1, 0,
-        in_array($i, [4,5,6,7,8,9,10,11,12]) ? 'R' : 'L', true);
+$totalLec = 0; $totalCapt = 0;
+foreach ($datos['almacenes'] as $b) {
+    foreach (($b['lecherias'] ?? []) as $l) {
+        $totalLec++;
+        if (!empty($l['capturado'])) $totalCapt++;
+    }
 }
-$pdf->Ln();
 
-// ─── Salida ───────────────────────────────────────────────────────────────
-ob_end_clean();
-$pdf->Output('I', 'reporte_mensual_' . $mesNombre . '_' . $anio . '.pdf');
+require_once __DIR__ . '/../includes/pdf_archivado.php';
+archivarPdf($pdf, [
+    'tipo'    => 'reporte_mensual',
+    'modulo'  => 'supervisor',
+    'subdir'  => 'reportes_mensuales',
+    'mes'     => $mes,
+    'anio'    => $anio,
+    'usuario' => $_SESSION['usuario'] ?? '',
+    'nombre'  => $nombreArchivo,
+    'extras'  => [
+        'precio'           => $precioTit,
+        'total_lecherias'  => $totalLec,
+        'total_capturadas' => $totalCapt,
+    ],
+]);
+
+$pdf->Output('I', $nombreArchivo);

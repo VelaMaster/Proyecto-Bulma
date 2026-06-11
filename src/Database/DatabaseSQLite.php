@@ -24,7 +24,10 @@ class DatabaseSQLite
         self::$pdo = new PDO('sqlite:' . self::$dbPath);
         self::$pdo->setAttribute(PDO::ATTR_ERRMODE,            PDO::ERRMODE_EXCEPTION);
         self::$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
-        self::$pdo->exec('PRAGMA journal_mode=WAL');   // escrituras concurrentes seguras
+        // journal_mode=DELETE: clientes externos (DBeaver) ven los cambios al instante.
+        // Si en el futuro hay concurrencia alta de escrituras, volver a WAL.
+        self::$pdo->exec('PRAGMA journal_mode=DELETE');
+        self::$pdo->exec('PRAGMA synchronous=NORMAL');
         self::$pdo->exec('PRAGMA foreign_keys=ON');
 
         self::crearEsquema(self::$pdo);
@@ -155,6 +158,10 @@ class DatabaseSQLite
             "ALTER TABLE requerimiento_dotacion  ADD COLUMN pdf_nombre   TEXT",
             "ALTER TABLE reporte_mensual_lecher  ADD COLUMN bloqueado    INTEGER DEFAULT 0",
             "ALTER TABLE requerimiento_dotacion  ADD COLUMN bloqueado    INTEGER DEFAULT 0",
+            // Aprobación por supervisor para liberar a Distribución
+            "ALTER TABLE reporte_mensual_lecher  ADD COLUMN aprobado            INTEGER DEFAULT 0",
+            "ALTER TABLE reporte_mensual_lecher  ADD COLUMN supervisor_aprobador TEXT",
+            "ALTER TABLE reporte_mensual_lecher  ADD COLUMN fecha_aprobacion    TEXT",
             // Fase 3 — espejo de Firebird
             "ALTER TABLE lecheria                ADD COLUMN EN_OPERACION INTEGER DEFAULT 0",
             "ALTER TABLE lecheria                ADD COLUMN SUPERVISOR   INTEGER",

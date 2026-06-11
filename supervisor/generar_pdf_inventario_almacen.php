@@ -284,5 +284,18 @@ if (ob_get_length()) ob_clean();
 $nombre = sprintf('Inventario_Almacen_%s_%02d_%d.pdf',
     preg_replace('/[^A-Za-z0-9]/','_', $almacen),
     $mes, $anio);
+
+require_once __DIR__ . '/../includes/pdf_archivado.php';
+archivarPdf($pdf, [
+    'tipo'    => 'inventario_almacen',
+    'modulo'  => 'supervisor',
+    'subdir'  => 'inventarios_almacen',
+    'mes'     => $mes,
+    'anio'    => $anio,
+    'usuario' => $_SESSION['usuario'] ?? '',
+    'nombre'  => $nombre,
+    'extras'  => ['almacen' => $almacen],
+]);
+
 $pdf->Output('I', $nombre);
 exit;

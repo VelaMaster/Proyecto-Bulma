@@ -4,8 +4,30 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
     header("Location: ../iniciosesionSupervisor.php");
     exit();
 }
+require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
+
 $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
-$promotor_pre = isset($_GET['promotor']) ? (int)$_GET['promotor'] : 0;
+$id_supervisor  = $_SESSION['clave_rol'] ?? 0;
+$promotor_pre   = isset($_GET['promotor']) ? (int)$_GET['promotor'] : 0;
+
+// Promotores asignados al supervisor (server-side: evita el problema de
+// upgrade tardío del md-outlined-select cuando los hijos se inyectan por JS).
+$pdo = DatabaseSQLite::getInstance();
+$stmt = $pdo->prepare("
+    SELECT P.PMT_NUMERO AS id,
+           TRIM(P.PMT_NOMBRE) AS nombre,
+           COUNT(DISTINCT L.LECHER) AS cantidad_lecherias
+    FROM promotor P
+    JOIN lecheria L ON L.PROMOTOR = P.PMT_NUMERO
+    JOIN mapeo_supervisor_lecheria M
+          ON M.LECHER = L.LECHER AND M.ID_SUPERVISOR = :sup
+    WHERE COALESCE(P.PMT_ACTIVO,'S') = 'S'
+      AND COALESCE(L.EN_OPERACION, 0) = 0
+    GROUP BY P.PMT_NUMERO, P.PMT_NOMBRE
+    ORDER BY TRIM(P.PMT_NOMBRE)
+");
+$stmt->execute([':sup' => $id_supervisor]);
+$promotores = $stmt->fetchAll() ?: [];
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">
@@ -61,46 +83,17 @@ $promotor_pre = isset($_GET['promotor']) ? (int)$_GET['promotor'] : 0;
         <div class="app-bar-end">
             <div class="desktop-nav">
                 <md-text-button href="inicio.php">
-                    <md-icon slot="icon">home</md-icon>
-                    Inicio
+                    <md-icon slot="icon">home</md-icon>Inicio
                 </md-text-button>
-
-                <div style="position: relative;">
-                    <md-text-button id="btn-rev" onclick="abrirMenu('menu-rev')">
-                        Revisión de Inventarios
-                        <md-icon slot="icon">arrow_drop_down</md-icon>
-                    </md-text-button>
-                    <md-menu id="menu-rev" anchor="btn-rev">
-                        <md-menu-item href="validarInventarios.php">
-                            <div slot="headline">Validar Pendientes</div>
-                            <md-icon slot="start">fact_check</md-icon>
-                        </md-menu-item>
-                        <md-menu-item href="historialGlobal.php">
-                            <div slot="headline">Historial General</div>
-                            <md-icon slot="start">history</md-icon>
-                        </md-menu-item>
-                    </md-menu>
-                </div>
-
-                <md-text-button href="lecherias.php">
-                    <md-icon slot="icon">storefront</md-icon>
-                    Lecherías
+                <md-text-button href="listadoReportesPromotores.php">
+                    <md-icon slot="icon">receipt_long</md-icon>Reporte Mensual
                 </md-text-button>
-
-                <md-text-button href="listaPromotores.php">
-                    <md-icon slot="icon">group</md-icon>
-                    Promotores
+                <md-text-button href="requerimientodedotacion.php">
+                    <md-icon slot="icon">fact_check</md-icon>Requerimiento de Dotación
                 </md-text-button>
-
-                <a href="solicitudes.php" id="lnkSolicitudes" style="position:relative;display:inline-flex;align-items:center;gap:6px;
-                    padding:0 12px;height:40px;border-radius:20px;text-decoration:none;
-                    color:var(--md-sys-color-on-surface);font-size:.875rem;font-weight:500;">
-                    <md-icon>inbox</md-icon>Solicitudes
-                    <span id="badgeSol" style="display:none;position:absolute;top:4px;right:4px;
-                        background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
-                        font-size:.7rem;font-weight:700;min-width:18px;height:18px;border-radius:999px;
-                        align-items:center;justify-content:center;padding:0 4px;"></span>
-                </a>
+                <md-text-button href="inventario_almacen.php">
+                    <md-icon slot="icon">warehouse</md-icon>Inventario de Almacén
+                </md-text-button>
             </div>
 
             <md-filled-tonal-button href="../cerrar_sesionsupervisor.php" style="margin-left: 16px;">
@@ -118,20 +111,17 @@ $promotor_pre = isset($_GET['promotor']) ? (int)$_GET['promotor'] : 0;
         </div>
         <md-list style="background: transparent;">
             <md-list-item href="inicio.php" type="button">
-                <div slot="headline">Inicio</div>
-                <md-icon slot="start">home</md-icon>
+                <div slot="headline">Inicio</div><md-icon slot="start">home</md-icon>
             </md-list-item>
-            <md-list-item href="lecherias.php" type="button">
-                <div slot="headline">Lecherías</div>
-                <md-icon slot="start">storefront</md-icon>
+            <md-divider style="margin:8px 0;"></md-divider>
+            <md-list-item href="listadoReportesPromotores.php" type="button">
+                <div slot="headline">Reporte Mensual</div><md-icon slot="start">receipt_long</md-icon>
             </md-list-item>
-            <md-list-item href="validarInventarios.php" type="button">
-                <div slot="headline">Validar Pendientes</div>
-                <md-icon slot="start">fact_check</md-icon>
+            <md-list-item href="requerimientodedotacion.php" type="button">
+                <div slot="headline">Requerimiento de Dotación</div><md-icon slot="start">fact_check</md-icon>
             </md-list-item>
-            <md-list-item href="listaPromotores.php" type="button">
-                <div slot="headline">Promotores</div>
-                <md-icon slot="start">group</md-icon>
+            <md-list-item href="inventario_almacen.php" type="button">
+                <div slot="headline">Inventario de Almacén</div><md-icon slot="start">warehouse</md-icon>
             </md-list-item>
         </md-list>
     </aside>
@@ -151,34 +141,35 @@ $promotor_pre = isset($_GET['promotor']) ? (int)$_GET['promotor'] : 0;
 
         <!-- Filtros -->
         <div class="md3-card filtros-card">
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                <label>Promotor</label>
-                <select id="selPromotor" class="md3-input" style="min-width:240px; cursor:pointer; margin:0;">
-                    <option value="">Cargando...</option>
-                </select>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                <label>Mes</label>
-                <select id="selMes" class="md3-input" style="min-width:140px; cursor:pointer; margin:0;">
-                    <option value="1"  <?= date('n')==1  ? 'selected' : '' ?>>Enero</option>
-                    <option value="2"  <?= date('n')==2  ? 'selected' : '' ?>>Febrero</option>
-                    <option value="3"  <?= date('n')==3  ? 'selected' : '' ?>>Marzo</option>
-                    <option value="4"  <?= date('n')==4  ? 'selected' : '' ?>>Abril</option>
-                    <option value="5"  <?= date('n')==5  ? 'selected' : '' ?>>Mayo</option>
-                    <option value="6"  <?= date('n')==6  ? 'selected' : '' ?>>Junio</option>
-                    <option value="7"  <?= date('n')==7  ? 'selected' : '' ?>>Julio</option>
-                    <option value="8"  <?= date('n')==8  ? 'selected' : '' ?>>Agosto</option>
-                    <option value="9"  <?= date('n')==9  ? 'selected' : '' ?>>Septiembre</option>
-                    <option value="10" <?= date('n')==10 ? 'selected' : '' ?>>Octubre</option>
-                    <option value="11" <?= date('n')==11 ? 'selected' : '' ?>>Noviembre</option>
-                    <option value="12" <?= date('n')==12 ? 'selected' : '' ?>>Diciembre</option>
-                </select>
-            </div>
-            <div style="display:flex; flex-direction:column; gap:4px;">
-                <label>Año</label>
-                <input id="inpAnio" type="number" class="md3-input" value="<?= date('Y') ?>"
-                       style="max-width:96px; text-align:center; margin:0;">
-            </div>
+            <md-outlined-select id="selPromotor" label="Promotor" style="min-width:280px;">
+                <md-select-option value=""><div slot="headline">— Selecciona un promotor —</div></md-select-option>
+                <?php foreach ($promotores as $p):
+                    $nom = mb_convert_encoding($p['nombre'], 'UTF-8', 'UTF-8,ISO-8859-1,Windows-1252');
+                ?>
+                    <md-select-option value="<?= (int)$p['id'] ?>"
+                        <?= ((int)$p['id'] === $promotor_pre) ? 'selected' : '' ?>>
+                        <div slot="headline">
+                            <?= htmlspecialchars($nom) ?>
+                            (<?= (int)$p['cantidad_lecherias'] ?> lecherías)
+                        </div>
+                    </md-select-option>
+                <?php endforeach; ?>
+            </md-outlined-select>
+
+            <md-outlined-select id="selMes" label="Mes" style="min-width:150px;">
+                <?php $mn = (int)date('n');
+                $nombresMes = ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                               'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+                foreach ($nombresMes as $i => $nom): $val = $i + 1; ?>
+                    <md-select-option value="<?= $val ?>" <?= $mn === $val ? 'selected' : '' ?>>
+                        <div slot="headline"><?= $nom ?></div>
+                    </md-select-option>
+                <?php endforeach; ?>
+            </md-outlined-select>
+
+            <md-outlined-text-field id="inpAnio" label="Año" type="number"
+                value="<?= date('Y') ?>" style="max-width:110px;"></md-outlined-text-field>
+
             <div style="margin-left:auto;">
                 <span id="resumen" class="estado-pill estado-info" style="display:none;"></span>
             </div>

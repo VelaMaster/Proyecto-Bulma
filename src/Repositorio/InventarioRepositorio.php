@@ -82,14 +82,12 @@ class InventarioRepositorio
         $anio = (int)$anio;
         $inList = $this->clavesCandidatas($lecheria);
 
+        // SOLO MES_PERIODO/ANIO_PERIODO. La FECHA es de captura y NO define el periodo
+        // (de lo contrario un alta de junio con fecha en mayo dispara falsamente "ya existe").
         $sql = "SELECT ID FROM inventarios_mensuales
                 WHERE TRIM(CLAVE_LECHERIA) IN ($inList)
-                  AND (
-                        (ANIO_PERIODO = $anio AND MES_PERIODO = $mes)
-                     OR (FECHA IS NOT NULL
-                         AND CAST(strftime('%Y', FECHA) AS INTEGER) = $anio
-                         AND CAST(strftime('%m', FECHA) AS INTEGER) = $mes)
-                  )
+                  AND ANIO_PERIODO = $anio
+                  AND MES_PERIODO  = $mes
                 LIMIT 1";
         $row = $this->db->query($sql)->fetch(PDO::FETCH_ASSOC);
         return $row ? (int)$row['ID'] : false;

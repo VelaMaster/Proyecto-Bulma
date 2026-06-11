@@ -340,8 +340,9 @@ document.addEventListener('DOMContentLoaded', () => {
             <span style="flex:1;font-size:.9rem;font-weight:500;">
                 Este requerimiento ya fue enviado y está bloqueado. Solicita un cambio al supervisor para modificarlo.
             </span>
-            <button id="btnSolicitarCambioReq" style="background:var(--md-sys-color-error);color:var(--md-sys-color-on-error);
-                border:none;border-radius:20px;padding:8px 18px;cursor:pointer;font-weight:600;font-size:.85rem;">
+            <button id="btnSolicitarCambioReq" style="background:#fff;color:#b3261e;
+                border:none;border-radius:20px;padding:8px 18px;cursor:pointer;font-weight:700;font-size:.85rem;
+                box-shadow:0 1px 3px rgba(0,0,0,.25);">
                 Solicitar cambio
             </button>`;
         btnGuardar.parentNode.insertBefore(_bannerBloqueoReq, btnGuardar);
@@ -468,7 +469,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (data.status === 'success') {
                 notificar(`Requerimiento guardado (${data.lecherias} lecherías en ${data.almacenes} almacén${data.almacenes===1?'':'es'}).`, 'info');
 
-                if (chkGenerarPDF && chkGenerarPDF.checked) {
+                {
                     try {
                         const r2 = await fetch('generar_pdf_requerimiento.php', {
                             method: 'POST',

@@ -92,11 +92,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await r.json();
             if (data.status !== 'success') throw new Error(data.message || 'No se pudo cargar promotores');
 
-            selPromotor.innerHTML = '<option value="">-- Selecciona un promotor --</option>';
+            // md-outlined-select acepta md-select-option como hijos
+            selPromotor.innerHTML =
+                '<md-select-option value=""><div slot="headline">-- Selecciona un promotor --</div></md-select-option>';
             data.promotores.forEach(p => {
-                const opt = document.createElement('option');
+                const opt = document.createElement('md-select-option');
                 opt.value = p.id;
-                opt.textContent = `${p.nombre} (${p.cantidad_lecherias} lecherías)`;
+                opt.innerHTML = `<div slot="headline">${p.nombre} (${p.cantidad_lecherias} lecherías)</div>`;
                 selPromotor.appendChild(opt);
             });
 
@@ -107,7 +109,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (e) {
             console.error(e);
-            selPromotor.innerHTML = '<option value="">Error al cargar promotores</option>';
+            selPromotor.innerHTML =
+                '<md-select-option value=""><div slot="headline">Error al cargar promotores</div></md-select-option>';
             notificar('No se pudo cargar la lista de promotores', 'error');
         }
     }
@@ -241,6 +244,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }).catch(() => {});
 
-    // Init
-    cargarPromotores();
+    // Init — los promotores ya vienen renderizados desde PHP.
+    // Si hay preselección por query string, disparamos la carga.
+    if (PRESELECCIONADO && selPromotor.value == String(PRESELECCIONADO)) {
+        cargarEstado();
+    }
 });

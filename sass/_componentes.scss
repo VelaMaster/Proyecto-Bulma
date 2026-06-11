@@ -368,8 +368,9 @@ html[data-theme="light"] nav.navbar.nav-base-moderna {
     animation: fadeIn 0.2s ease-out;
 }
 .dropdown-content.glass-menu {
-    background-color: var(--bulma-scheme-main-ter) !important; 
-    backdrop-filter: blur(12px); 
+    background-color: var(--bulma-scheme-main-ter) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--bulma-border);
     border-radius: 12px !important;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5); 
@@ -689,13 +690,14 @@ html[data-theme="light"] .label-dinamico {
 }
 
 /* --- EFECTO COQUETO AL PASAR EL MOUSE (Filas) --- */
+/* Fix Safari: transform no aplica a <td> (display: table-cell) */
 .tabla-glass tbody tr {
-    transition: all 0.3s ease;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.tabla-glass tbody tr:hover td {
-
-    transform: scale(1.05);
+.tabla-glass tbody tr:hover {
+    background-color: rgba(var(--bulma-link-rgb), 0.08);
+    box-shadow: inset 0 0 0 1px rgba(var(--bulma-link-rgb), 0.25);
 }
 /* =========================================
    Ajustes de Color por Tema para las Tablas

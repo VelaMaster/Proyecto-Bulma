@@ -157,6 +157,8 @@ $lecher_get = $_GET['lecher'] ?? '';
         </div>
     </header>
 
+    <div class="md3-drawer-scrim" id="drawer-scrim" onclick="toggleDrawer()"></div>
+
     <aside class="md3-drawer" id="mobile-drawer">
         <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 8px 24px;">
             <span style="font-size: 1.25rem; font-weight: 500; color: var(--md-sys-color-on-surface);">Menú</span>
@@ -706,7 +708,13 @@ $lecher_get = $_GET['lecher'] ?? '';
                 document.getElementById('campoHogares').value  = d.HOGARES        ?? '';
                 document.getElementById('campoMenores').value  = d.MENORES        ?? '';
                 document.getElementById('campoMayores').value  = d.MAYORES        ?? '';
-                document.getElementById('campoDotacion').value = d.DOTACION       ?? '';
+                // DOTACION no está en el esquema: la derivamos de menores+mayores
+                // (misma fórmula que seleccionarLecheria).
+                {
+                    const _men = parseInt(d.MENORES ?? 0) || 0;
+                    const _may = parseInt(d.MAYORES ?? 0) || 0;
+                    document.getElementById('campoDotacion').value = ((_men + _may) * 8 / 36 * 72).toFixed(0);
+                }
 
                 // Tabla I
                 document.getElementById('inv_ini_caja').value    = d.INV_INI_CAJA    ?? '';

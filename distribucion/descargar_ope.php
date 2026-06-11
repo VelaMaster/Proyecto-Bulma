@@ -420,6 +420,18 @@ try {
         $filename = sprintf('OPE%02d%dDICONSA%s.xlsx', $mes, $anio, $sufijo);
     }
 
+    require_once __DIR__ . '/../includes/pdf_archivado.php';
+    archivarArchivo($tmpPath, [
+        'tipo'    => 'ope',
+        'modulo'  => 'distribucion',
+        'subdir'  => 'ope',
+        'mes'     => $mes,
+        'anio'    => $anio,
+        'usuario' => $_SESSION['usuario'] ?? '',
+        'nombre'  => $filename,
+        'extras'  => ['precio' => $precio],
+    ]);
+
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment; filename="' . $filename . '"');
     header('Content-Length: ' . filesize($tmpPath));

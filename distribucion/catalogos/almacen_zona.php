@@ -85,5 +85,19 @@ return [
         'SANTA MA. HUATULCO'         => 'STA. MA. HUATULCO',
         'STA MA HUATULCO'            => 'STA. MA. HUATULCO',
         'HUAJUAPAN'                  => 'HUAJOLOTITLAN', // si aplica
+        // ── BDD usa nombres largos; el OPE usa nombres cortos del XLS ──
+        'EL TOMATAL'                 => 'TOMATAL',
+        'SAN ANDRES HUAXPALTEPEC'    => 'HUAXPALTEPEC',
+        'LA REFORMA YAUTEPEC'        => 'REFORMA YAUTEPEC',
+        'LOS IDEALES'                => 'IDEALES',
+        'PUEBLO NUEVO TUXTEPEC'      => 'PUEBLO NUEVO',
+        'PUEBLO NUEVO, TUX.'         => 'PUEBLO NUEVO',
+        'SAN JOSE EL CHILAR'         => 'SAN JOSE DEL CHILAR',
+        'TEOTITLAN DE FLORES MAGON'  => 'TEOTITLAN DE FLORES',
+        'SANTO TOMAS TAMAZULAPAM'    => 'TAMAZULAPAN',
+        'SANTO TOMAS TAMAZULAPAN'    => 'TAMAZULAPAN',
+        'SAN PEDRO JUCHATENGO'       => 'JUCHATENGO',
+        'CUAJIMOLOYAS'               => 'SAN ANTONIO CUAJIMOLOYAS',
+        'SANTA MARIA LACHIXIO'       => 'LACHIXIO',
     ],
 ];

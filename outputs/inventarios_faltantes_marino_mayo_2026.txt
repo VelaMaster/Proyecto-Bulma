@@ -1,0 +1,55 @@
+INVENTARIOS FALTANTES — SUPERVISOR: MARINO MARTINEZ MARTINEZ (ID 1002)
+PERIODO: MAYO 2026
+TOTAL FALTANTES: 16 de 178 lecherías esperadas
+Fuente: datos/local.db (tabla inventarios_mensuales, lógica replicada de api_avance_promotores.php)
+
+====================================================================================================
+RESUMEN POR PROMOTOR
+====================================================================================================
+Promotor                                  Total  Capturadas  Faltantes
+DULCE ANDREA CASTELLANOS VAZQUEZ             17         14          3
+ECHEVERRIA TREJO ESPERANZA YESENIA           17         14          3
+ELIEL DAVID CASTELLANOS RAMIREZ              18         18          0
+FELIPE ROMERO                                21         19          2
+LORENA MARTINEZ MARTINEZ                     16         16          0
+PACHECO HERNANDEZ VERONICA PATRICIA          19         17          2
+SUSANA MENDOZA                               16         15          1
+VAZQUEZ LOPEZ JESUS EMMANUEL                 20         17          3
+VIANNY YAZMIN VELASCO MATUS                  19         19          0
+WILLERBALDO MARTIN                           15         13          2
+                                                          ------------
+                                                  TOTAL:          16
+
+====================================================================================================
+DETALLE DE LOS 16 INVENTARIOS FALTANTES
+====================================================================================================
+CLAVE       T#     NOMBRE LECHERÍA                       PROMOTOR                              TIPO                PRECIO
+----------  -----  ------------------------------------  ------------------------------------  ------------------  ------
+2009610100  10101  SAN ANDRES SINAXTLA                   DULCE ANDREA CASTELLANOS VAZQUEZ      —                   —
+2048610200  10101  VILLA TEJUPAM DE LA UNION             DULCE ANDREA CASTELLANOS VAZQUEZ      —                   —
+2054710100  10101  TEOTONGO                              DULCE ANDREA CASTELLANOS VAZQUEZ      —                   —
+2000610400  10101  ASUNCION NOCHIXTLAN EL CALVARIO       ECHEVERRIA TREJO ESPERANZA YESENIA    —                   —
+2005410100  10101  MAGDALENA ZAHUATLAN                   ECHEVERRIA TREJO ESPERANZA YESENIA    —                   —
+2017610200  9      SAN JUAN BAUTISTA COIXTLAHUACA        ECHEVERRIA TREJO ESPERANZA YESENIA    FACTOR DE RETIRO    4.50
+2026110800  50     XOCONOXTLE                            FELIPE ROMERO                         FACTOR DE RETIRO    4.50
+2040510100  10101  CENTRO CHILAPA DE DIAZ                FELIPE ROMERO                         —                   —
+2012710200  22     SAN CRISTOBAL AMOLTEPEC               PACHECO HERNANDEZ VERONICA PATRICIA   FACTOR DE RETIRO    4.50
+2012710300  104    CABEZA DEL RIO                        PACHECO HERNANDEZ VERONICA PATRICIA   FACTOR DE RETIRO    4.50
+2034610200  152    SAN SEBASTIAN NICANANDUTA             SUSANA MENDOZA                        ABASTO SOCIAL       6.50
+2000610300  10101  AMPLIACION CHOCANO                    VAZQUEZ LOPEZ JESUS EMMANUEL          —                   —
+2051110100  5      SANTO DOMINGO NUXAA                   VAZQUEZ LOPEZ JESUS EMMANUEL          FACTOR DE RETIRO    4.50
+2056410100  68     YUTANDUCHI DE GUERRERO                VAZQUEZ LOPEZ JESUS EMMANUEL          ABASTO SOCIAL       6.50
+2024210500  61     SAN MIGUEL PERAS                      WILLERBALDO MARTIN                    FACTOR DE RETIRO    4.50
+2046910500  103    LAZARO CARDENAS COPALA                WILLERBALDO MARTIN                    ABASTO SOCIAL       6.50
+
+====================================================================================================
+PATRÓN / RELACIÓN
+====================================================================================================
+  - 7 lecherías sin TIPO ni PRECIO (NUM_TIENDA = 10101)
+        → padrón genérico sin clasificar; muy probablemente atención DM
+          (Distribución Mercantil / sin tienda concesionada).
+  - 6 lecherías Factor de Retiro a $4.50
+  - 3 lecherías Abasto Social a $6.50
+
+  NOTA: ninguna lechería de Marino tiene presentación líquida (todas son P = polvo).
+        DM aquí se infiere por la ausencia de clasificación, no por un campo explícito.

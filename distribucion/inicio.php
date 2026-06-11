@@ -102,12 +102,13 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         .almacen-titulo .alm-meta {
             margin-left: auto; font-weight: 500; opacity: .75; font-size: 0.78rem;
         }
-        .reporte-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+        .reporte-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; min-width:340px; }
         .reporte-table th, .reporte-table td {
-            padding: 5px 10px;
+            padding: 5px 8px;
             border-bottom: 1px solid var(--md-sys-color-outline-variant);
-            text-align: left;
+            text-align: left; white-space: nowrap;
         }
+        .almacen-card .tabla-scroll{overflow-x:auto;}
         .reporte-table th {
             font-weight: 600; color: var(--md-sys-color-on-surface-variant);
             background: var(--md-sys-color-surface-container);
@@ -122,6 +123,24 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             display: inline-block; padding: 2px 10px; border-radius: 999px;
             background: color-mix(in srgb, var(--md-sys-color-error) 18%, transparent);
             color: var(--md-sys-color-error); font-weight: 600; font-size: 0.72rem;
+        }
+        .estado-pill{
+            display:inline-flex; align-items:center; gap:3px;
+            padding:1px 8px; border-radius:999px;
+            font-weight:600; font-size:0.65rem; text-transform:uppercase; letter-spacing:.3px;
+        }
+        .estado-pill md-icon{font-size:12px;width:12px;height:12px;}
+        .estado-ver{background:color-mix(in srgb,#2e7d32 22%,transparent); color:#7fd996;}
+        .estado-cap{background:color-mix(in srgb,var(--md-sys-color-primary) 22%,transparent); color:var(--md-sys-color-primary);}
+        .estado-est{background:color-mix(in srgb,#ffc107 22%,transparent); color:#ffd966;}
+        .req-val.estimado{opacity:.85; font-style:italic;}
+        tr.estimada td{background:color-mix(in srgb,#ffc107 6%,transparent);}
+        .legend-dist{
+            display:flex; flex-wrap:wrap; gap:12px; align-items:center;
+            padding:8px 12px; margin:10px 0; border-radius:10px;
+            background:var(--md-sys-color-surface-container);
+            border:1px solid var(--md-sys-color-outline-variant);
+            font-size:0.72rem; color:var(--md-sys-color-on-surface-variant);
         }
         .dm-tag {
             display: inline-block; padding: 1px 8px; border-radius: 6px;
@@ -153,22 +172,47 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             <div class="app-brand"><span>Leche para el Bienestar — Distribución</span></div>
         </div>
         <div class="app-bar-end">
+            <div class="desktop-nav">
+                <md-text-button onclick="document.getElementById('seccion-resultado').scrollIntoView({behavior:'smooth'})">
+                    <md-icon slot="icon">description</md-icon>
+                    Resultado OPE
+                </md-text-button>
+
+                <md-text-button onclick="document.getElementById('seccion-guia').scrollIntoView({behavior:'smooth'})">
+                    <md-icon slot="icon">local_shipping</md-icon>
+                    Guía de Distribución
+                </md-text-button>
+
+                <md-text-button onclick="document.getElementById('seccion-minuta').scrollIntoView({behavior:'smooth'})">
+                    <md-icon slot="icon">edit_note</md-icon>
+                    Minuta
+                </md-text-button>
+            </div>
+
             <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left:16px;">
                 <md-icon slot="icon">logout</md-icon> Salir
             </md-filled-tonal-button>
         </div>
     </header>
 
+    <div id="drawer-scrim" class="md3-drawer-scrim" onclick="toggleDrawer()"></div>
     <aside class="md3-drawer" id="mobile-drawer">
         <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 16px 8px 24px;">
             <span style="font-size:1.25rem; font-weight:500;">Menú Distribución</span>
             <md-icon-button onclick="toggleDrawer()"><md-icon>close</md-icon></md-icon-button>
         </div>
         <md-list style="background:transparent;">
-            <div class="drawer-section-title">Requerimiento</div>
-            <md-list-item href="inicio.php" type="button">
-                <div slot="headline">Consolidado Global</div>
-                <md-icon slot="start">summarize</md-icon>
+            <md-list-item type="button" onclick="document.getElementById('seccion-resultado').scrollIntoView({behavior:'smooth'}); toggleDrawer();">
+                <div slot="headline">Resultado OPE</div>
+                <md-icon slot="start">description</md-icon>
+            </md-list-item>
+            <md-list-item type="button" onclick="document.getElementById('seccion-guia').scrollIntoView({behavior:'smooth'}); toggleDrawer();">
+                <div slot="headline">Guía de Distribución</div>
+                <md-icon slot="start">local_shipping</md-icon>
+            </md-list-item>
+            <md-list-item type="button" onclick="document.getElementById('seccion-minuta').scrollIntoView({behavior:'smooth'}); toggleDrawer();">
+                <div slot="headline">Minuta</div>
+                <md-icon slot="start">edit_note</md-icon>
             </md-list-item>
         </md-list>
     </aside>
@@ -213,7 +257,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         </div>
 
         <!-- ── OPE Diconsa ───────────────────────────────────────────── -->
-        <div class="md3-card" style="margin-bottom:16px; padding:16px 20px; background:color-mix(in srgb, var(--md-sys-color-primary-container) 55%, transparent);">
+        <div id="seccion-resultado" class="md3-card" style="margin-bottom:16px; padding:16px 20px; background:color-mix(in srgb, var(--md-sys-color-primary-container) 55%, transparent); scroll-margin-top:80px;">
             <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
                 <md-icon style="color:var(--md-sys-color-primary); font-size:28px; width:28px; height:28px;">description</md-icon>
                 <div style="flex:1; min-width:200px;">
@@ -248,7 +292,43 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </div>
         </div>
 
+        <!-- ── Requerimiento de Leche (xlsx por precio) ─────────────────── -->
+        <div class="md3-card" style="margin-bottom:16px; padding:16px 20px; background:color-mix(in srgb, var(--md-sys-color-tertiary-container) 55%, transparent);">
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <md-icon style="color:var(--md-sys-color-tertiary); font-size:28px; width:28px; height:28px;">request_page</md-icon>
+                <div style="flex:1; min-width:200px;">
+                    <h3 style="margin:0; font-size:1.05rem; font-weight:500;">Requerimiento de leche (formato Excel)</h3>
+                    <p style="margin:4px 0 0; font-size:0.82rem; color:var(--md-sys-color-on-surface-variant);">
+                        Hoja "POR ALMACEN" + "TOTAL" por sucursal (HUAJUAPAN / ISTMO-COSTA / V. CENTRAL).
+                    </p>
+                </div>
+                <md-outlined-button id="btnReq650">
+                    <md-icon slot="icon">download</md-icon> REQ $6.50
+                </md-outlined-button>
+                <md-outlined-button id="btnReq450">
+                    <md-icon slot="icon">download</md-icon> REQ $4.50
+                </md-outlined-button>
+            </div>
+        </div>
+
+        <!-- ── Minuta mensual (xlsm con macros) ─────────────────────────── -->
+        <div id="seccion-minuta" class="md3-card" style="margin-bottom:16px; padding:16px 20px; background:color-mix(in srgb, var(--md-sys-color-secondary-container) 55%, transparent); scroll-margin-top:80px;">
+            <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+                <md-icon style="color:var(--md-sys-color-secondary); font-size:28px; width:28px; height:28px;">edit_note</md-icon>
+                <div style="flex:1; min-width:200px;">
+                    <h3 style="margin:0; font-size:1.05rem; font-weight:500;">Minuta de conciliación mensual</h3>
+                    <p style="margin:4px 0 0; font-size:0.82rem; color:var(--md-sys-color-on-surface-variant);">
+                        Plantilla precargada con embarques, total de puntos de venta y mes del periodo.
+                    </p>
+                </div>
+                <md-outlined-button id="btnMinuta">
+                    <md-icon slot="icon">download</md-icon> Descargar Minuta
+                </md-outlined-button>
+            </div>
+        </div>
+
         <!-- Barra de exportación -->
+        <div id="seccion-guia" style="scroll-margin-top:80px;"></div>
         <div class="md3-card filtros-card" id="exportBar" style="display:none; background:color-mix(in srgb,var(--md-sys-color-secondary-container) 40%,transparent);">
             <md-icon style="color:var(--md-sys-color-secondary);">filter_list</md-icon>
             <span style="font-size:0.85rem;font-weight:500;color:var(--md-sys-color-on-surface-variant);">Filtrar exportación:</span>
@@ -354,40 +434,57 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             contenedor.innerHTML = `<div class="supervisores-lista">${block}</div>`;
         }
 
+        function estadoPillDist(l) {
+            if (l.estado === 'verificado') return `<span class="estado-pill estado-ver"><md-icon>verified</md-icon>Verif</span>`;
+            if (l.estado === 'capturado')  return `<span class="estado-pill estado-cap"><md-icon>edit_note</md-icon>Capt</span>`;
+            if (l.estado === 'estimado')   return `<span class="estado-pill estado-est"><md-icon>auto_graph</md-icon>Est</span>`;
+            return '';
+        }
+        function reqCellDist(l) {
+            if (!l.capturado) return `<span class="falta-pill">FALTA</span>`;
+            const cls = l.es_estimado ? 'req-val estimado' : 'req-val';
+            const suf = l.es_estimado ? ' *' : '';
+            return `<span class="${cls}">${fmtNum(l.requerimiento)}${suf}</span>`;
+        }
+
         function pintarAlmacen(alm) {
             const filas = alm.lecherias.map(l => {
-                const reqCell = l.capturado
-                    ? fmtNum(l.requerimiento)
-                    : `<span class="falta-pill">FALTA</span>`;
                 const tiendaCell = l.num_tienda === 'DM'
                     ? `<span class="dm-tag">DM</span>`
                     : (l.num_tienda || '');
-                return `<tr>
+                const trCls = l.capturado ? (l.es_estimado ? 'estimada' : '') : '';
+                return `<tr class="${trCls}">
                     <td>${l.punto_venta}</td>
                     <td>${tiendaCell}</td>
-                    <td>${reqCell}</td>
+                    <td>${estadoPillDist(l)}</td>
+                    <td>${reqCellDist(l)}</td>
                 </tr>`;
             }).join('');
+
+            const verCount = alm.verificadas || 0;
+            const metaTxt = `${verCount}<md-icon style="font-size:12px;width:12px;height:12px;vertical-align:middle;">verified</md-icon> / ${alm.capturadas}/${alm.total}`;
 
             return `
                 <div class="almacen-card">
                     <div class="almacen-titulo">
                         <md-icon style="font-size:18px;">warehouse</md-icon>
                         <span>ALMACÉN ${alm.almacen}</span>
-                        <span class="alm-meta">${alm.capturadas}/${alm.total}</span>
+                        <span class="alm-meta">${metaTxt}</span>
                     </div>
+                    <div class="tabla-scroll">
                     <table class="reporte-table">
                         <thead>
-                            <tr><th>Punto de Venta</th><th>Tienda</th><th>Req.</th></tr>
+                            <tr><th>Punto de Venta</th><th>Tienda</th><th>Estado</th><th>Req.</th></tr>
                         </thead>
                         <tbody>
                             ${filas}
                             <tr class="subtotal-row">
-                                <td colspan="2" style="text-align:right;">SUBTOTAL =</td>
+                                <td colspan="3" style="text-align:right;">SUBTOTAL =</td>
                                 <td>${fmtNum(alm.subtotal)}</td>
                             </tr>
                         </tbody>
                     </table>
+                    </div>
                 </div>`;
         }
 
@@ -473,7 +570,15 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 return;
             }
 
-            contenedor.innerHTML = `<div class="supervisores-lista">${data.supervisores.map(pintarSupervisor).join('')}</div>`;
+            const leyenda = `
+                <div class="legend-dist">
+                    <md-icon style="font-size:16px;">info</md-icon>
+                    <span class="estado-pill estado-ver"><md-icon>verified</md-icon>Verif</span><span>VB supervisor (confiable)</span>
+                    <span class="estado-pill estado-cap"><md-icon>edit_note</md-icon>Capt</span><span>Promotor envió, pendiente VB</span>
+                    <span class="estado-pill estado-est"><md-icon>auto_graph</md-icon>Est</span><span>Avance estimado (no confiable)</span>
+                </div>`;
+            contenedor.innerHTML = leyenda +
+                `<div class="supervisores-lista">${data.supervisores.map(pintarSupervisor).join('')}</div>`;
 
             totalGeneralEl.textContent = fmtNum(data.total_general);
             totalLechEl.textContent    = `(${data.total_capturadas}/${data.total_lecherias} capturadas)`;
@@ -504,7 +609,8 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         }
 
         function toggleDrawer() {
-            document.getElementById('mobile-drawer').classList.toggle('open');
+            document.getElementById('mobile-drawer')?.classList.toggle('open');
+            document.getElementById('drawer-scrim')?.classList.toggle('open');
         }
 
         function exportParams() {
@@ -598,6 +704,25 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         document.getElementById('btnOpe450').addEventListener('click', () => descargarOpe('4.50'));
         document.getElementById('btnOpe650').addEventListener('click', () => descargarOpe('6.50'));
         document.getElementById('btnOpeForce').addEventListener('click', () => descargarOpe(opeUltimoPrecio, true));
+
+        // Requerimiento por precio (xlsx — POR ALMACEN + TOTAL)
+        function descargarReq(precio) {
+            const m = parseInt(selMes.value || '0', 10);
+            const a = parseInt(inputAnio.value || '0', 10);
+            if (!m || !a) { alert('Selecciona mes y año.'); return; }
+            const url = `descargar_req_precio.php?mes=${m}&anio=${a}&precio=${precio}`;
+            window.location.href = url;
+        }
+        document.getElementById('btnReq650').addEventListener('click', () => descargarReq('6.50'));
+        document.getElementById('btnReq450').addEventListener('click', () => descargarReq('4.50'));
+
+        // Minuta mensual
+        document.getElementById('btnMinuta').addEventListener('click', () => {
+            const m = parseInt(selMes.value || '0', 10);
+            const a = parseInt(inputAnio.value || '0', 10);
+            if (!m || !a) { alert('Selecciona mes y año.'); return; }
+            window.location.href = `descargar_minuta.php?mes=${m}&anio=${a}`;
+        });
 
         // Subtítulo dinámico mes/año
         function actualizarSubOpe() {
