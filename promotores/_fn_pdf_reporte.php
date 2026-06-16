@@ -61,26 +61,45 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
     $logoIzq = __DIR__ . '/../imagenes/Logos/logo_agricultura.png';
     $logoDer = __DIR__ . '/../imagenes/Logos/Logo_lecheparaelbienestar.png';
 
+    // ── Definición de columnas (anchos en mm) ─────────────────────
+    // Estructura agrupada (como el formato original):
+    //   - Grupos con encabezado padre + dos sub-columnas (CAJAS/SOBRES, ROTOS/FALT)
+    //   - Columnas simples ocupan ambas filas (rowspan)
+    // 'kind' => 'single' | 'group'
+    // 'sub'  => sólo en grupos (array de [titulo, ancho])
+    // Estructura agrupada (encabezados padre en 2 líneas para no desbordar)
     $cols = [
-        ['NUMERO DE PUNTO DE VENTA',  18],
-        ['CLAVE TIENDA',              12],
-        ['PRECIO',                    13],
-        ['INV. INI. CAJAS',           12],
-        ['INV. INI. SOB',             10],
-        ['DOTACION RECIB. CAJAS',     15],
-        ['TOTAL CAJAS',               12],
-        ['TOTAL SOB',                 10],
-        ['VEND. CAJAS',               12],
-        ['VEND. SOB',                 10],
-        ['INV. FIN. CAJAS',           12],
-        ['INV. FIN. SOB',             10],
-        ['RETIRO CAJAS',              12],
-        ['RETIRO SOB',                10],
-        ['FAM. NO ACUD.',             13],
-        ['SOB. ROTOS',                10],
-        ['SOB. FALT.',                10],
-        ['OBSERVACIONES',             36],
+        ['kind'=>'single', 'title'=>"NUMERO DE\nPUNTO DE VENTA",          'w'=>22],
+        ['kind'=>'single', 'title'=>"CLAVE\nDE LA\nTIENDA",                'w'=>13],
+        ['kind'=>'single', 'title'=>"PRECIO",                              'w'=>13],
+        ['kind'=>'group',  'title'=>"INVENTARIO\nINICIAL",                 'sub'=>[['CAJAS',11],['SOB.',10]]],
+        ['kind'=>'single', 'title'=>"DOTACION\nRECIBIDA\n(CAJAS)",         'w'=>15],
+        ['kind'=>'group',  'title'=>"T O T A L\n(INV INI + DOT REC.)",     'sub'=>[['CAJAS',11],['SOBRES',11]]],
+        ['kind'=>'group',  'title'=>"DOT. VENDIDA\nEN EL PERIODO",         'sub'=>[['CAJAS',11],['SOBRES',11]]],
+        ['kind'=>'group',  'title'=>"INVENTARIO\nFINAL",                   'sub'=>[['CAJAS',11],['SOBRES',11]]],
+        ['kind'=>'group',  'title'=>"SEGUN REG. DE\nRETIRO DE VENTAS",     'sub'=>[['CAJAS',11],['SOBRES',11]]],
+        ['kind'=>'single', 'title'=>"No. DE FAM.\nQUE NO ACUD.\nPOR SU DOT.", 'w'=>17],
+        ['kind'=>'group',  'title'=>"SOBRES",                              'sub'=>[['ROTOS',10],['FALT.',10]]],
+        ['kind'=>'single', 'title'=>"OBSERVACIONES",                       'w'=>31],
     ];
+
+    // Ancho total y centrado horizontal de la tabla
+    $totalAncho = 0;
+    foreach ($cols as $c) {
+        $totalAncho += ($c['kind'] === 'single')
+            ? $c['w']
+            : array_sum(array_map(fn($s) => $s[1], $c['sub']));
+    }
+
+    // Lista lineal de anchos individuales para los datos (orden importa)
+    $colWidths = [];
+    foreach ($cols as $c) {
+        if ($c['kind'] === 'single') {
+            $colWidths[] = $c['w'];
+        } else {
+            foreach ($c['sub'] as $s) $colWidths[] = $s[1];
+        }
+    }
 
     foreach ($almacenes as $bloque) {
         $almacenNombre = $bloque['almacen']   ?? '';
@@ -91,12 +110,24 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
         if (file_exists($logoIzq)) $pdf->Image($logoIzq, 8,   6, 45);
         if (file_exists($logoDer)) $pdf->Image($logoDer, 225, 6, 40);
 
+        // ── Encabezado superior ───────────────────────────────────
         $pdf->SetY(8);
         $pdf->SetFont('Arial', 'B', 13);
         $pdf->Cell(0, 6, $d_fn('LECHE PARA EL BIENESTAR, S.A. DE C.V.'), 0, 1, 'C');
         $pdf->SetFont('Arial', 'B', 11);
         $pdf->Cell(0, 5, $d_fn('GERENCIA ESTATAL OAXACA'), 0, 1, 'C');
-        $pdf->Cell(0, 6, $d_fn('REPORTE MENSUAL DE LA OPERACION EN LECHERIAS'), 0, 1, 'C');
+
+        // Detectar precios presentes para el título (fiel al original)
+        $precios = [];
+        foreach ($lecherias as $l) {
+            if (!empty($l['precio'])) $precios[trim((string)$l['precio'])] = true;
+        }
+        $preciosTxt = count($precios) === 1
+            ? array_key_first($precios) . '/LITRO'
+            : '$ 4.50 Y $ 6.50/LITRO';
+
+        $pdf->SetFont('Arial', 'B', 11);
+        $pdf->Cell(0, 6, $d_fn('REPORTE MENSUAL DE LA OPERACION EN LECHERIAS CON VENTA DE LECHE EN POLVO DE ' . $preciosTxt), 0, 1, 'C');
         $pdf->Ln(1);
 
         $pdf->SetFont('Arial', '', 8);
@@ -108,16 +139,66 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
         $pdf->Cell(0, 4, $d_fn($periodoTxt), 0, 1, 'L');
         $pdf->Ln(1);
 
-        // Centrar la tabla horizontalmente en la página
-        $totalAncho = array_sum(array_column($cols, 1));
+        // ── Tabla: encabezados agrupados (2 filas) ────────────────
         $xIni = ($pdf->GetPageWidth() - $totalAncho) / 2;
+        $y0   = $pdf->GetY();
+        $hTop = 7;   // alto fila superior (grupo)
+        $hSub = 5;   // alto fila inferior (sub-cabeceras)
+        $hHead = $hTop + $hSub;
 
-        $pdf->SetFont('Arial', 'B', 6);
         $pdf->SetFillColor(220, 220, 220);
-        $pdf->SetX($xIni);
-        foreach ($cols as $c) $pdf->Cell($c[1], 9, $d_fn($c[0]), 1, 0, 'C', true);
-        $pdf->Ln();
+        $pdf->SetDrawColor(0, 0, 0);
 
+        $x = $xIni;
+        foreach ($cols as $c) {
+            if ($c['kind'] === 'single') {
+                // Celda que abarca las dos filas
+                $pdf->Rect($x, $y0, $c['w'], $hHead, 'DF');
+                $pdf->SetFont('Arial', 'B', 6);
+                $lineas  = explode("\n", $c['title']);
+                $nLineas = count($lineas);
+                $lh      = 2.6; // alto por línea
+                $bloque  = $nLineas * $lh;
+                $yTxt    = $y0 + ($hHead - $bloque) / 2;
+                foreach ($lineas as $ln) {
+                    $pdf->SetXY($x, $yTxt);
+                    $pdf->Cell($c['w'], $lh, $d_fn($ln), 0, 0, 'C');
+                    $yTxt += $lh;
+                }
+                $x += $c['w'];
+            } else {
+                // Grupo: encabezado padre arriba + sub-celdas abajo
+                $wGrupo = array_sum(array_map(fn($s) => $s[1], $c['sub']));
+                $pdf->Rect($x, $y0, $wGrupo, $hTop, 'DF');
+                $pdf->SetFont('Arial', 'B', 6);
+                $lineasG  = explode("\n", $c['title']);
+                $nLineasG = count($lineasG);
+                $lhG      = 2.6;
+                $bloqueG  = $nLineasG * $lhG;
+                $yTxtG    = $y0 + ($hTop - $bloqueG) / 2;
+                foreach ($lineasG as $lnG) {
+                    $pdf->SetXY($x, $yTxtG);
+                    $pdf->Cell($wGrupo, $lhG, $d_fn($lnG), 0, 0, 'C');
+                    $yTxtG += $lhG;
+                }
+
+                $subX = $x;
+                foreach ($c['sub'] as $s) {
+                    [$subTitle, $subW] = $s;
+                    $pdf->Rect($subX, $y0 + $hTop, $subW, $hSub, 'DF');
+                    $pdf->SetXY($subX, $y0 + $hTop + ($hSub - 3) / 2);
+                    $pdf->SetFont('Arial', 'B', 6);
+                    $pdf->Cell($subW, 3, $d_fn($subTitle), 0, 0, 'C');
+                    $subX += $subW;
+                }
+                $x += $wGrupo;
+            }
+        }
+
+        // Posicionar cursor debajo del encabezado
+        $pdf->SetY($y0 + $hHead);
+
+        // ── Filas de datos ────────────────────────────────────────
         $pdf->SetFont('Arial', '', 7);
         foreach ($lecherias as $l) {
             $vals = [
@@ -141,7 +222,9 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
                 ($l['observaciones'] !== '' && $l['observaciones'] !== null) ? $l['observaciones'] : 'x',
             ];
             $pdf->SetX($xIni);
-            foreach ($cols as $i => $c) $pdf->Cell($c[1], 6, $d_fn((string)$vals[$i]), 1, 0, 'C');
+            foreach ($colWidths as $i => $w) {
+                $pdf->Cell($w, 6, $d_fn((string)$vals[$i]), 1, 0, 'C');
+            }
             $pdf->Ln();
         }
 
@@ -149,7 +232,7 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
         $faltan = max(0, 17 - count($lecherias));
         for ($i = 0; $i < $faltan; $i++) {
             $pdf->SetX($xIni);
-            foreach ($cols as $c) $pdf->Cell($c[1], 6, '', 1, 0);
+            foreach ($colWidths as $w) $pdf->Cell($w, 6, '', 1, 0);
             $pdf->Ln();
         }
 
@@ -161,7 +244,7 @@ function generarArchivoReporte(array $datos, string $slugUsr): string|false
         $pdf->SetFont('Arial', '', 6);
         $pdf->Cell(0, 4, $d_fn('OA-IN-810-02-R04'), 0, 1, 'R');
 
-        // Firmas
+        // Firmas (sin cambios)
         $mesNum  = str_pad((string)$mes, 2, '0', STR_PAD_LEFT);
         $anioStr = (string)$anio;
         $dia     = date('d');

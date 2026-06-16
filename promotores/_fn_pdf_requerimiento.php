@@ -80,14 +80,28 @@ function generarArchivoRequerimiento(array $datos, string $slugUsr): string|fals
         $pdf->Cell(0, 6, $d_fn('LECHE PARA EL BIENESTAR, S.A. DE C.V.'), 0, 1, 'C');
         $pdf->SetFont('Arial', 'B', 11);
         $pdf->Cell(0, 5, $d_fn('GERENCIA ESTATAL OAXACA'), 0, 1, 'C');
+
+        // Detectar precios para reflejarlos en el título (fiel al original)
+        $precios = [];
+        foreach ($lecherias as $l) {
+            if (!empty($l['precio'])) $precios[trim((string)$l['precio'])] = true;
+        }
+        $tituloPrecio = count($precios) === 1
+            ? array_key_first($precios) . '/LITRO'
+            : '$ 4.50 Y $ 6.50/LITRO';
+
         $pdf->SetFont('Arial', 'B', 12);
-        $pdf->Cell(0, 6, $d_fn('REQUERIMIENTO DE LECHE'), 0, 1, 'C');
+        $pdf->Cell(0, 6, $d_fn('REQUERIMIENTO DE LECHE DE ' . $tituloPrecio), 0, 1, 'C');
         $pdf->Ln(2);
 
         $pdf->SetFont('Arial', '', 9);
-        $pdf->Cell(120, 5, $d_fn('ALMACÉN: ') . $d_fn(strtoupper($almacenNombre)), 0, 0);
+        $pdf->Cell(120, 5, $d_fn('ALMACEN: ') . $d_fn(strtoupper($almacenNombre)), 0, 0);
         $pdf->Cell(0, 5, $d_fn('MES DE: ' . strtoupper($mesDestinoNombre) . ' ' . $anioDestino), 0, 1, 'R');
-        $pdf->Ln(2);
+        // Línea ZONA / RUTA igual que el formato original
+        $zona = $datos['zona'] ?? '____';
+        $ruta = $datos['ruta'] ?? '____';
+        $pdf->Cell(120, 5, $d_fn("ZONA: $zona   RUTA: $ruta"), 0, 1, 'L');
+        $pdf->Ln(1);
 
         $pdf->SetFont('Arial', 'B', 7);
         $pdf->SetFillColor(220, 220, 220);
@@ -102,6 +116,18 @@ function generarArchivoRequerimiento(array $datos, string $slugUsr): string|fals
         }
         $pdf->SetY($y0 + 11);
 
+        // Formatea "X -- Y" → "X" cuando Y == 0 (fiel al original que muestra "0" en lugar de "0--0")
+        $compactCS = function ($v) {
+            $s = trim((string)$v);
+            if ($s === '') return '';
+            if (preg_match('/^(-?\d+)\s*-+\s*(-?\d+)$/', $s, $m)) {
+                $cajas = (int)$m[1];
+                $sobres = (int)$m[2];
+                return $sobres === 0 ? (string)$cajas : "{$cajas}--{$sobres}";
+            }
+            return $s;
+        };
+
         $pdf->SetFont('Arial', '', 8);
         foreach ($lecherias as $l) {
             $vals = [
@@ -111,10 +137,10 @@ function generarArchivoRequerimiento(array $datos, string $slugUsr): string|fals
                 $l['familias']         ?? '',
                 $l['beneficiarios']    ?? '',
                 $l['dotacion_teorica'] ?? '',
-                $l['inv_inicial']      ?? '',
+                $compactCS($l['inv_inicial'] ?? ''),
                 $l['surtimiento']      ?? '',
-                $l['ventas']           ?? '',
-                $l['inv_final']        ?? '',
+                $compactCS($l['ventas'] ?? ''),
+                $compactCS($l['inv_final'] ?? ''),
                 $l['req_ms_anterior']  ?? '',
                 $l['vms']              ?? '',
                 $l['req_actual']       ?? '',
@@ -130,16 +156,12 @@ function generarArchivoRequerimiento(array $datos, string $slugUsr): string|fals
             $pdf->Ln();
         }
 
-        $pdf->SetY(-10);
-        $pdf->SetFont('Arial', '', 6);
-        $pdf->Cell(0, 4, $d_fn('OA-IN-810-02-R08'), 0, 1, 'R');
-
-        // Firmas
-        $pdf->Ln(6);
+        // ── Firmas (van antes del pie para no quedar fuera de página) ─
+        $pdf->SetY(-45);
         $pdf->SetFont('Arial', 'B', 9);
-        $pdf->Cell(125, 5, $d_fn('FECHA DE ELABORACIÓN:'), 0, 0, 'L');
+        $pdf->Cell(125, 5, $d_fn('FECHA DE ELABORACION:'), 0, 0, 'L');
         $pdf->Cell(15,  5, '', 0, 0);
-        $pdf->Cell(0,   5, $d_fn('REVISÓ:'), 0, 1, 'L');
+        $pdf->Cell(0,   5, $d_fn('REVISO:'), 0, 1, 'L');
 
         $pdf->SetFont('Arial', '', 9);
         $fechaLarga = _req_fechaLargaDDM(date('Y-m-d'));
@@ -159,6 +181,11 @@ function generarArchivoRequerimiento(array $datos, string $slugUsr): string|fals
         $pdf->Cell(125, 4, $d_fn('NOMBRE Y FIRMA DEL PROMOTOR'),   0, 0, 'L');
         $pdf->Cell(15,  4, '', 0, 0);
         $pdf->Cell(0,   4, $d_fn('NOMBRE Y FIRMA DEL SUPERVISOR'), 0, 1, 'L');
+
+        // ── Pie de página al final ─────────────────────────────────
+        $pdf->SetY(-10);
+        $pdf->SetFont('Arial', '', 6);
+        $pdf->Cell(0, 4, $d_fn('OA-IN-810-02-R08'), 0, 1, 'R');
     }
 
     // ── Guardar a disco ───────────────────────────────────────────
