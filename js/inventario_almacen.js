@@ -84,14 +84,14 @@ function render() {
         <div class="seccion-cuerpo">
           <h4 style="margin:0 0 8px;font-size:.85rem;opacity:.8;">PROGRAMA DE POBREZA EXTREMA</h4>
           <div class="totales">
-            <div class="total-cell"><label>Buen estado · cajas</label>
-              <input class="r05-edit" data-k="pe.buen_cajas" type="number" value="${r05.pe.buen_cajas}"></div>
-            <div class="total-cell"><label>Buen estado · sobres</label>
-              <input class="r05-edit" data-k="pe.buen_sobres" type="number" value="${r05.pe.buen_sobres}"></div>
-            <div class="total-cell"><label>Mal estado · cajas</label>
-              <input class="r05-edit" data-k="pe.mal_cajas" type="number" value="${r05.pe.mal_cajas}"></div>
-            <div class="total-cell"><label>Mal estado · sobres</label>
-              <input class="r05-edit" data-k="pe.mal_sobres" type="number" value="${r05.pe.mal_sobres}"></div>
+            <div class="total-cell">
+              <md-outlined-text-field class="r05-edit" data-k="pe.buen_cajas" type="number" label="Buen estado · cajas" value="${r05.pe.buen_cajas}" style="width:100%;"></md-outlined-text-field></div>
+            <div class="total-cell">
+              <md-outlined-text-field class="r05-edit" data-k="pe.buen_sobres" type="number" label="Buen estado · sobres" value="${r05.pe.buen_sobres}" style="width:100%;"></md-outlined-text-field></div>
+            <div class="total-cell">
+              <md-outlined-text-field class="r05-edit" data-k="pe.mal_cajas" type="number" label="Mal estado · cajas" value="${r05.pe.mal_cajas}" style="width:100%;"></md-outlined-text-field></div>
+            <div class="total-cell">
+              <md-outlined-text-field class="r05-edit" data-k="pe.mal_sobres" type="number" label="Mal estado · sobres" value="${r05.pe.mal_sobres}" style="width:100%;"></md-outlined-text-field></div>
           </div>
 
           <h4 style="margin:14px 0 8px;font-size:.85rem;opacity:.8;">PROGRAMA I.N.I. (en ceros)</h4>
@@ -114,9 +114,9 @@ function render() {
                     ? r05.lecherias_pe.map((l,i)=>`<tr>
                         <td>${l.punto_venta}</td>
                         <td>${l.num_tienda}</td>
-                        <td><input class="r05-row" data-i="${i}" data-k="cajas" type="number" value="${l.cajas}"></td>
-                        <td><input class="r05-row" data-i="${i}" data-k="sobres" type="number" value="${l.sobres}"></td>
-                        <td><input class="r05-row" data-i="${i}" data-k="mes_corresponde" value="${l.mes_corresponde}"></td>
+                        <td><md-outlined-text-field class="r05-row" data-i="${i}" data-k="cajas" type="number" value="${l.cajas}" style="max-width:100px;"></md-outlined-text-field></td>
+                        <td><md-outlined-text-field class="r05-row" data-i="${i}" data-k="sobres" type="number" value="${l.sobres}" style="max-width:100px;"></md-outlined-text-field></td>
+                        <td><md-outlined-text-field class="r05-row" data-i="${i}" data-k="mes_corresponde" value="${l.mes_corresponde}" style="max-width:120px;"></md-outlined-text-field></td>
                       </tr>`).join('')
                     : `<tr><td colspan="5" style="opacity:.6;">Sin saldos pendientes en almacén.</td></tr>`
                 }
@@ -125,7 +125,7 @@ function render() {
           </div>
 
           <h4 style="margin:14px 0 6px;font-size:.85rem;opacity:.8;">Observaciones generales</h4>
-          <textarea id="inpObs" class="obs-text" placeholder="Observaciones del inventario…"></textarea>
+          <md-outlined-text-field id="inpObs" type="textarea" label="Observaciones del inventario" rows="3" style="width:100%;"></md-outlined-text-field>
         </div>
       </div>
 
@@ -191,13 +191,13 @@ function renderR07(r07, label, grupo) {
             ${r07.rows.map((r,i)=>`<tr>
               <td>${r.punto_venta}</td>
               <td>${r.num_tienda}</td>
-              <td><input class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="cajas_recibidas" type="number" value="${r.cajas_recibidas}"></td>
-              <td><input class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="fecha_recepcion" value="${r.fecha_recepcion}"></td>
-              <td><input class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="guias_distribucion" type="number" value="${r.guias_distribucion}"></td>
-              <td><input class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="no_factura" value="${r.no_factura}"></td>
-              <td><input class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="no_cajas_enviadas" type="number" value="${r.no_cajas_enviadas}"></td>
-              <td><input class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="fecha_enviada" value="${r.fecha_enviada}"></td>
-              <td><input class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="observaciones" value=""></td>
+              <td><md-outlined-text-field class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="cajas_recibidas" type="number" value="${r.cajas_recibidas}" style="max-width:90px;"></md-outlined-text-field></td>
+              <td><md-outlined-text-field class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="fecha_recepcion" value="${r.fecha_recepcion}" style="max-width:110px;"></md-outlined-text-field></td>
+              <td><md-outlined-text-field class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="guias_distribucion" type="number" value="${r.guias_distribucion}" style="max-width:90px;"></md-outlined-text-field></td>
+              <td><md-outlined-text-field class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="no_factura" value="${r.no_factura}" style="max-width:110px;"></md-outlined-text-field></td>
+              <td><md-outlined-text-field class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="no_cajas_enviadas" type="number" value="${r.no_cajas_enviadas}" style="max-width:90px;"></md-outlined-text-field></td>
+              <td><md-outlined-text-field class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="fecha_enviada" value="${r.fecha_enviada}" style="max-width:110px;"></md-outlined-text-field></td>
+              <td><md-outlined-text-field class="r07-edit" data-g="${grupo}" data-i="${i}" data-k="observaciones" value="" style="max-width:120px;"></md-outlined-text-field></td>
             </tr>`).join('')}
           </tbody>
         </table>
@@ -222,9 +222,16 @@ function generarPDF() {
     document.body.removeChild(form);
 }
 
+// -- Auto-cargar al cambiar cualquier filtro -----------------------------------
+function autoCarga() {
+    if ($('#selAlmacen').value) cargar();
+}
+
 // -- Init ----------------------------------------------------------------------
 document.addEventListener('DOMContentLoaded', () => {
     cargarCatalogo();
-    $('#btnCargar').addEventListener('click', cargar);
+    $('#selAlmacen').addEventListener('change', autoCarga);
+    $('#selMes').addEventListener('change', autoCarga);
+    $('#selAnio').addEventListener('change', autoCarga);
     $('#btnPDF').addEventListener('click', generarPDF);
 });

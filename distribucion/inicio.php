@@ -168,54 +168,18 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 <body>
     <header class="md3-top-app-bar">
         <div class="app-bar-start">
-            <md-icon-button onclick="toggleDrawer()"><md-icon>menu</md-icon></md-icon-button>
-            <div class="app-brand"><span>Leche para el Bienestar — Distribución</span></div>
+            <div class="app-brand">
+                <img src="/imagenes/Logos/Logo_lecheparaelbienestar.png" alt="Logo"
+                     style="height: 44px; vertical-align: middle; border-radius: 4px; margin-right: 12px;">
+                <span>Distribución</span>
+            </div>
         </div>
         <div class="app-bar-end">
-            <div class="desktop-nav">
-                <md-text-button onclick="document.getElementById('seccion-resultado').scrollIntoView({behavior:'smooth'})">
-                    <md-icon slot="icon">description</md-icon>
-                    Resultado OPE
-                </md-text-button>
-
-                <md-text-button onclick="document.getElementById('seccion-guia').scrollIntoView({behavior:'smooth'})">
-                    <md-icon slot="icon">local_shipping</md-icon>
-                    Guía de Distribución
-                </md-text-button>
-
-                <md-text-button onclick="document.getElementById('seccion-minuta').scrollIntoView({behavior:'smooth'})">
-                    <md-icon slot="icon">edit_note</md-icon>
-                    Minuta
-                </md-text-button>
-            </div>
-
             <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left:16px;">
                 <md-icon slot="icon">logout</md-icon> Salir
             </md-filled-tonal-button>
         </div>
     </header>
-
-    <div id="drawer-scrim" class="md3-drawer-scrim" onclick="toggleDrawer()"></div>
-    <aside class="md3-drawer" id="mobile-drawer">
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 16px 8px 24px;">
-            <span style="font-size:1.25rem; font-weight:500;">Menú Distribución</span>
-            <md-icon-button onclick="toggleDrawer()"><md-icon>close</md-icon></md-icon-button>
-        </div>
-        <md-list style="background:transparent;">
-            <md-list-item type="button" onclick="document.getElementById('seccion-resultado').scrollIntoView({behavior:'smooth'}); toggleDrawer();">
-                <div slot="headline">Resultado OPE</div>
-                <md-icon slot="start">description</md-icon>
-            </md-list-item>
-            <md-list-item type="button" onclick="document.getElementById('seccion-guia').scrollIntoView({behavior:'smooth'}); toggleDrawer();">
-                <div slot="headline">Guía de Distribución</div>
-                <md-icon slot="start">local_shipping</md-icon>
-            </md-list-item>
-            <md-list-item type="button" onclick="document.getElementById('seccion-minuta').scrollIntoView({behavior:'smooth'}); toggleDrawer();">
-                <div slot="headline">Minuta</div>
-                <md-icon slot="start">edit_note</md-icon>
-            </md-list-item>
-        </md-list>
-    </aside>
 
     <main class="panel-content">
         <!-- Hero -->
@@ -275,9 +239,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <md-outlined-button id="btnOpe650">
                     <md-icon slot="icon">download</md-icon> Solo $6.50
                 </md-outlined-button>
-                <md-text-button href="comparar_lecherias.php" target="_blank">
-                    <md-icon slot="icon">fact_check</md-icon> Validar lecherías BDD↔OPE
-                </md-text-button>
             </div>
             <div id="opePendientes" style="display:none; margin-top:12px; padding:10px 14px; border-radius:10px;
                                            background:color-mix(in srgb,var(--md-sys-color-error-container) 70%,transparent);
@@ -333,13 +294,13 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             <md-icon style="color:var(--md-sys-color-secondary);">filter_list</md-icon>
             <span style="font-size:0.85rem;font-weight:500;color:var(--md-sys-color-on-surface-variant);">Filtrar exportación:</span>
 
-            <select id="exportSupSelect" class="md3-input" style="margin:0;cursor:pointer;min-width:180px;">
-                <option value="0">Todos los supervisores</option>
-            </select>
+            <md-outlined-select id="exportSupSelect" label="Supervisor" style="min-width:200px;">
+                <md-select-option value="0"><div slot="headline">Todos los supervisores</div></md-select-option>
+            </md-outlined-select>
 
-            <select id="exportAlmSelect" class="md3-input" style="margin:0;cursor:pointer;min-width:160px;">
-                <option value="">Todos los almacenes</option>
-            </select>
+            <md-outlined-select id="exportAlmSelect" label="Almacén" style="min-width:180px;">
+                <md-select-option value=""><div slot="headline">Todos los almacenes</div></md-select-option>
+            </md-outlined-select>
 
             <span style="flex-grow:1;"></span>
 
@@ -353,7 +314,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
         <!-- Resumen -->
         <div class="md3-card" id="resumenCard" style="display:none; margin-bottom:16px;">
-            <h3 style="margin:0 0 12px; font-size:1rem; font-weight:500;">
+            <h3 id="resumenTitulo" style="margin:0 0 12px; font-size:1rem; font-weight:500;">
                 <md-icon style="vertical-align:middle; margin-right:6px; color:var(--md-sys-color-primary);">insights</md-icon>
                 Resumen global
             </h3>
@@ -511,9 +472,9 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         function pintarResumen(r) {
             if (!r) { document.getElementById('resumenCard').style.display = 'none'; return; }
             document.getElementById('resSupervisores').textContent = fmtNum(r.supervisores);
-            document.getElementById('resPromotores').textContent   = fmtNum(r.promotores);
-            document.getElementById('resLech450').textContent      = fmtNum(r.lecherias_450);
-            document.getElementById('resLech650').textContent      = fmtNum(r.lecherias_650);
+            document.getElementById('resPromotores').textContent   = isNaN(r.promotores) ? r.promotores : fmtNum(r.promotores);
+            document.getElementById('resLech450').textContent      = isNaN(r.lecherias_450) ? r.lecherias_450 : fmtNum(r.lecherias_450);
+            document.getElementById('resLech650').textContent      = isNaN(r.lecherias_650) ? r.lecherias_650 : fmtNum(r.lecherias_650);
             document.getElementById('resCapt').textContent         = fmtNum(r.capturadas);
             document.getElementById('resumenCard').style.display   = 'block';
         }
@@ -526,35 +487,143 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
             // Reconstruir supervisores
             const supActual = supSelect.value;
-            supSelect.innerHTML = '<option value="0">Todos los supervisores</option>';
+            supSelect.innerHTML = '<md-select-option value="0"><div slot="headline">Todos los supervisores</div></md-select-option>';
             data.supervisores.forEach(s => {
-                const opt = document.createElement('option');
+                const opt = document.createElement('md-select-option');
                 opt.value = s.id;
-                opt.textContent = s.nombre;
+                opt.innerHTML = `<div slot="headline">${s.nombre}</div>`;
                 supSelect.appendChild(opt);
             });
             supSelect.value = supActual;
 
-            // Reconstruir almacenes según supervisor seleccionado
             function poblarAlmacenes() {
                 const supId = parseInt(supSelect.value) || 0;
                 const almActual = almSelect.value;
-                almSelect.innerHTML = '<option value="">Todos los almacenes</option>';
+                almSelect.innerHTML = '<md-select-option value=""><div slot="headline">Todos los almacenes</div></md-select-option>';
                 const sups = supId ? data.supervisores.filter(s => s.id === supId) : data.supervisores;
                 const almSet = new Set();
                 sups.forEach(s => s.almacenes.forEach(a => almSet.add(a.almacen)));
                 almSet.forEach(a => {
-                    const opt = document.createElement('option');
+                    const opt = document.createElement('md-select-option');
                     opt.value = a;
-                    opt.textContent = a;
+                    opt.innerHTML = `<div slot="headline">${a}</div>`;
                     almSelect.appendChild(opt);
                 });
                 if (almSet.has(almActual)) almSelect.value = almActual;
             }
             poblarAlmacenes();
-            supSelect.onchange = poblarAlmacenes;
+
+            supSelect.onchange = () => { poblarAlmacenes(); aplicarFiltroVista(); };
+            almSelect.onchange = () => { aplicarFiltroVista(); };
 
             document.getElementById('exportBar').style.display = 'flex';
+        }
+
+        // Filtra la vista (tablas + resumen + total) según los selects de supervisor/almacén
+        function aplicarFiltroVista() {
+            if (!ultimaData) return;
+            const supId  = parseInt(document.getElementById('exportSupSelect').value) || 0;
+            const almVal = document.getElementById('exportAlmSelect').value || '';
+
+            // Sin filtro → restaurar vista original
+            if (!supId && !almVal) {
+                const data = ultimaData;
+                const leyenda = `
+                    <div class="legend-dist">
+                        <md-icon style="font-size:16px;">info</md-icon>
+                        <span class="estado-pill estado-ver"><md-icon>verified</md-icon>Verif</span><span>VB supervisor (confiable)</span>
+                        <span class="estado-pill estado-cap"><md-icon>edit_note</md-icon>Capt</span><span>Promotor envió, pendiente VB</span>
+                        <span class="estado-pill estado-est"><md-icon>auto_graph</md-icon>Est</span><span>Avance estimado (no confiable)</span>
+                    </div>`;
+                contenedor.innerHTML = leyenda +
+                    `<div class="supervisores-lista">${data.supervisores.map(pintarSupervisor).join('')}</div>`;
+                totalGeneralEl.textContent = fmtNum(data.total_general);
+                totalLechEl.textContent    = `(${data.total_capturadas}/${data.total_lecherias} capturadas)`;
+                grandTotal.style.display   = 'flex';
+                document.getElementById('resumenTitulo').innerHTML = `<md-icon style="vertical-align:middle; margin-right:6px; color:var(--md-sys-color-primary);">insights</md-icon> Resumen global`;
+                pintarResumen({ ...data.resumen, capturadas: data.total_capturadas });
+                return;
+            }
+
+            // Filtrar supervisores
+            let sups = ultimaData.supervisores;
+            if (supId) sups = sups.filter(s => s.id === supId);
+
+            // Filtrar almacenes dentro de cada supervisor
+            if (almVal) {
+                sups = sups.map(s => ({
+                    ...s,
+                    almacenes: s.almacenes.filter(a => a.almacen === almVal)
+                })).filter(s => s.almacenes.length > 0);
+            }
+
+            // Recalcular totales filtrados
+            let totalGen = 0, totalLech = 0, totalCapt = 0;
+            sups.forEach(s => {
+                s.almacenes.forEach(a => {
+                    a.lecherias.forEach(l => {
+                        totalLech++;
+                        if (l.capturado) { totalCapt++; totalGen += (l.requerimiento || 0); }
+                    });
+                });
+            });
+            // El precio ya está filtrado por la API
+            const l450 = precioActivo === '4.50' ? totalLech : '—';
+            const l650 = precioActivo === '6.50' ? totalLech : '—';
+
+            // Re-renderizar tablas
+            const leyenda = `
+                <div class="legend-dist">
+                    <md-icon style="font-size:16px;">info</md-icon>
+                    <span class="estado-pill estado-ver"><md-icon>verified</md-icon>Verif</span><span>VB supervisor (confiable)</span>
+                    <span class="estado-pill estado-cap"><md-icon>edit_note</md-icon>Capt</span><span>Promotor envió, pendiente VB</span>
+                    <span class="estado-pill estado-est"><md-icon>auto_graph</md-icon>Est</span><span>Avance estimado (no confiable)</span>
+                </div>`;
+
+            if (sups.length === 0) {
+                contenedor.innerHTML = `
+                    <div class="md3-card" style="text-align:center; padding:24px; color:var(--md-sys-color-on-surface-variant);">
+                        <md-icon style="font-size:36px; color:var(--md-sys-color-tertiary);">inbox</md-icon>
+                        <p style="margin-top:8px;">No hay datos para este filtro.</p>
+                    </div>`;
+                grandTotal.style.display = 'none';
+            } else {
+                // Recalcular subtotales de supervisor con datos filtrados
+                const supsRender = sups.map(s => {
+                    const subtotal = s.almacenes.reduce((acc, a) => acc + (a.subtotal || 0), 0);
+                    const totalSup = s.almacenes.reduce((acc, a) => acc + (a.total || 0), 0);
+                    const captSup  = s.almacenes.reduce((acc, a) => acc + (a.capturadas || 0), 0);
+                    return { ...s, subtotal_supervisor: subtotal, total_sup: totalSup, capturadas_sup: captSup };
+                });
+                contenedor.innerHTML = leyenda +
+                    `<div class="supervisores-lista">${supsRender.map(pintarSupervisor).join('')}</div>`;
+                totalGeneralEl.textContent = fmtNum(totalGen);
+                totalLechEl.textContent    = `(${totalCapt}/${totalLech} capturadas)`;
+                grandTotal.style.display   = 'flex';
+            }
+
+            // Título del resumen
+            const tituloEl = document.getElementById('resumenTitulo');
+            if (supId || almVal) {
+                const supName = supId
+                    ? (ultimaData.supervisores.find(s => s.id === supId)?.nombre || '')
+                    : '';
+                const parts = ['Resumen'];
+                if (supName) parts.push(supName);
+                if (almVal) parts.push(`· ${almVal}`);
+                tituloEl.innerHTML = `<md-icon style="vertical-align:middle; margin-right:6px; color:var(--md-sys-color-primary);">insights</md-icon> ${parts.join(' ')}`;
+            } else {
+                tituloEl.innerHTML = `<md-icon style="vertical-align:middle; margin-right:6px; color:var(--md-sys-color-primary);">insights</md-icon> Resumen global`;
+            }
+
+            // Resumen actualizado
+            pintarResumen({
+                supervisores: sups.length,
+                promotores:   '—',
+                lecherias_450: l450,
+                lecherias_650: l650,
+                capturadas:    totalCapt,
+            });
         }
 
         function pintar(data) {
@@ -608,10 +677,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             }
         }
 
-        function toggleDrawer() {
-            document.getElementById('mobile-drawer')?.classList.toggle('open');
-            document.getElementById('drawer-scrim')?.classList.toggle('open');
-        }
 
         function exportParams() {
             const mes  = selMes.value;
@@ -631,7 +696,11 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             window.open(`exportar_pdf.php?${exportParams()}`, '_blank');
         });
 
-        cargar();
+        // Auto-cargar cuando MD3 esté listo
+        Promise.all([
+            customElements.whenDefined('md-outlined-select'),
+            customElements.whenDefined('md-outlined-text-field')
+        ]).then(() => { setTimeout(() => { actualizarSubOpe(); cargar(); }, 120); });
 
         // ── OPE Diconsa: descarga con check de autorización ──────────────
         const opePend     = document.getElementById('opePendientes');
@@ -736,7 +805,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         }
         selMes.addEventListener('change', actualizarSubOpe);
         inputAnio.addEventListener('change', actualizarSubOpe);
-        actualizarSubOpe();
     </script>
 </body>
 </html>

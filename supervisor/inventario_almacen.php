@@ -54,11 +54,14 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             background:var(--md-sys-color-surface-container-high);
             font-size:.72rem; text-transform:uppercase; letter-spacing:.4px;
         }
-        .inv-table td input{
-            width:100%; max-width:120px; padding:4px 6px;
-            border:1px solid var(--md-sys-color-outline-variant);
-            border-radius:6px; background:var(--md-sys-color-surface);
-            color:var(--md-sys-color-on-surface); font-size:.82rem; text-align:center;
+        .inv-table td md-outlined-text-field{
+            --md-outlined-text-field-container-shape: 8px;
+            --md-outlined-text-field-top-space: 6px;
+            --md-outlined-text-field-bottom-space: 6px;
+            min-width:80px;
+        }
+        .total-cell md-outlined-text-field{
+            --md-outlined-text-field-container-shape: 10px;
         }
         .totales{
             display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
@@ -69,7 +72,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             background:var(--md-sys-color-surface-container-high);
             border:1px solid var(--md-sys-color-outline-variant);
         }
-        .total-cell label{ font-size:.7rem; opacity:.75; display:block; }
         .total-cell strong{ font-size:1.05rem; }
         .pill{
             display:inline-block; padding:2px 10px; border-radius:999px;
@@ -173,7 +175,6 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             ?>
         </md-outlined-select>
 
-        <md-filled-button id="btnCargar"><md-icon slot="icon">search</md-icon> Cargar</md-filled-button>
         <md-filled-tonal-button id="btnPDF" disabled><md-icon slot="icon">picture_as_pdf</md-icon> Generar PDF</md-filled-tonal-button>
     </div>
 

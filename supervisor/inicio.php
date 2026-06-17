@@ -34,7 +34,9 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <md-icon>menu</md-icon>
             </md-icon-button>
             <div class="app-brand">
-                <span>Liconsa - Supervisión</span>
+                <img src="/imagenes/Logos/Logo_lecheparaelbienestar.png" alt="Logo"
+                     style="height: 44px; vertical-align: middle; border-radius: 4px; margin-right: 12px;">
+                <span>Supervisión</span>
             </div>
         </div>
 

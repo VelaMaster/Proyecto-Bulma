@@ -49,7 +49,9 @@ $origen_conexion = 'SQLite local';
     <div class="pantallaCentrada">
         <div class="md3-surface-container">
 
-            <h1 class="md3-title">Inventarios de Leche</h1>
+            <img src="imagenes/Logos/Logo_lecheparaelbienestar.png" alt="Leche para el Bienestar"
+                 style="width: 200px; display: block; margin: 0 auto 16px auto;">
+            <h1 class="md3-title">Inventarios de Leche en Polvo GEO</h1>
 
             <div class="role-selector">
                 <md-text-button onclick="cambiarPagina('iniciosesionPromotor.php');">Promotor</md-text-button>
@@ -81,17 +83,13 @@ $origen_conexion = 'SQLite local';
                     </md-icon-button>
                 </md-outlined-text-field>
 
-                <div class="form-actions" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
-                    <label style="display:flex; align-items:center; gap:12px; cursor:pointer;"
-                           onclick="const sw=document.getElementById('chk-recordar'); sw.selected=!sw.selected; document.getElementById('chk-recordar-hidden').value=sw.selected?'1':'';">
-                        <md-switch id="chk-recordar" aria-label="Recordar sesión por 30 días"></md-switch>
-                        <input type="hidden" name="recordar_sesion" id="chk-recordar-hidden" value="">
-                        <span style="font-size:0.875rem; color:var(--md-sys-color-on-surface-variant); user-select:none;">
-                            Recordar sesión (30 días)
-                        </span>
-                    </label>
-                    <a href="#" class="md3-link">¿Olvidó su contraseña?</a>
-                </div>
+
+                <label style="display:flex; align-items:center; gap:12px; cursor:pointer; margin-top:4px;"
+                       onclick="const sw=document.getElementById('chk-recordar'); sw.selected=!sw.selected; document.getElementById('chk-recordar-hidden').value=sw.selected?'1':'';">
+                    <md-switch id="chk-recordar" aria-label="Recordar sesión"></md-switch>
+                    <input type="hidden" name="recordar_sesion" id="chk-recordar-hidden" value="">
+                    <span style="font-size:0.875rem; color:var(--md-sys-color-on-surface-variant); user-select:none;">Recordar sesión</span>
+                </label>
 
                 <md-filled-button type="submit" id="btn-ingresar" style="width: 100%; margin-top: 10px;">
                     Ingresar
@@ -99,9 +97,6 @@ $origen_conexion = 'SQLite local';
                 </md-filled-button>
             </form>
 
-            <p class="conexion-text">
-                Conectado a: <span><?php echo $origen_conexion; ?></span>
-            </p>
         </div>
     </div>
 

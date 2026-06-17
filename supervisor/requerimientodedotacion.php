@@ -147,6 +147,16 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             color:var(--md-sys-color-on-surface);
             margin-bottom:14px;
         }
+        .req-input{
+            width:60px; padding:3px 6px; border-radius:8px; font-size:0.82rem;
+            border:1px solid var(--md-sys-color-outline-variant);
+            background:var(--md-sys-color-surface-container-high);
+            color:var(--md-sys-color-on-surface); text-align:right;
+        }
+        .req-input:focus{outline:2px solid var(--md-sys-color-primary); border-color:transparent;}
+        .req-input.guardando{opacity:.5; pointer-events:none;}
+        .req-input.ok{border-color:#4caf50;}
+        .req-input.err{border-color:var(--md-sys-color-error);}
     </style>
     <script type="importmap">{ "imports": { "@material/web/": "https://esm.run/@material/web/" } }</script>
     <script type="module"> import '@material/web/all.js'; </script>
@@ -405,9 +415,18 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         }
         function reqCell(l) {
             if (!l.capturado) return `<span class="falta-pill">FALTA</span>`;
-            const cls = l.es_estimado ? 'req-val estimado' : 'req-val';
-            const suf = l.es_estimado ? ' *' : '';
-            return `<span class="${cls}">${fmtNum(l.requerimiento)}${suf}</span>`;
+            // Capturado (promotor envió) → editable por supervisor
+            if (l.estado === 'capturado') {
+                return `<input type="number" class="req-input" min="0"
+                         value="${l.requerimiento || 0}"
+                         data-clave="${l.punto_venta}"
+                         data-original="${l.requerimiento || 0}"
+                         onchange="editarReq(this)">`;
+            }
+            // Estimado → solo lectura (dato del sistema, no editable)
+            if (l.es_estimado) return `<span class="req-val estimado">${fmtNum(l.requerimiento)} *</span>`;
+            // Verificado → solo lectura
+            return `<span class="req-val">${fmtNum(l.requerimiento)}</span>`;
         }
 
         function pintarAlmacen(b) {
@@ -612,6 +631,65 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             const s = document.getElementById('drawer-scrim');
             if (d) d.classList.toggle('open');
             if (s) s.classList.toggle('open');
+        }
+
+        async function editarReq(input) {
+            const clave   = input.dataset.clave;
+            const nuevo   = parseInt(input.value, 10) || 0;
+            const original= parseInt(input.dataset.original, 10) || 0;
+            if (nuevo === original) return;
+            if (nuevo < 0) { input.value = original; return; }
+
+            input.classList.add('guardando');
+            try {
+                const r = await fetch('editar_requerimiento.php', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        mes:      Number(selMes.value),
+                        anio:     Number(inputAnio.value),
+                        clave,
+                        cantidad: nuevo,
+                    }),
+                });
+                const j = await r.json();
+                if (j.status === 'success') {
+                    input.dataset.original = nuevo;
+                    input.classList.add('ok');
+                    setTimeout(() => input.classList.remove('ok'), 1500);
+                    // Recalcular subtotales sin recargar todo
+                    recalcSubtotales();
+                } else {
+                    alert(j.message || 'No se pudo guardar.');
+                    input.value = original;
+                    input.classList.add('err');
+                    setTimeout(() => input.classList.remove('err'), 2000);
+                }
+            } catch (e) {
+                alert('Error de conexión: ' + e.message);
+                input.value = original;
+            }
+            input.classList.remove('guardando');
+        }
+
+        function recalcSubtotales() {
+            let totalGen = 0;
+            contenedor.querySelectorAll('.almacen-card').forEach(card => {
+                let sub = 0;
+                card.querySelectorAll('.reporte-table tbody tr:not(.subtotal-row)').forEach(tr => {
+                    const inp = tr.querySelector('.req-input');
+                    const reqSpan = tr.querySelector('.req-val');
+                    if (inp) sub += parseInt(inp.value, 10) || 0;
+                    else if (reqSpan) {
+                        const txt = reqSpan.textContent.replace(/[^0-9]/g, '');
+                        sub += parseInt(txt, 10) || 0;
+                    }
+                });
+                const subTd = card.querySelector('.subtotal-row td:last-child');
+                if (subTd) subTd.textContent = fmtNum(sub);
+                totalGen += sub;
+            });
+            totalGeneralEl.textContent = fmtNum(totalGen);
         }
 
         cargar();

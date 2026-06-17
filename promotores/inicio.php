@@ -59,7 +59,9 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <md-icon>menu</md-icon>
             </md-icon-button>
             <div class="app-brand">
-                <span>Leche para el bienestar - Promotor</span>
+                <img src="/imagenes/Logos/Logo_lecheparaelbienestar.png" alt="Logo"
+                     style="height: 44px; vertical-align: middle; border-radius: 4px; margin-right: 12px;">
+                <span>Promotor</span>
             </div>
         </div>
 

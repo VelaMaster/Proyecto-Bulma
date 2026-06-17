@@ -123,7 +123,9 @@ try {
     );
     $finKey = $anio*12 + $mes;
     $iniKey = $finKey - 3;
-    $stmtInv->execute([':ini' => $iniKey, ':fin' => $finKey]);
+    $stmtInv->bindValue(':ini', $iniKey, PDO::PARAM_INT);
+    $stmtInv->bindValue(':fin', $finKey, PDO::PARAM_INT);
+    $stmtInv->execute();
     $inv = [];           // K => ['surt'=>[..], 'fin_base'=>?, 'tiene_mes_base'=>bool, 'fecha'=>?]
     foreach ($stmtInv->fetchAll() as $iv) {
         $k = trim((string)$iv['K']);
