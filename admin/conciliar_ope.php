@@ -103,36 +103,18 @@ if ($accion === 'preview' || $accion === 'aplicar') {
 $ultima = DatabaseSQLite::getConfig('last_conciliacion_ope') ?: 'nunca';
 ?>
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="dark" data-theme-accent="violeta">
 <head>
     <meta charset="UTF-8">
     <title>Conciliar OPE — Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
     <link rel="stylesheet" href="/main_md3.css">
+    <link rel="stylesheet" href="/estilos/admin_md3.css">
     <script type="module" src="https://esm.run/@material/web@1.0.0/all.js"></script>
-    <style>
-        body { background:#141218; color:#E6E1E5; font-family:'Roboto',sans-serif; padding: 24px; margin:0; }
-        .wrap { max-width: 920px; margin: 0 auto; }
-        h1 { font-size:1.6rem; font-weight:500; margin: 0 0 4px; }
-        .sub { opacity:.7; margin: 0 0 22px; font-size:.92rem; }
-        .card { background:#211f26; border-radius:18px; padding: 22px 22px 18px; margin-bottom: 18px; }
-        textarea { width:100%; min-height: 280px; background:#1c1b1f; color:#E6E1E5; border:1px solid #49454F; border-radius:12px; padding:12px; font-family:'Roboto Mono',monospace; font-size:.85rem; resize:vertical; }
-        .actions { display:flex; gap:10px; justify-content:flex-end; margin-top:14px; }
-        .msg { padding:12px 14px; border-radius:10px; margin-bottom:14px; }
-        .msg.ok  { background: rgba(76,175,80,.16); color:#a5d6a7; }
-        .msg.err { background: rgba(244,67,54,.16); color:#ef9a9a; }
-        table { width:100%; border-collapse:collapse; margin-top:8px; }
-        td, th { padding:8px 10px; border-bottom: 1px solid #322e38; text-align:left; }
-        th { opacity:.75; font-weight:500; font-size:.85rem; }
-        .num { font-variant-numeric: tabular-nums; text-align:right; font-weight:500; }
-        code { background:#0f0e12; padding: 2px 6px; border-radius:4px; }
-        .hint { opacity:.65; font-size:.85rem; margin: 6px 0 0; }
-        a.back { color:#cfbcff; text-decoration:none; font-size:.9rem; }
-    </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap" style="max-width:920px">
     <p><a class="back" href="/admin/index.php">‹ Volver al panel</a></p>
     <h1>Conciliar OPE de Distribución</h1>
     <p class="sub">Última conciliación: <code><?= htmlspecialchars($ultima) ?></code></p>

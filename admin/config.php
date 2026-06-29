@@ -23,30 +23,18 @@ foreach (['fb_host','fb_port','fb_user','fb_pass','fb_db_path','fb_charset'] as 
 }
 ?>
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="dark" data-theme-accent="violeta">
 <head>
 <meta charset="UTF-8">
 <title>Admin · Config Firebird</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
 <link rel="stylesheet" href="../main_md3.css">
+<link rel="stylesheet" href="../estilos/admin_md3.css">
 <style>
-  body { font-family: Roboto, sans-serif; background:#141218; color:#E6E1E5; margin:0; padding:24px; }
-  .wrap { max-width:720px; margin:0 auto; }
-  h1 { font-size:1.4rem; font-weight:500; margin:0 0 4px; }
-  .crumb { font-size:.85rem; opacity:.7; margin-bottom:24px; }
-  .crumb a { color:#D0BCFF; text-decoration:none; }
-  form { background:#1e1b22; padding:24px; border-radius:16px; border:1px solid #49454F; }
-  label { display:block; font-size:.78rem; opacity:.7; margin-bottom:6px; margin-top:14px; text-transform:uppercase; letter-spacing:.05em; }
-  input { width:100%; box-sizing:border-box; padding:10px 12px; border-radius:8px; border:1px solid #49454F; background:#141218; color:#E6E1E5; font-size:.95rem; font-family:inherit; }
-  input:focus { outline:none; border-color:#D0BCFF; }
-  .row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
-  .btn { display:inline-flex; align-items:center; gap:8px; padding:11px 22px; border-radius:24px; border:none; cursor:pointer; font-weight:500; font-size:.9rem; margin-top:18px; margin-right:8px; }
-  .btn-primary { background:#D0BCFF; color:#21005D; }
-  .btn-secondary { background:transparent; color:#D0BCFF; border:1px solid #D0BCFF; }
-  .alert { padding:12px 16px; border-radius:12px; margin-bottom:16px; font-size:.9rem; }
-  .alert-ok  { background:#1B4332; color:#86EFAC; }
-  .alert-err { background:#5C1A1A; color:#FCA5A5; }
+  /* Override local: el form completo actúa como card */
+  form.config-form { background: var(--md-sys-color-surface-container); padding: 24px; border-radius: 16px; border: 1px solid var(--md-sys-color-outline-variant); }
+  form.config-form .btn { margin-top: 18px; margin-right: 8px; padding: 11px 22px; font-size: .9rem; }
 </style>
 </head>
 <body>
@@ -62,7 +50,7 @@ foreach (['fb_host','fb_port','fb_user','fb_pass','fb_db_path','fb_charset'] as 
     </div>
   <?php endif; ?>
 
-  <form method="POST">
+  <form method="POST" class="config-form">
     <div class="row">
       <div><label>Host / IP</label><input name="fb_host" value="<?= htmlspecialchars($cfg['fb_host']) ?>"></div>
       <div><label>Puerto</label><input name="fb_port" value="<?= htmlspecialchars($cfg['fb_port']) ?>"></div>

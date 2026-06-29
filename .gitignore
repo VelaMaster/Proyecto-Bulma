@@ -7,3 +7,39 @@ database/*.fbk
 
 # graphify - knowledge graph generado localmente
 graphify-out/
+.graphifyignore
+
+# === Asistentes de IA (charlas, memoria, configs locales) ===
+# Claude / Claude Code / Cowork
+.claude/
+.claude.json
+CLAUDE.md
+AGENTS.md
+.anthropic/
+.cowork/
+.cursor-sessions/
+
+# OpenCode
+.opencode/
+
+# Gemini / Google AI
+.gemini/
+.geminiignore
+.gemini-*
+
+# Otros asistentes
+.cursor/
+.aider*
+.continue/
+.copilot/
+.windsurf/
+.codeium/
+.zed/
+.tabnine/
+
+# Transcripciones / notas generadas por IA
+chat-*.md
+chats/
+charlas/
+ai-notes/
+*.transcript.md
