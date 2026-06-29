@@ -4,16 +4,36 @@
 
 set -e
 
-# Crear directorios necesarios si no existen
-mkdir -p /var/www/html/datos/sesiones
-mkdir -p /var/www/html/datos/promotores/requerimientos
-mkdir -p /var/www/html/datos/promotores/reportes
-mkdir -p /var/www/html/datos/promotores/pdfs
+# Subdirs runtime que Apache necesita escribir.
+# IMPORTANTE: NO hacer `chown -R` sobre /var/www/html/datos porque es bind-mount
+# y los cambios se propagan al host → rompe `git pull` (EACCES sobre archivos
+# trackeados que quedaron como www-data 750). Solo tocamos los subdirs runtime.
+RUNTIME_DIRS="
+sesiones
+promotores/requerimientos
+promotores/reportes
+promotores/pdfs
+distribucion/minutas
+distribucion/req_precio
+distribucion/ope
+supervisor/inventarios_almacen
+supervisores/requerimientos_dotacion
+"
 
-# Dar permisos de escritura a www-data (uid 33 en Debian/Apache)
-chown -R www-data:www-data /var/www/html/datos
-chmod -R 750 /var/www/html/datos
-chmod -R 700 /var/www/html/datos/sesiones
+for d in $RUNTIME_DIRS; do
+    mkdir -p "/var/www/html/datos/$d"
+    chown www-data:www-data "/var/www/html/datos/$d" 2>/dev/null || true
+    # 2775 = setgid + rwx grupo → archivos nuevos heredan grupo www-data
+    chmod 2775 "/var/www/html/datos/$d" 2>/dev/null || true
+done
+
+# Sesiones: solo www-data (contienen IDs activos)
+chmod 700 /var/www/html/datos/sesiones 2>/dev/null || true
+
+# BDD SQLite escribible por Apache (sin tocar dueño si ya existe en host)
+if [ -f /var/www/html/datos/local.db ]; then
+    chmod 664 /var/www/html/datos/local.db 2>/dev/null || true
+fi
 
 # Bloquear acceso web al directorio de sesiones
 cat > /var/www/html/datos/sesiones/.htaccess << 'EOF'

@@ -18,6 +18,11 @@ datos/promotores/
 datos/distribucion/minutas/
 datos/distribucion/req_precio/
 datos/distribucion/ope/
+datos/supervisor/inventarios_almacen/
+datos/supervisores/requerimientos_dotacion/
+# Basura de FUSE (mounts SSHFS/SMBFS dejan estos al unlink-ear archivos abiertos)
+.fuse_hidden*
+datos/**/.fuse_hidden*
 
 # graphify - knowledge graph generado localmente
 graphify-out/
