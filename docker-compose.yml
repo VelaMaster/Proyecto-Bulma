@@ -2,6 +2,7 @@ services:
   web:
     platform: linux/amd64
     build: .
+    restart: always
     ports:
       - "8080:80"
     volumes:
