@@ -162,7 +162,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                 <p class="action-card-desc">Generar</p>
             </a>
             <a href="consultarinventarioMensual.php" class="md3-action-card">
-                <div class="action-card-icon">
+                <div class="action-card-icon" style="background-color:var(--md-sys-color-tertiary-container);color:var(--md-sys-color-on-tertiary-container);">
                     <md-icon>search</md-icon>
                 </div>
                 <h4 class="action-card-title">Inventario Mensual</h4>

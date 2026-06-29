@@ -6,33 +6,14 @@ $pdo = DatabaseSQLite::getInstance();
 $usuarios = $pdo->query("SELECT USUARIO, NOMBRE, ROL, CLAVE_ROL, ACTIVO FROM usuarios_inventarios ORDER BY ROL, USUARIO")->fetchAll();
 ?>
 <!DOCTYPE html>
-<html lang="es" data-theme="dark">
+<html lang="es" data-theme="dark" data-theme-accent="violeta">
 <head>
 <meta charset="UTF-8">
 <title>Admin · Usuarios</title>
 <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
 <link rel="stylesheet" href="../main_md3.css">
-<style>
-  body { font-family:Roboto,sans-serif; background:#141218; color:#E6E1E5; margin:0; padding:24px; }
-  .wrap { max-width:1000px; margin:0 auto; }
-  .crumb { font-size:.85rem; opacity:.7; margin-bottom:16px; } .crumb a { color:#D0BCFF; text-decoration:none; }
-  h1 { font-size:1.4rem; font-weight:500; margin:0 0 12px; }
-  .panel { background:#1e1b22; padding:20px; border-radius:16px; border:1px solid #49454F; margin-bottom:20px; }
-  table { width:100%; border-collapse:collapse; }
-  th, td { padding:10px; text-align:left; border-bottom:1px solid #49454F; font-size:.88rem; }
-  th { font-weight:500; opacity:.7; font-size:.75rem; text-transform:uppercase; }
-  input, select { padding:8px 10px; border-radius:8px; border:1px solid #49454F; background:#141218; color:#E6E1E5; font-family:inherit; font-size:.88rem; }
-  .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:18px; border:none; cursor:pointer; font-weight:500; font-size:.82rem; font-family:inherit; }
-  .btn-primary { background:#D0BCFF; color:#21005D; }
-  .btn-danger { background:#5C1A1A; color:#FCA5A5; }
-  .pill-rol { display:inline-block; padding:2px 10px; border-radius:10px; font-size:.7rem; font-weight:600; background:#4F378A; color:#EADDFF; }
-  .row-form { display:grid; grid-template-columns: 1fr 1fr 1fr 120px 120px auto; gap:8px; align-items:end; }
-  .row-form label { font-size:.72rem; opacity:.7; display:block; margin-bottom:4px; }
-  .toast { position:fixed; bottom:20px; right:20px; padding:12px 18px; border-radius:12px; font-size:.88rem; }
-  .toast-ok  { background:#1B4332; color:#86EFAC; }
-  .toast-err { background:#5C1A1A; color:#FCA5A5; }
-</style>
+<link rel="stylesheet" href="../estilos/admin_md3.css">
 </head>
 <body>
 <div class="wrap">
