@@ -6,23 +6,12 @@ database/*.fdb
 database/*.fbk
 
 # === Datos de runtime (NO subir; cada server tiene los suyos) ===
-# BDD local SQLite — sobrescribirla destruye producción
-datos/local.db
-datos/local.db-journal
-datos/local.db-wal
-datos/local.db-shm
-# Sesiones de PHP
-datos/sesiones/
-# PDFs y archivos generados por los módulos
-datos/promotores/
-datos/distribucion/minutas/
-datos/distribucion/req_precio/
-datos/distribucion/ope/
-datos/supervisor/inventarios_almacen/
-datos/supervisores/requerimientos_dotacion/
+# La carpeta entera datos/ es runtime: BDD SQLite viva, sesiones PHP, PDFs
+# generados por los módulos, basura de FUSE, etc. Cada server (host, VM,
+# producción) tiene los suyos. Nunca debe versionarse.
+/datos/
 # Basura de FUSE (mounts SSHFS/SMBFS dejan estos al unlink-ear archivos abiertos)
 .fuse_hidden*
-datos/**/.fuse_hidden*
 
 # graphify - knowledge graph generado localmente
 graphify-out/
