@@ -2,10 +2,8 @@
 require_once __DIR__ . '/guard.php';
 require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 require_once __DIR__ . '/../src/Servicio/SincronizadorFirebird.php';
-
 $mensaje = null;
 $probar  = null;
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach (['fb_host','fb_port','fb_user','fb_pass','fb_db_path','fb_charset'] as $k) {
         if (isset($_POST[$k])) DatabaseSQLite::setConfig($k, trim($_POST[$k]));

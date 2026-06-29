@@ -70,7 +70,7 @@ $totales = $pdo->query("SELECT tipo, COUNT(*) c FROM errores_log GROUP BY tipo")
       </tr></thead>
       <tbody>
       <?php if (!$errores): ?>
-        <tr><td colspan="6" style="text-align:center;padding:36px;opacity:.6">Sin errores registrados. ✨</td></tr>
+        <tr><td colspan="6" style="text-align:center;padding:36px;opacity:.6">Sin errores registrados.</td></tr>
       <?php else: foreach ($errores as $e): ?>
         <tr>
           <td style="font-size:.76rem;opacity:.7;white-space:nowrap"><?= htmlspecialchars($e['fecha']) ?></td>

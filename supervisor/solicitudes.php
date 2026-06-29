@@ -210,7 +210,7 @@ if (!isset($_SESSION['usuario']) || $_SESSION['rol'] !== 'supervisor') {
                         <div class="sol-meta">
                             <span>${pillTipo}</span>
                             <span>${pillEstado}</span>
-                            <span>📅 ${mesLabel}</span>
+                            <span> ${mesLabel}</span>
                             <span>Lechería: ${s.clave_lecheria}</span>
                         </div>
                     </div>
