@@ -5,6 +5,20 @@
 database/*.fdb
 database/*.fbk
 
+# === Datos de runtime (NO subir; cada server tiene los suyos) ===
+# BDD local SQLite — sobrescribirla destruye producción
+datos/local.db
+datos/local.db-journal
+datos/local.db-wal
+datos/local.db-shm
+# Sesiones de PHP
+datos/sesiones/
+# PDFs y archivos generados por los módulos
+datos/promotores/
+datos/distribucion/minutas/
+datos/distribucion/req_precio/
+datos/distribucion/ope/
+
 # graphify - knowledge graph generado localmente
 graphify-out/
 .graphifyignore

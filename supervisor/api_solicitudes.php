@@ -68,15 +68,20 @@ if ($method === 'POST') {
             SET estado = ?, nota_supervisor = ?, fecha_resolucion = datetime('now','localtime')
             WHERE id = ?")->execute([$estado, $nota, $id]);
 
-        // Si se resuelve → desbloquear el registro para permitir edición del supervisor
+        // Si se resuelve → desbloquear el registro correspondiente para que pueda editarse.
+        // Soporta los tres tipos de captura del promotor.
         if ($accion === 'resolver') {
             if ($sol['tipo'] === 'reporte') {
                 $db->prepare("UPDATE reporte_mensual_lecher SET bloqueado = 0
                     WHERE clave_lecheria = ? AND mes = ? AND anio = ?")
                    ->execute([$sol['clave_lecheria'], $sol['mes'], $sol['anio']]);
-            } else {
+            } elseif ($sol['tipo'] === 'requerimiento') {
                 $db->prepare("UPDATE requerimiento_dotacion SET bloqueado = 0
                     WHERE clave_lecheria = ? AND mes_base = ? AND anio_base = ?")
+                   ->execute([$sol['clave_lecheria'], $sol['mes'], $sol['anio']]);
+            } elseif ($sol['tipo'] === 'inventario') {
+                $db->prepare("UPDATE inventarios_mensuales SET bloqueado = 0
+                    WHERE CLAVE_LECHERIA = ? AND MES_PERIODO = ? AND ANIO_PERIODO = ?")
                    ->execute([$sol['clave_lecheria'], $sol['mes'], $sol['anio']]);
             }
         }

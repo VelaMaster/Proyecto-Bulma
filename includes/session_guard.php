@@ -21,6 +21,11 @@
 $_BULMA_ROOT = dirname(__DIR__);
 
 require_once $_BULMA_ROOT . '/src/Servicio/RecuerdameServicio.php';
+require_once $_BULMA_ROOT . '/src/Servicio/LoggerErrores.php';
+
+// Engancha set_error_handler / set_exception_handler para que TODOS los errores
+// PHP del proyecto queden registrados en errores_log y sean visibles en /admin/errores.
+LoggerErrores::instalar();
 
 /* ── 1. Configurar lifetime de sesión ────────────────────────────── */
 $sessionLifetime = 8 * 3600; // 8 horas por defecto

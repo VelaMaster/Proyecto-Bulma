@@ -90,27 +90,40 @@ try {
     }
 
     // ── 2) Consultar datos consolidados ─────────────────────────────────────
+    // Fuente primaria: reporte_mensual_lecher (R).
+    // Fallback (HALLAZGO #6): si el promotor capturó inventario pero NO envió el
+    // reporte formal, se usan los datos crudos de inventarios_mensuales (IM) para
+    // que el OPE no salga vacío. Se marca como 'fallback_inv' en la fila.
     $sql = "
         SELECT
-            L.LECHER                          AS lecher,
-            TRIM(L.ALMACEN_RURAL)             AS almacen,
-            L.TIPO_PUNTO_VENTA                AS tipo,
-            COALESCE(R.inv_ini_cajas,0)       AS inv_ini_cajas,
-            COALESCE(R.inv_ini_sobres,0)      AS inv_ini_sobres,
-            COALESCE(R.dot_recib_cajas,0)     AS dot_recib_cajas,
-            COALESCE(R.vend_cajas,0)          AS vend_cajas,
-            COALESCE(R.vend_sobres,0)         AS vend_sobres,
-            COALESCE(R.inv_fin_cajas,0)       AS inv_fin_cajas,
-            COALESCE(R.inv_fin_sobres,0)      AS inv_fin_sobres,
-            COALESCE(R.retiro_cajas,0)        AS retiro_cajas,
-            COALESCE(R.sobres_rotos,0)        AS sobres_rotos,
-            COALESCE(R.sobres_falt,0)         AS sobres_falt,
-            R.observaciones                   AS observaciones,
-            U.NOMBRE                          AS sup_nombre
+            L.LECHER                                                                 AS lecher,
+            TRIM(COALESCE(R.almacen, L.ALMACEN_RURAL))                               AS almacen,
+            L.TIPO_PUNTO_VENTA                                                       AS tipo,
+            COALESCE(R.inv_ini_cajas,   IM.INV_INI_CAJA,   0)                        AS inv_ini_cajas,
+            COALESCE(R.inv_ini_sobres,  IM.INV_INI_SOBRES, 0)                        AS inv_ini_sobres,
+            COALESCE(R.dot_recib_cajas, IM.ABASTO_CAJA,    0)                        AS dot_recib_cajas,
+            COALESCE(R.vend_cajas,      IM.VENTA_CAJA,     0)                        AS vend_cajas,
+            COALESCE(R.vend_sobres,     IM.VENTA_SOBRES,   0)                        AS vend_sobres,
+            COALESCE(R.inv_fin_cajas,   IM.FIN_CAJA,       0)                        AS inv_fin_cajas,
+            COALESCE(R.inv_fin_sobres,  IM.FIN_SOBRES,     0)                        AS inv_fin_sobres,
+            COALESCE(R.retiro_cajas,    IM.REG_CAJA,       0)                        AS retiro_cajas,
+            COALESCE(R.sobres_rotos,    0)                                           AS sobres_rotos,
+            COALESCE(R.sobres_falt,     0)                                           AS sobres_falt,
+            R.observaciones                                                          AS observaciones,
+            U.NOMBRE                                                                 AS sup_nombre,
+            CASE
+                WHEN R.clave_lecheria IS NOT NULL THEN 'reporte'
+                WHEN IM.ID            IS NOT NULL THEN 'inventario'
+                ELSE 'sin_datos'
+            END                                                                      AS fuente_datos
         FROM lecheria L
         LEFT JOIN reporte_mensual_lecher R
                ON CAST(R.clave_lecheria AS INTEGER) = L.LECHER
               AND R.mes = :mes AND R.anio = :anio
+        LEFT JOIN inventarios_mensuales IM
+               ON CAST(IM.CLAVE_LECHERIA AS INTEGER) = L.LECHER
+              AND IM.MES_PERIODO  = :mes
+              AND IM.ANIO_PERIODO = :anio
         LEFT JOIN mapeo_supervisor_lecheria M ON M.LECHER = L.LECHER
         LEFT JOIN usuarios_inventarios U
                ON U.CLAVE_ROL = M.ID_SUPERVISOR

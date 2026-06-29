@@ -175,6 +175,9 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             </div>
         </div>
         <div class="app-bar-end">
+            <md-text-button href="../cambiar_contrasena.php" style="margin-left:8px;">
+                <md-icon slot="icon">key</md-icon> Contraseña
+            </md-text-button>
             <md-filled-tonal-button href="../cerrar_sesion.php" style="margin-left:16px;">
                 <md-icon slot="icon">logout</md-icon> Salir
             </md-filled-tonal-button>
@@ -356,6 +359,32 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
             <span style="opacity:.75;" id="totalLechVal">(0 lecherías)</span>
         </div>
     </main>
+
+    <!-- Diálogo MD3 reutilizable (sustituye confirm/alert nativos) -->
+    <md-dialog id="md3Modal">
+      <div slot="headline" id="md3ModalTitle">Mensaje</div>
+      <form slot="content" id="md3ModalForm" method="dialog">
+        <p id="md3ModalBody" style="margin:0; line-height:1.5;"></p>
+      </form>
+      <div slot="actions">
+        <md-text-button form="md3ModalForm" value="cancel" id="md3ModalCancel">Cancelar</md-text-button>
+        <md-filled-button form="md3ModalForm" value="ok" id="md3ModalOk">Aceptar</md-filled-button>
+      </div>
+    </md-dialog>
+
+    <script>
+    window.md3Alert = (title, body, okText='Aceptar') => new Promise(res => {
+        const d  = document.getElementById('md3Modal');
+        const ok = document.getElementById('md3ModalOk');
+        const cn = document.getElementById('md3ModalCancel');
+        document.getElementById('md3ModalTitle').textContent = title;
+        document.getElementById('md3ModalBody').textContent  = body;
+        ok.textContent = okText; cn.style.display = 'none';
+        const handler = () => { d.removeEventListener('close', handler); cn.style.display=''; res(); };
+        d.addEventListener('close', handler);
+        d.show();
+    });
+    </script>
 
     <script src="../js/temas_md3.js"></script>
     <script>
@@ -711,7 +740,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         async function descargarOpe(precioFiltro, force = false) {
             const mes  = selMes.value;
             const anio = inputAnio.value;
-            if (!mes || !anio) { alert('Selecciona mes y año.'); return; }
+            if (!mes || !anio) { await md3Alert('Datos faltantes', 'Selecciona mes y año.'); return; }
             opeUltimoPrecio = precioFiltro;
 
             const params = new URLSearchParams({ mes, anio, precio: precioFiltro });
@@ -733,7 +762,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                             return;
                         }
                         if (d.status === 'error') {
-                            alert('Error: ' + (d.message || 'no se pudo generar el OPE'));
+                            await md3Alert('Error', d.message || 'No se pudo generar el OPE');
                             return;
                         }
                         // status ok pero JSON inesperado → no debería ocurrir
@@ -745,7 +774,7 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
                         return;
                     }
                 } catch (e) {
-                    alert('Error de red: ' + e.message);
+                    await md3Alert('Error de red', e.message);
                     return;
                 }
             }
@@ -775,10 +804,10 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         document.getElementById('btnOpeForce').addEventListener('click', () => descargarOpe(opeUltimoPrecio, true));
 
         // Requerimiento por precio (xlsx — POR ALMACEN + TOTAL)
-        function descargarReq(precio) {
+        async function descargarReq(precio) {
             const m = parseInt(selMes.value || '0', 10);
             const a = parseInt(inputAnio.value || '0', 10);
-            if (!m || !a) { alert('Selecciona mes y año.'); return; }
+            if (!m || !a) { await md3Alert('Datos faltantes', 'Selecciona mes y año.'); return; }
             const url = `descargar_req_precio.php?mes=${m}&anio=${a}&precio=${precio}`;
             window.location.href = url;
         }
@@ -786,10 +815,10 @@ $nombre_usuario = $_SESSION['nombre'] ?? $_SESSION['usuario'];
         document.getElementById('btnReq450').addEventListener('click', () => descargarReq('4.50'));
 
         // Minuta mensual
-        document.getElementById('btnMinuta').addEventListener('click', () => {
+        document.getElementById('btnMinuta').addEventListener('click', async () => {
             const m = parseInt(selMes.value || '0', 10);
             const a = parseInt(inputAnio.value || '0', 10);
-            if (!m || !a) { alert('Selecciona mes y año.'); return; }
+            if (!m || !a) { await md3Alert('Datos faltantes', 'Selecciona mes y año.'); return; }
             window.location.href = `descargar_minuta.php?mes=${m}&anio=${a}`;
         });
 

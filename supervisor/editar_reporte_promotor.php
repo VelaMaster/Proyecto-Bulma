@@ -39,9 +39,10 @@ $nombrePromotor = $nombrePromotor !== '' ? $nombrePromotor : ('Promotor #' . $pr
 
 $nombreSupervisor = $_SESSION['nombre'] ?? $_SESSION['usuario'];
 
-// Estado aprobado actual (busca ambas variantes de usuario_captura)
+// Estado aprobado actual (busca ambas variantes de usuario_captura).
+// ROL en Firebird real es '0'=promotor; aceptamos texto por compatibilidad.
 $stmt = $pdo->prepare("SELECT USUARIO FROM usuarios_inventarios
-                       WHERE CLAVE_ROL = :id AND ROL = 'promotor' LIMIT 1");
+                       WHERE CLAVE_ROL = :id AND ROL IN ('0','promotor') LIMIT 1");
 $stmt->execute([':id' => $promotorId]);
 $usuarioReal = $stmt->fetchColumn() ?: null;
 $keys = array_values(array_filter(array_unique([$usuarioReal, 'promotor_' . $promotorId])));

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../Database/DatabaseSQLite.php';
 require_once __DIR__ . '/LoggerErrores.php';
+require_once __DIR__ . '/PasswordServicio.php';
 
 /**
  * SincronizadorFirebird
@@ -16,6 +17,12 @@ class SincronizadorFirebird
 {
     /** Mapa lógico tabla → callback que la sincroniza. */
     private array $mapa;
+
+    /** Entorno resuelto en la última conexión: 'liconsa' | 'docker' | null. */
+    private static ?string $envCodigo = null;
+    private static string  $envNombre = 'Desconocido';
+    private static string  $envHost   = '';
+    private static string  $envDbPath = '';
 
     public function __construct()
     {
@@ -85,23 +92,87 @@ class SincronizadorFirebird
     }
 
     /* ────────────────────────────────────────────────────────────── */
-    /*  Conexión a Firebird (lee config desde SQLite)                 */
+    /*  Conexión a Firebird — Liconsa real primero, Docker fallback   */
     /* ────────────────────────────────────────────────────────────── */
+    /**
+     * Igual que Database::getInstance(): intenta primero el servidor real
+     * de Liconsa (172.24.10.251 / DB_SIDIST.FDB / pass 290990). Si no
+     * responde en 0.3 s, cae al Firebird del contenedor Docker
+     * (host 'db' / DB_SIDISTLOCAL.FDB / masterkey).
+     *
+     * El admin puede sobreescribir el host remoto desde /admin/config.php
+     * guardando 'fb_host', 'fb_port', etc. en admin_config; si no hay
+     * configuración, se usan los defaults institucionales.
+     */
     private function conectarFirebird(): PDO
     {
-        $host    = DatabaseSQLite::getConfig('fb_host', '172.24.10.251');
-        $port    = DatabaseSQLite::getConfig('fb_port', '3050');
-        $user    = DatabaseSQLite::getConfig('fb_user', 'SYSDBA');
-        $pass    = DatabaseSQLite::getConfig('fb_pass', 'masterkey');
-        $dbPath  = DatabaseSQLite::getConfig('fb_db_path', '/firebird/data/DB_SIDISTLOCAL.FDB');
-        $charset = DatabaseSQLite::getConfig('fb_charset', 'NONE');
+        $hostRemoto = DatabaseSQLite::getConfig('fb_host_remoto', '172.24.10.251');
+        $portRemoto = DatabaseSQLite::getConfig('fb_port',        '3050');
+        $hostLocal  = DatabaseSQLite::getConfig('fb_host_local',  'db');
+        $charset    = DatabaseSQLite::getConfig('fb_charset',     'NONE');
 
-        $dsn = "firebird:dbname=$host/$port:$dbPath;charset=$charset";
-        $pdo = new PDO($dsn, $user, $pass, [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        ]);
-        return $pdo;
+        // Cache de 5 min para no pagar fsockopen en cada sync — mismo patrón
+        // que Database.php para mantener el comportamiento idéntico.
+        $cacheFile = sys_get_temp_dir() . '/liconsa_dbhost.cache';
+        $useRemote = false;
+        if (file_exists($cacheFile) && (time() - filemtime($cacheFile)) < 300) {
+            $useRemote = (trim((string)@file_get_contents($cacheFile)) === '1');
+        } else {
+            $sock = @fsockopen($hostRemoto, (int)$portRemoto, $errno, $errstr, 0.3);
+            $useRemote = (bool)$sock;
+            if ($sock) fclose($sock);
+            @file_put_contents($cacheFile, $useRemote ? '1' : '0');
+        }
+
+        if ($useRemote) {
+            $host    = $hostRemoto;
+            $dbPath  = DatabaseSQLite::getConfig('fb_db_path_remoto', 'C:/SisDLL20/BD/DB_SIDIST.FDB');
+            $user    = DatabaseSQLite::getConfig('fb_user_remoto',   'SYSDBA');
+            $pass    = DatabaseSQLite::getConfig('fb_pass_remoto',   '290990');
+            self::$envCodigo = 'liconsa';
+            self::$envNombre = 'SERVIDOR REAL (LICONSA)';
+        } else {
+            $host    = $hostLocal;
+            $dbPath  = DatabaseSQLite::getConfig('fb_db_path_local', '/firebird/data/DB_SIDISTLOCAL.FDB');
+            $user    = DatabaseSQLite::getConfig('fb_user_local',   'SYSDBA');
+            $pass    = DatabaseSQLite::getConfig('fb_pass_local',   'masterkey');
+            self::$envCodigo = 'docker';
+            self::$envNombre = 'DOCKER LOCAL (PRUEBAS)';
+        }
+        self::$envHost   = $host;
+        self::$envDbPath = $dbPath;
+
+        try {
+            $dsn = "firebird:dbname=$host/$portRemoto:$dbPath;charset=$charset";
+            return new PDO($dsn, $user, $pass, [
+                PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            ]);
+        } catch (PDOException $e) {
+            // Si falla el remoto cacheado, limpia cache y reintenta con local.
+            if ($useRemote) {
+                @unlink($cacheFile);
+                self::$envCodigo = null;
+                self::$envNombre = 'Desconocido';
+                return $this->conectarFirebird();
+            }
+            throw $e;
+        }
+    }
+
+    /** Devuelve metadatos del entorno Firebird al que se conectó por última vez. */
+    public function entornoActual(): array
+    {
+        if (self::$envCodigo === null) {
+            // Forzar una resolución silenciosa probando socket sin abrir PDO.
+            $this->probarConexion();
+        }
+        return [
+            'codigo' => self::$envCodigo ?? 'desconocido',
+            'nombre' => self::$envNombre,
+            'host'   => self::$envHost,
+            'bdd'    => self::$envDbPath,
+        ];
     }
 
     /* ────────────────────────────────────────────────────────────── */
@@ -110,10 +181,59 @@ class SincronizadorFirebird
     private function _syncUsuarios(PDO $fb, PDO $sqlite): int
     {
         // Firebird real no tiene columna ACTIVO. En SQLite la columna existe con DEFAULT 1.
+        // UPSERT (NO truncar):
+        //   • Usuarios locales (sin equivalente en Firebird) se preservan.
+        //   • Si el usuario ya existe en SQLite y CONTRASENA local YA es hash → NO se sobrescribe
+        //     (evita perder la migración a password_hash; RNF-08).
+        //   • Si el usuario es nuevo o la local sigue en texto plano → se hashea la de Firebird al insertar.
         $rows = $fb->query("SELECT USUARIO, CONTRASENA, NOMBRE, ROL, CLAVE_ROL FROM USUARIOS_INVENTARIOS")
                    ->fetchAll();
-        return $this->_reemplazarTabla($sqlite, 'usuarios_inventarios',
-            ['USUARIO','CONTRASENA','NOMBRE','ROL','CLAVE_ROL'], $rows);
+
+        $sqlite->beginTransaction();
+        try {
+            $sel = $sqlite->prepare("SELECT CONTRASENA FROM usuarios_inventarios WHERE USUARIO = :u");
+            $ins = $sqlite->prepare(
+                "INSERT INTO usuarios_inventarios (USUARIO, CONTRASENA, NOMBRE, ROL, CLAVE_ROL)
+                 VALUES (:u, :c, :n, :r, :k)
+                 ON CONFLICT(USUARIO) DO UPDATE SET
+                    CONTRASENA = CASE
+                                    WHEN length(usuarios_inventarios.CONTRASENA) >= 50
+                                         AND usuarios_inventarios.CONTRASENA LIKE '$%'
+                                    THEN usuarios_inventarios.CONTRASENA
+                                    ELSE excluded.CONTRASENA
+                                 END,
+                    NOMBRE     = excluded.NOMBRE,
+                    ROL        = excluded.ROL,
+                    CLAVE_ROL  = excluded.CLAVE_ROL"
+            );
+
+            $n = 0;
+            foreach ($rows as $r) {
+                $usuario = trim((string)($r['USUARIO']    ?? ''));
+                $passFb  = trim((string)($r['CONTRASENA'] ?? ''));
+                $nombre  = trim((string)($r['NOMBRE']     ?? ''));
+                $rol     = trim((string)($r['ROL']        ?? ''));
+                $clave   = $r['CLAVE_ROL'] ?? null;
+                if ($usuario === '') continue;
+
+                // Hashea la contraseña de Firebird (sólo se usará si la local no era hash).
+                $passParaInsertar = $passFb !== '' ? PasswordServicio::hashear($passFb) : '';
+
+                $ins->execute([
+                    ':u' => $usuario,
+                    ':c' => $passParaInsertar,
+                    ':n' => $nombre,
+                    ':r' => $rol,
+                    ':k' => $clave,
+                ]);
+                $n++;
+            }
+            $sqlite->commit();
+            return $n;
+        } catch (\Throwable $e) {
+            $sqlite->rollBack();
+            throw $e;
+        }
     }
 
     private function _syncMunicipio(PDO $fb, PDO $sqlite): int

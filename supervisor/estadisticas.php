@@ -68,7 +68,7 @@ $st = $pdo->prepare("
       AND usuario_captura IN (
             SELECT 'promotor_' || P.PMT_NUMERO FROM promotor P
             UNION
-            SELECT U.USUARIO FROM usuarios_inventarios U WHERE U.ROL='promotor'
+            SELECT U.USUARIO FROM usuarios_inventarios U WHERE U.ROL IN ('0','promotor')
           )
 ");
 $st->execute([$mes, $anio]);

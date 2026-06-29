@@ -34,14 +34,28 @@ try {
     $db = DatabaseSQLite::getInstance();
     $id = (int)$datos['inventario_id'];
 
-    // Guardamos el PDF_RUTA anterior para detectar si cambió de mes y borrar el viejo en disco.
-    $rutaPrev = '';
+    // Guardamos el PDF_RUTA anterior y el flag de bloqueo (RF-14).
+    $rutaPrev  = '';
+    $bloqPrev  = 0;
     try {
-        $stmtPrev = $db->prepare("SELECT PDF_RUTA FROM inventarios_mensuales WHERE ID = ?");
+        $stmtPrev = $db->prepare("SELECT PDF_RUTA, COALESCE(bloqueado,0) AS bloqueado
+                                    FROM inventarios_mensuales WHERE ID = ?");
         $stmtPrev->execute([$id]);
-        $rowPrev = $stmtPrev->fetch(PDO::FETCH_ASSOC);
+        $rowPrev  = $stmtPrev->fetch(PDO::FETCH_ASSOC);
         $rutaPrev = trim($rowPrev['PDF_RUTA'] ?? '');
+        $bloqPrev = (int)($rowPrev['bloqueado'] ?? 0);
     } catch (Throwable $e) { /* no crítico */ }
+
+    // RF-14: si el inventario ya fue ENVIADO (bloqueado=1), no permitir edición.
+    // El promotor debe pedir cambio al supervisor para desbloquear.
+    if ($bloqPrev === 1) {
+        http_response_code(409);
+        echo json_encode([
+            'status'  => 'bloqueado',
+            'mensaje' => 'Este inventario ya fue enviado y está bloqueado. Solicita un cambio a tu supervisor para editarlo.'
+        ]);
+        exit();
+    }
 
     $sql = "UPDATE inventarios_mensuales SET
         FECHA          = :fecha,

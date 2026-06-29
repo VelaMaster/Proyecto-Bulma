@@ -41,9 +41,11 @@ try {
         exit();
     }
 
-    // Resolver posibles llaves
+    // Resolver posibles llaves.
+    // ROL en Firebird real es numérico: '0'=promotor, '1'=supervisor, '2'=distribución.
+    // Aceptamos también la variante textual por compatibilidad legacy.
     $st = $db->prepare("SELECT USUARIO FROM usuarios_inventarios
-                        WHERE CLAVE_ROL = :id AND ROL = 'promotor' LIMIT 1");
+                        WHERE CLAVE_ROL = :id AND ROL IN ('0','promotor') LIMIT 1");
     $st->execute([':id' => $promotor]);
     $usuarioReal = $st->fetchColumn() ?: null;
     $keys = array_values(array_filter(array_unique([$usuarioReal, 'promotor_' . $promotor])));

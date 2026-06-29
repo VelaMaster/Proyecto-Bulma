@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/guard.php';
 require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
+require_once __DIR__ . '/../src/Servicio/PasswordServicio.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -19,13 +20,29 @@ try {
         if ($usuario === '' || $contrasena === '') {
             throw new RuntimeException('Usuario y contraseña son obligatorios');
         }
-        // Política temporal: la BDD original guarda la contraseña tal cual.
-        // Cuando migremos auth a SQLite, aquí cambiar por password_hash().
+        $hash = PasswordServicio::hashear($contrasena);
         $pdo->prepare(
             "INSERT INTO usuarios_inventarios (USUARIO, NOMBRE, CONTRASENA, ROL, CLAVE_ROL, ACTIVO)
              VALUES (?, ?, ?, ?, ?, 1)"
-        )->execute([$usuario, $nombre, $contrasena, $rol, $claveRol]);
+        )->execute([$usuario, $nombre, $hash, $rol, $claveRol]);
 
+        echo json_encode(['ok' => true]);
+        exit;
+    }
+
+    if ($accion === 'reset_password') {
+        $usuario = trim($body['usuario'] ?? '');
+        $nueva   = (string)($body['nueva'] ?? '');
+        if ($usuario === '' || $nueva === '') {
+            throw new RuntimeException('Usuario y nueva contraseña son obligatorios');
+        }
+        if (strlen($nueva) < 4) {
+            throw new RuntimeException('La contraseña debe tener al menos 4 caracteres');
+        }
+        $hash = PasswordServicio::hashear($nueva);
+        $stmt = $pdo->prepare("UPDATE usuarios_inventarios SET CONTRASENA=? WHERE USUARIO=?");
+        $stmt->execute([$hash, $usuario]);
+        if ($stmt->rowCount() === 0) throw new RuntimeException('Usuario no encontrado');
         echo json_encode(['ok' => true]);
         exit;
     }

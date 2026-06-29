@@ -31,20 +31,39 @@ try {
     $metodo = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 
     if ($metodo === 'POST') {
-        // Contar lecherías del supervisor con INVENTARIO MENSUAL capturado ese mes.
-        // (reporte_mensual_lecher se llena tarde — usábamos esa tabla y daba 0.)
+        // HALLAZGO #6: Contamos por separado las lecherías con INVENTARIO y con
+        // REPORTE formal (que es lo que finalmente lee el OPE). Autorizamos por
+        // el total UNIÓN, pero devolvemos AMBOS números para que el supervisor
+        // vea si está cerrando con datos por fallback.
         $sqlCount = "
-            SELECT COUNT(DISTINCT IM.CLAVE_LECHERIA) AS n
-            FROM inventarios_mensuales IM
-            JOIN mapeo_supervisor_lecheria M
-              ON CAST(M.LECHER AS TEXT) = IM.CLAVE_LECHERIA
-            WHERE M.ID_SUPERVISOR = :sup
-              AND IM.MES_PERIODO  = :mes
-              AND IM.ANIO_PERIODO = :anio
+            WITH lech_sup AS (
+                SELECT DISTINCT CAST(M.LECHER AS TEXT) AS k
+                  FROM mapeo_supervisor_lecheria M
+                 WHERE M.ID_SUPERVISOR = :sup
+            )
+            SELECT
+                (SELECT COUNT(*) FROM lech_sup
+                  WHERE k IN (SELECT TRIM(CAST(CLAVE_LECHERIA AS TEXT))
+                                FROM inventarios_mensuales
+                               WHERE MES_PERIODO = :mes AND ANIO_PERIODO = :anio))   AS n_inv,
+                (SELECT COUNT(*) FROM lech_sup
+                  WHERE k IN (SELECT TRIM(CAST(clave_lecheria AS TEXT))
+                                FROM reporte_mensual_lecher
+                               WHERE mes = :mes AND anio = :anio))                    AS n_rep,
+                (SELECT COUNT(*) FROM lech_sup
+                  WHERE k IN (SELECT TRIM(CAST(CLAVE_LECHERIA AS TEXT))
+                                FROM inventarios_mensuales
+                               WHERE MES_PERIODO = :mes AND ANIO_PERIODO = :anio)
+                     OR k IN (SELECT TRIM(CAST(clave_lecheria AS TEXT))
+                                FROM reporte_mensual_lecher
+                               WHERE mes = :mes AND anio = :anio))                    AS n_union
         ";
         $st = $pdo->prepare($sqlCount);
         $st->execute([':sup' => $supClave, ':mes' => $mes, ':anio' => $anio]);
-        $n = (int)($st->fetchColumn() ?: 0);
+        $cnt   = $st->fetch(PDO::FETCH_ASSOC) ?: ['n_inv'=>0,'n_rep'=>0,'n_union'=>0];
+        $nInv  = (int)$cnt['n_inv'];
+        $nRep  = (int)$cnt['n_rep'];
+        $n     = (int)$cnt['n_union'];
 
         $sqlIns = "
             INSERT INTO cierre_mes_supervisor
@@ -61,9 +80,16 @@ try {
         ]);
 
         echo json_encode([
-            'status' => 'ok',
-            'autorizado' => true,
-            'total_lecherias' => $n,
+            'status'                => 'ok',
+            'autorizado'            => true,
+            'total_lecherias'       => $n,
+            'con_reporte_formal'    => $nRep,
+            'solo_inventario'       => max(0, $n - $nRep),
+            'con_inventario'        => $nInv,
+            'advertencia_fallback'  => ($nRep < $n)
+                ? "Hay $n - $nRep lecherías que sólo tienen inventario, sin reporte mensual formal. " .
+                  "El OPE las incluirá usando los datos del inventario como fallback."
+                : null,
             'fecha' => date('Y-m-d H:i:s'),
             'mes' => $mes, 'anio' => $anio
         ]);

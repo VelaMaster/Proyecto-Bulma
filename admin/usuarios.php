@@ -54,6 +54,9 @@ $usuarios = $pdo->query("SELECT USUARIO, NOMBRE, ROL, CLAVE_ROL, ACTIVO FROM usu
           <td><?= htmlspecialchars((string)($u['CLAVE_ROL'] ?? '')) ?></td>
           <td><?= $u['ACTIVO'] ? '✔' : '—' ?></td>
           <td style="text-align:right">
+            <button class="btn btn-secondary btn-reset" data-usuario="<?= htmlspecialchars($u['USUARIO']) ?>" style="margin-right:6px;">
+              <span class="material-symbols-outlined">password</span>Reset
+            </button>
             <button class="btn btn-danger btn-eliminar" data-usuario="<?= htmlspecialchars($u['USUARIO']) ?>">
               <span class="material-symbols-outlined">delete</span>Eliminar
             </button>
@@ -98,6 +101,21 @@ document.querySelectorAll('.btn-eliminar').forEach(b => {
             document.querySelector(`tr[data-usuario="${b.dataset.usuario}"]`)?.remove();
             toast('Eliminado');
         } else toast(r.mensaje || 'Error', false);
+    });
+});
+
+document.querySelectorAll('.btn-reset').forEach(b => {
+    b.addEventListener('click', async () => {
+        const u = b.dataset.usuario;
+        const nueva = prompt(`Nueva contraseña para "${u}" (mínimo 4 caracteres):`);
+        if (nueva === null) return;
+        if (nueva.length < 4) { toast('Mínimo 4 caracteres', false); return; }
+        const r = await fetch('api_usuarios.php', {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({ accion:'reset_password', usuario: u, nueva })
+        }).then(r => r.json());
+        if (r.ok) toast('Contraseña reseteada (hasheada)');
+        else toast(r.mensaje || 'Error', false);
     });
 });
 </script>

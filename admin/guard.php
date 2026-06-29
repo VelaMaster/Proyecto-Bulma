@@ -9,6 +9,10 @@
  */
 
 require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
+require_once __DIR__ . '/../src/Servicio/LoggerErrores.php';
+
+// Captura errores del panel admin en el visor (errores_log)
+LoggerErrores::instalar();
 
 function _admin_client_ip(): string {
     return $_SERVER['HTTP_X_FORWARDED_FOR']

@@ -39,7 +39,7 @@ try {
                (SELECT U.USUARIO
                   FROM usuarios_inventarios U
                  WHERE U.CLAVE_ROL = P.PMT_NUMERO
-                   AND U.ROL = 'promotor'
+                   AND U.ROL IN ('0','promotor')
                  LIMIT 1)                AS USUARIO
         FROM promotor P
         JOIN lecheria L ON L.PROMOTOR = P.PMT_NUMERO

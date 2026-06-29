@@ -21,7 +21,7 @@ if (!is_array($d)) {
     exit;
 }
 
-$tipo          = in_array($d['tipo'] ?? '', ['reporte', 'requerimiento'], true) ? $d['tipo'] : null;
+$tipo          = in_array($d['tipo'] ?? '', ['reporte', 'requerimiento', 'inventario'], true) ? $d['tipo'] : null;
 $clave_lecheria = trim($d['clave_lecheria'] ?? '');
 $mes           = (int)($d['mes']  ?? 0);
 $anio          = (int)($d['anio'] ?? 0);
@@ -38,7 +38,9 @@ require_once __DIR__ . '/../src/Database/DatabaseSQLite.php';
 try {
     $db = DatabaseSQLite::getInstance();
 
-    // Obtener supervisor de la lechería desde el espejo en SQLite
+    // Obtener supervisor de la lechería desde el espejo en SQLite.
+    // Si la lechería no está mapeada a ningún supervisor, la solicitud quedaría
+    // huérfana (ningún supervisor podría verla ni resolverla). Rechazamos con 422.
     $supervisor_clave = null;
     try {
         $stmtSup = $db->prepare("SELECT M.ID_SUPERVISOR
@@ -48,6 +50,16 @@ try {
         $supRow = $stmtSup->fetch(PDO::FETCH_ASSOC);
         if ($supRow) $supervisor_clave = (int)$supRow['ID_SUPERVISOR'];
     } catch (Throwable $ignored) {}
+
+    if ($supervisor_clave === null || $supervisor_clave <= 0) {
+        http_response_code(422);
+        echo json_encode([
+            'error'   => true,
+            'mensaje' => 'Esta lechería no tiene supervisor asignado en el sistema. ' .
+                         'Avísale al administrador para que mapee la lechería antes de solicitar cambios.'
+        ]);
+        exit;
+    }
 
     // Evitar duplicados pendientes
     $stmtDup = $db->prepare("SELECT id FROM solicitudes_cambio

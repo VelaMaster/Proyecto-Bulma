@@ -2,6 +2,7 @@
 // src/Repositorio/UsuarioRepositorio.php
 // MIGRADO a SQLite (Fase 3). Consultas reescritas para sintaxis SQLite.
 require_once __DIR__ . '/../Database/DatabaseSQLite.php';
+require_once __DIR__ . '/../Servicio/PasswordServicio.php';
 
 class UsuarioRepositorio
 {
@@ -19,7 +20,9 @@ class UsuarioRepositorio
     public function buscarPorCredenciales(string $usuario, string $pass, string $rol)
     {
         // ROL en usuarios_inventarios viene tal cual de Firebird: '0' promotor, '1' supervisor, '2' distribución
+        // Se filtra por usuario+rol y se verifica el password en PHP (acepta hash y legacy texto plano).
         $sql = "SELECT U.USUARIO,
+                       U.CONTRASENA,
                        U.ROL,
                        U.CLAVE_ROL,
                        COALESCE(P.PMT_NOMBRE, S.NOMBRE_SUPERVISOR, U.NOMBRE) AS NOMBRE_MOSTRAR
@@ -27,12 +30,32 @@ class UsuarioRepositorio
                 LEFT JOIN promotor   P ON U.CLAVE_ROL = P.PMT_NUMERO   AND U.ROL = '0'
                 LEFT JOIN supervisor S ON U.CLAVE_ROL = S.ID_SUPERVISOR AND U.ROL = '1'
                 WHERE U.USUARIO    = :usuario
-                  AND U.CONTRASENA = :pass
-                  AND U.ROL        = :rol";
+                  AND U.ROL        = :rol
+                  AND COALESCE(U.ACTIVO,1) = 1";
         try {
             $stmt = $this->db->prepare($sql);
-            $stmt->execute([':usuario' => $usuario, ':pass' => $pass, ':rol' => $rol]);
-            return $stmt->fetch();
+            $stmt->execute([':usuario' => $usuario, ':rol' => $rol]);
+            $row = $stmt->fetch();
+            if (!$row) return false;
+
+            if (!PasswordServicio::verificar($pass, $row['CONTRASENA'])) {
+                return false;
+            }
+
+            // Migración perezosa: si la contraseña estaba en texto plano o necesita rehash, la actualizamos.
+            if (PasswordServicio::necesitaRehash($row['CONTRASENA'])) {
+                try {
+                    $nuevo = PasswordServicio::hashear($pass);
+                    $upd = $this->db->prepare("UPDATE usuarios_inventarios SET CONTRASENA = :h WHERE USUARIO = :u");
+                    $upd->execute([':h' => $nuevo, ':u' => $row['USUARIO']]);
+                } catch (\Throwable $e) {
+                    // No bloquea el login si falla el rehash; solo se registra.
+                    error_log("Rehash falló para {$row['USUARIO']}: " . $e->getMessage());
+                }
+            }
+
+            unset($row['CONTRASENA']); // no propagar el hash al resto del sistema
+            return $row;
         } catch (PDOException $e) {
             error_log("Error en buscarPorCredenciales: " . $e->getMessage());
             return false;

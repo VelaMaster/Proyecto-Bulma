@@ -22,6 +22,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['accion'] ?? '') === 'regen
     header('Location: index.php?key=' . admin_token_actual());
     exit;
 }
+
+// Reactivar todas las lecherías (EN_OPERACION=0). Útil si una conciliación previa
+// las dejó casi todas fuera y los promotores/supervisores ya no las ven.
+$msgReactivar = null;
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['accion'] ?? '') === 'reactivar_lecherias') {
+    try {
+        $antes = (int)$pdo->query("SELECT COUNT(*) FROM lecheria WHERE COALESCE(EN_OPERACION,0)<>0")->fetchColumn();
+        $pdo->exec("UPDATE lecheria SET EN_OPERACION = 0");
+        DatabaseSQLite::setConfig('last_reactivacion_global', date('Y-m-d H:i:s'));
+        $msgReactivar = ['ok', "Reactivadas $antes lecherías. Promotores y supervisores ya las verán."];
+    } catch (\Throwable $e) {
+        $msgReactivar = ['err', 'No se pudo reactivar: ' . $e->getMessage()];
+    }
+}
+
+// Conteos de lecherías para el panel de mantenimiento
+$_totLech = (int)$pdo->query("SELECT COUNT(*) FROM lecheria")->fetchColumn();
+$_opLech  = (int)$pdo->query("SELECT COUNT(*) FROM lecheria WHERE COALESCE(EN_OPERACION,0)=0")->fetchColumn();
+$_alertaLech = ($_totLech > 0 && $_opLech < max(10, $_totLech * 0.10));
+
 $_token = admin_token_actual();
 ?>
 <!DOCTYPE html>
@@ -46,7 +66,7 @@ $_token = admin_token_actual();
     <a href="sync.php"><span class="material-symbols-outlined">sync</span>Sincronizar BDD</a>
     <a href="config.php"><span class="material-symbols-outlined">settings</span>Configurar Firebird</a>
     <a href="usuarios.php"><span class="material-symbols-outlined">group</span>Usuarios</a>
-    <a href="conciliar_ope.php"><span class="material-symbols-outlined">fact_check</span>Conciliar OPE</a>
+    <a href="poblar_usuarios.php"><span class="material-symbols-outlined">group_add</span>Poblar usuarios</a>
     <a href="errores.php"><span class="material-symbols-outlined">bug_report</span>Visor de errores</a>
   </nav>
 
@@ -64,6 +84,35 @@ $_token = admin_token_actual();
     <p style="font-size:.78rem;opacity:.85;margin:10px 0 0">
       Desde la LAN entras sin token. Desde fuera usa: <code>https://inventariosliconsaoaxaca.duckdns.org/admin/?key=…</code>
     </p>
+  </div>
+
+  <?php if ($msgReactivar): ?>
+    <div class="alert <?= $msgReactivar[0]==='ok' ? 'alert-ok' : 'alert-err' ?>" style="margin-bottom:16px;">
+      <?= htmlspecialchars($msgReactivar[1]) ?>
+    </div>
+  <?php endif; ?>
+
+  <!-- ── Panel de mantenimiento: estado de lecherías ───────────────── -->
+  <div class="stat-card <?= $_alertaLech ? '' : '' ?>" style="margin-bottom:24px;<?= $_alertaLech ? 'border:2px solid var(--md-sys-color-error);' : '' ?>">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <div style="flex:1;min-width:200px;">
+        <div class="label">Lecherías operando (EN_OPERACION=0)</div>
+        <div class="value <?= $_alertaLech ? 'err' : 'ok' ?>"><?= $_opLech ?> / <?= $_totLech ?></div>
+        <?php if ($_alertaLech): ?>
+          <p style="margin:8px 0 0;font-size:.85rem;opacity:.85;">
+            Quedan muy pocas operando. Si los promotores y supervisores no ven sus lecherías,
+            haz clic en <strong>Reactivar lecherías</strong> para poner todas en operación.
+          </p>
+        <?php endif; ?>
+      </div>
+      <form method="POST" onsubmit="return confirm('Esto pondrá EN_OPERACION=0 en TODAS las <?= $_totLech ?> lecherías. ¿Continuar?');">
+        <input type="hidden" name="accion" value="reactivar_lecherias">
+        <button class="btn <?= $_alertaLech ? 'btn-primary' : 'btn-secondary' ?>" type="submit">
+          <span class="material-symbols-outlined">restart_alt</span>
+          Reactivar lecherías
+        </button>
+      </form>
+    </div>
   </div>
 
   <h2 style="font-size:1.1rem;font-weight:500;margin:0 0 12px;opacity:.85">Estado de SQLite</h2>

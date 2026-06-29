@@ -72,13 +72,8 @@ try {
     $stmt->execute();
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Columnas de aprobación: defensivo
-    foreach (['aprobado INTEGER DEFAULT 0',
-              'supervisor_aprobador TEXT',
-              'fecha_aprobacion TEXT'] as $colDef) {
-        try { $pdo->exec("ALTER TABLE requerimiento_dotacion ADD COLUMN $colDef"); }
-        catch (Throwable $e) {}
-    }
+    // (Las columnas de aprobación se garantizan en DatabaseSQLite::inicializar()
+    //  via migraciones idempotentes. Ya no se necesita ALTER defensivo aquí.)
 
     // 2) Requerimientos capturados + estado de aprobación
     $stmtSQ = $pdo->prepare(

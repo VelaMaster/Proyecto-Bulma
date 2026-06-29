@@ -85,8 +85,9 @@ try {
     $stmt = $db->prepare($sql);
     $db->beginTransaction();
 
-    $totalLech = 0;
-    $errores   = [];
+    $totalLech       = 0;
+    $errores         = [];
+    $clavesGuardadas = []; // para bloquear solo lo recién enviado, no todo el mes
     foreach ($almacenes as $bloque) {
         foreach ($bloque['lecherias'] ?? [] as $l) {
             $clave = trim((string)($l['punto_venta'] ?? ''));
@@ -111,6 +112,7 @@ try {
                     ':usr'    => mb_substr($usuario, 0, 50),
                 ]);
                 $totalLech++;
+                $clavesGuardadas[] = $clave;
             } catch (Exception $eFila) {
                 $errores[] = ['lecheria' => $clave, 'error' => $eFila->getMessage()];
             }
@@ -118,10 +120,15 @@ try {
     }
     $db->commit();
 
-    // Bloquear tras el primer guardado
-    $db->exec("UPDATE requerimiento_dotacion SET bloqueado = 1
-               WHERE mes_base = $mesBase AND anio_base = $anioBase
-                 AND usuario_captura = " . $db->quote($usuario));
+    // Bloquear SOLO las lecherías recién enviadas (por (clave_lecheria, mes_base, anio_base))
+    if (!empty($clavesGuardadas)) {
+        $ph = implode(',', array_fill(0, count($clavesGuardadas), '?'));
+        $stmtBlk = $db->prepare(
+            "UPDATE requerimiento_dotacion SET bloqueado = 1
+              WHERE mes_base = ? AND anio_base = ? AND clave_lecheria IN ($ph)"
+        );
+        $stmtBlk->execute(array_merge([$mesBase, $anioBase], $clavesGuardadas));
+    }
 
 } catch (Throwable $e) {
     if (isset($db) && $db->inTransaction()) $db->rollBack();
@@ -153,12 +160,14 @@ try {
 while (ob_get_level() > $nivelOb) @ob_end_clean();
 
 // ── 4. Guardar pdf_nombre en SQLite (para que listar_docs_lecheria lo encuentre) ──
-if ($pdfNombre) {
+if ($pdfNombre && !empty($clavesGuardadas)) {
     try {
-        $db->exec("UPDATE requerimiento_dotacion
-                   SET pdf_nombre = " . $db->quote($pdfNombre) . "
-                   WHERE mes_base = $mesBase AND anio_base = $anioBase
-                     AND usuario_captura = " . $db->quote($usuario));
+        $ph = implode(',', array_fill(0, count($clavesGuardadas), '?'));
+        $stmtPdf = $db->prepare(
+            "UPDATE requerimiento_dotacion SET pdf_nombre = ?
+              WHERE mes_base = ? AND anio_base = ? AND clave_lecheria IN ($ph)"
+        );
+        $stmtPdf->execute(array_merge([$pdfNombre, $mesBase, $anioBase], $clavesGuardadas));
     } catch (Throwable $e) { /* no crítico */ }
 }
 

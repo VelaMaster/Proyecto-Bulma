@@ -38,55 +38,67 @@ class DatabaseSQLite
     {
         $pdo->exec("
             CREATE TABLE IF NOT EXISTS reporte_mensual_lecher (
-                clave_lecheria    TEXT    NOT NULL,
-                mes               INTEGER NOT NULL,
-                anio              INTEGER NOT NULL,
-                almacen           TEXT,
-                precio            TEXT,
-                inv_ini_cajas     INTEGER DEFAULT 0,
-                inv_ini_sobres    INTEGER DEFAULT 0,
-                dot_recib_cajas   INTEGER DEFAULT 0,
-                total_cajas       INTEGER DEFAULT 0,
-                total_sobres      INTEGER DEFAULT 0,
-                vend_cajas        INTEGER DEFAULT 0,
-                vend_sobres       INTEGER DEFAULT 0,
-                inv_fin_cajas     INTEGER DEFAULT 0,
-                inv_fin_sobres    INTEGER DEFAULT 0,
-                retiro_cajas      INTEGER DEFAULT 0,
-                retiro_sobres     INTEGER DEFAULT 0,
-                familias_no_acud  INTEGER DEFAULT 0,
-                sobres_rotos      INTEGER DEFAULT 0,
-                sobres_falt       INTEGER DEFAULT 0,
-                observaciones     TEXT,
-                periodo_inicio    TEXT,
-                periodo_fin       TEXT,
-                promotor          TEXT,
-                supervisor        TEXT,
-                usuario_captura   TEXT,
-                fecha_captura     TEXT DEFAULT (datetime('now','localtime')),
+                clave_lecheria       TEXT    NOT NULL,
+                mes                  INTEGER NOT NULL,
+                anio                 INTEGER NOT NULL,
+                almacen              TEXT,
+                precio               TEXT,
+                inv_ini_cajas        INTEGER DEFAULT 0,
+                inv_ini_sobres       INTEGER DEFAULT 0,
+                dot_recib_cajas      INTEGER DEFAULT 0,
+                total_cajas          INTEGER DEFAULT 0,
+                total_sobres         INTEGER DEFAULT 0,
+                vend_cajas           INTEGER DEFAULT 0,
+                vend_sobres          INTEGER DEFAULT 0,
+                inv_fin_cajas        INTEGER DEFAULT 0,
+                inv_fin_sobres       INTEGER DEFAULT 0,
+                retiro_cajas         INTEGER DEFAULT 0,
+                retiro_sobres        INTEGER DEFAULT 0,
+                familias_no_acud     INTEGER DEFAULT 0,
+                sobres_rotos         INTEGER DEFAULT 0,
+                sobres_falt          INTEGER DEFAULT 0,
+                observaciones        TEXT,
+                periodo_inicio       TEXT,
+                periodo_fin          TEXT,
+                promotor             TEXT,
+                supervisor           TEXT,
+                usuario_captura      TEXT,
+                fecha_captura        TEXT DEFAULT (datetime('now','localtime')),
+                -- Estado / aprobación del supervisor (Sprint 3, RF-14)
+                pdf_nombre           TEXT,
+                bloqueado            INTEGER DEFAULT 0,
+                aprobado             INTEGER DEFAULT 0,
+                supervisor_aprobador TEXT,
+                fecha_aprobacion     TEXT,
                 PRIMARY KEY (clave_lecheria, mes, anio)
             );
 
             CREATE TABLE IF NOT EXISTS requerimiento_dotacion (
-                clave_lecheria    TEXT    NOT NULL,
-                mes_base          INTEGER NOT NULL,
-                anio_base         INTEGER NOT NULL,
-                promotor          INTEGER,
-                mes_destino       INTEGER,
-                anio_destino      INTEGER,
-                familias          INTEGER DEFAULT 0,
-                beneficiarios     INTEGER DEFAULT 0,
-                dotacion_teorica  INTEGER DEFAULT 0,
-                inv_inicial       TEXT,
-                surtimiento       INTEGER DEFAULT 0,
-                ventas            TEXT,
-                inv_final         TEXT,
-                req_ms_anterior   INTEGER DEFAULT 0,
-                vms               INTEGER DEFAULT 0,
-                req_actual        INTEGER DEFAULT 0,
-                observaciones     TEXT,
-                usuario_captura   TEXT,
-                fecha_captura     TEXT DEFAULT (datetime('now','localtime')),
+                clave_lecheria       TEXT    NOT NULL,
+                mes_base             INTEGER NOT NULL,
+                anio_base            INTEGER NOT NULL,
+                promotor             INTEGER,
+                mes_destino          INTEGER,
+                anio_destino         INTEGER,
+                familias             INTEGER DEFAULT 0,
+                beneficiarios        INTEGER DEFAULT 0,
+                dotacion_teorica     INTEGER DEFAULT 0,
+                inv_inicial          TEXT,
+                surtimiento          INTEGER DEFAULT 0,
+                ventas               TEXT,
+                inv_final            TEXT,
+                req_ms_anterior      INTEGER DEFAULT 0,
+                vms                  INTEGER DEFAULT 0,
+                req_actual           INTEGER DEFAULT 0,
+                observaciones        TEXT,
+                usuario_captura      TEXT,
+                fecha_captura        TEXT DEFAULT (datetime('now','localtime')),
+                -- Estado / aprobación del supervisor (Sprint 3, RF-14)
+                pdf_nombre           TEXT,
+                bloqueado            INTEGER DEFAULT 0,
+                aprobado             INTEGER DEFAULT 0,
+                supervisor_aprobador TEXT,
+                fecha_aprobacion     TEXT,
                 PRIMARY KEY (clave_lecheria, mes_base, anio_base)
             );
 
@@ -117,7 +129,7 @@ class DatabaseSQLite
 
             CREATE TABLE IF NOT EXISTS solicitudes_cambio (
                 id               INTEGER PRIMARY KEY AUTOINCREMENT,
-                tipo             TEXT NOT NULL,  -- 'reporte' | 'requerimiento'
+                tipo             TEXT NOT NULL,  -- 'reporte' | 'requerimiento' | 'inventario'
                 clave_lecheria   TEXT NOT NULL,
                 mes              INTEGER NOT NULL,
                 anio             INTEGER NOT NULL,
@@ -127,7 +139,8 @@ class DatabaseSQLite
                 estado           TEXT DEFAULT 'pendiente',  -- pendiente|en_proceso|resuelto|rechazado
                 nota_supervisor  TEXT,
                 fecha_solicitud  TEXT DEFAULT (datetime('now','localtime')),
-                fecha_resolucion TEXT
+                fecha_resolucion TEXT,
+                visto_promotor   INTEGER DEFAULT 0
             );
 
             CREATE INDEX IF NOT EXISTS idx_sol_supervisor
@@ -334,17 +347,56 @@ class DatabaseSQLite
             );
         ");
 
-        // Valores por defecto de Firebird (sobreescribibles desde /admin/config)
+        // Valores por defecto de Firebird (sobreescribibles desde /admin/config).
+        // Hay DOS pares (remoto/local) — el sincronizador prueba el remoto primero
+        // y cae al local si no responde, igual que Database::getInstance().
         $defaults = [
-            'fb_host'    => '172.24.10.251',
-            'fb_port'    => '3050',
-            'fb_user'    => 'SYSDBA',
-            'fb_pass'    => '290990',
-            'fb_db_path' => 'C:/SisDLL20/BD/DB_SIDIST.FDB',
-            'fb_charset' => 'NONE',
+            // ── Servidor REAL de Liconsa (intranet institucional) ──
+            'fb_host_remoto'    => '172.24.10.251',
+            'fb_db_path_remoto' => 'C:/SisDLL20/BD/DB_SIDIST.FDB',
+            'fb_user_remoto'    => 'SYSDBA',
+            'fb_pass_remoto'    => '290990',
+            // ── Firebird del contenedor Docker (pruebas locales) ──
+            'fb_host_local'     => 'db',
+            'fb_db_path_local'  => '/firebird/data/DB_SIDISTLOCAL.FDB',
+            'fb_user_local'     => 'SYSDBA',
+            'fb_pass_local'     => 'masterkey',
+            // ── Comunes ──
+            'fb_port'           => '3050',
+            'fb_charset'        => 'NONE',
+            // ── Legacy (claves planas que algunas pantallas viejas todavía leen) ──
+            'fb_host'           => '172.24.10.251',
+            'fb_user'           => 'SYSDBA',
+            'fb_pass'           => '290990',
+            'fb_db_path'        => 'C:/SisDLL20/BD/DB_SIDIST.FDB',
         ];
         $ins = $pdo->prepare("INSERT OR IGNORE INTO admin_config (clave, valor) VALUES (?, ?)");
         foreach ($defaults as $k => $v) $ins->execute([$k, $v]);
+
+        // ── Migraciones idempotentes para BDDs creadas antes de este schema ──
+        // SQLite no soporta ADD COLUMN IF NOT EXISTS, así que se usan try/catch.
+        $migraciones = [
+            // reporte_mensual_lecher: columnas de aprobación añadidas en Sprint 3
+            "ALTER TABLE reporte_mensual_lecher ADD COLUMN pdf_nombre TEXT",
+            "ALTER TABLE reporte_mensual_lecher ADD COLUMN bloqueado INTEGER DEFAULT 0",
+            "ALTER TABLE reporte_mensual_lecher ADD COLUMN aprobado INTEGER DEFAULT 0",
+            "ALTER TABLE reporte_mensual_lecher ADD COLUMN supervisor_aprobador TEXT",
+            "ALTER TABLE reporte_mensual_lecher ADD COLUMN fecha_aprobacion TEXT",
+            // requerimiento_dotacion: mismas columnas
+            "ALTER TABLE requerimiento_dotacion ADD COLUMN pdf_nombre TEXT",
+            "ALTER TABLE requerimiento_dotacion ADD COLUMN bloqueado INTEGER DEFAULT 0",
+            "ALTER TABLE requerimiento_dotacion ADD COLUMN aprobado INTEGER DEFAULT 0",
+            "ALTER TABLE requerimiento_dotacion ADD COLUMN supervisor_aprobador TEXT",
+            "ALTER TABLE requerimiento_dotacion ADD COLUMN fecha_aprobacion TEXT",
+            // solicitudes_cambio: flag de "visto" por promotor (notificaciones)
+            "ALTER TABLE solicitudes_cambio ADD COLUMN visto_promotor INTEGER DEFAULT 0",
+            // inventarios_mensuales: bloqueo individual (RF-14)
+            "ALTER TABLE inventarios_mensuales ADD COLUMN bloqueado INTEGER DEFAULT 0",
+            "ALTER TABLE inventarios_mensuales ADD COLUMN fecha_envio TEXT",
+        ];
+        foreach ($migraciones as $sql) {
+            try { $pdo->exec($sql); } catch (\Throwable $e) { /* columna ya existe */ }
+        }
     }
 
     /** Lee un valor de admin_config */

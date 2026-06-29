@@ -97,12 +97,14 @@ try {
     $db->beginTransaction();
 
     $total = 0;
+    $clavesGuardadas = []; // para bloquear solo lo recién enviado, no todo el mes
     foreach ($almacenes as $bloque) {
         $alm       = trim((string)($bloque['almacen'] ?? ''));
         $lecherias = $bloque['lecherias'] ?? [];
         foreach ($lecherias as $l) {
             $clave = trim((string)($l['punto_venta'] ?? ''));
             if ($clave === '') continue;
+            $clavesGuardadas[] = $clave;
             $obs = isset($l['observaciones']) && trim((string)$l['observaciones']) !== ''
                    ? trim((string)$l['observaciones']) : 'x';
             $stmt->execute([
@@ -132,10 +134,17 @@ try {
     }
     $db->commit();
 
-    // Bloquear inmediatamente tras el primer guardado
-    $db->exec("UPDATE reporte_mensual_lecher SET bloqueado = 1
-               WHERE mes = $mes AND anio = $anio
-                 AND usuario_captura = " . $db->quote($usuario));
+    // Bloquear SOLO las lecherías recién enviadas (por (clave_lecheria, mes, anio)).
+    // Esto permite captura incremental: si el promotor envía 3 de 5 lecherías,
+    // las otras 2 siguen siendo editables hasta que también se envíen.
+    if (!empty($clavesGuardadas)) {
+        $ph = implode(',', array_fill(0, count($clavesGuardadas), '?'));
+        $stmtBlk = $db->prepare(
+            "UPDATE reporte_mensual_lecher SET bloqueado = 1
+              WHERE mes = ? AND anio = ? AND clave_lecheria IN ($ph)"
+        );
+        $stmtBlk->execute(array_merge([$mes, $anio], $clavesGuardadas));
+    }
 
 } catch (Throwable $e) {
     if (isset($db) && $db->inTransaction()) $db->rollBack();
@@ -167,12 +176,15 @@ try {
 while (ob_get_level() > $nivelOb) @ob_end_clean();
 
 // ── 4. Guardar pdf_nombre en SQLite ───────────────────────────────
-if ($pdfNombre) {
+// El pdf_nombre se aplica solo a las claves recién enviadas en este request.
+if ($pdfNombre && !empty($clavesGuardadas)) {
     try {
-        $db->exec("UPDATE reporte_mensual_lecher
-                   SET pdf_nombre = " . $db->quote($pdfNombre) . "
-                   WHERE mes = $mes AND anio = $anio
-                     AND usuario_captura = " . $db->quote($usuario));
+        $ph = implode(',', array_fill(0, count($clavesGuardadas), '?'));
+        $stmtPdf = $db->prepare(
+            "UPDATE reporte_mensual_lecher SET pdf_nombre = ?
+              WHERE mes = ? AND anio = ? AND clave_lecheria IN ($ph)"
+        );
+        $stmtPdf->execute(array_merge([$pdfNombre, $mes, $anio], $clavesGuardadas));
     } catch (Throwable $e) { /* no crítico */ }
 }
 

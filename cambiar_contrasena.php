@@ -6,8 +6,9 @@
 
 require_once __DIR__ . '/includes/session_guard.php';
 require_once __DIR__ . '/src/Database/DatabaseSQLite.php';
+require_once __DIR__ . '/src/Servicio/PasswordServicio.php';
 
-if (!isset($_SESSION['usuario']) || !in_array(($_SESSION['rol'] ?? ''), ['promotor', 'supervisor'], true)) {
+if (!isset($_SESSION['usuario']) || !in_array(($_SESSION['rol'] ?? ''), ['promotor', 'supervisor', 'distribucion'], true)) {
     header("Location: /iniciosesionPromotor.php");
     exit();
 }
@@ -40,19 +41,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $db->prepare("SELECT CONTRASENA FROM usuarios_inventarios WHERE USUARIO = :u AND COALESCE(ACTIVO,1)=1");
         $stmt->execute([':u' => $usuario]);
         $row = $stmt->fetch();
-        if (!$row || (string)$row['CONTRASENA'] !== $actual) {
+        if (!$row || !PasswordServicio::verificar($actual, $row['CONTRASENA'])) {
             $mensaje = 'La contraseña actual es incorrecta.';
             $tipo_msg = 'err';
         } else {
             $upd = $db->prepare("UPDATE usuarios_inventarios SET CONTRASENA = :p WHERE USUARIO = :u");
-            $upd->execute([':p' => $nueva, ':u' => $usuario]);
+            $upd->execute([':p' => PasswordServicio::hashear($nueva), ':u' => $usuario]);
             $mensaje = 'Contraseña actualizada correctamente.';
             $tipo_msg = 'ok';
         }
     }
 }
 
-$volver = $rol === 'supervisor' ? '/supervisor/inicio.php' : '/promotores/inicio.php';
+$volver = match ($rol) {
+    'supervisor'   => '/supervisor/inicio.php',
+    'distribucion' => '/distribucion/inicio.php',
+    default        => '/promotores/inicio.php',
+};
 ?>
 <!DOCTYPE html>
 <html lang="es" data-theme="dark" data-theme-accent="violeta">

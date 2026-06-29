@@ -1,9 +1,14 @@
 FROM php:8.2-apache
 
-# Instalamos dependencias del sistema para el cliente de Firebird + libzip para XLSX
+# Instalamos dependencias del sistema para el cliente de Firebird + libzip para XLSX.
+# firebird3.0-utils incluye gbak/gfix/isql que se usan para CLONAR la BDD real de
+# Liconsa hacia el contenedor (backup remoto + restore local). Si el paquete 3.0
+# no estuviera disponible, el ServicioClonadorFirebird detecta el binario en
+# /usr/bin con `command -v` y registra error claro en errores_log.
 RUN apt-get update && apt-get install -y \
     libfbclient2 \
     firebird-dev \
+    firebird3.0-utils \
     libsqlite3-dev \
     libzip-dev \
     zip \

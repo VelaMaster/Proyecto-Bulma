@@ -42,9 +42,10 @@ try {
         exit();
     }
 
-    // Resolver posibles usuario_captura
+    // Resolver posibles usuario_captura.
+    // ROL en Firebird real es '0'=promotor; aceptamos texto por compatibilidad.
     $st = $db->prepare("SELECT USUARIO FROM usuarios_inventarios
-                        WHERE CLAVE_ROL = :id AND ROL = 'promotor' LIMIT 1");
+                        WHERE CLAVE_ROL = :id AND ROL IN ('0','promotor') LIMIT 1");
     $st->execute([':id' => $promotor]);
     $usuarioReal = $st->fetchColumn() ?: null;
     $usuarioFallback = 'promotor_' . $promotor;
